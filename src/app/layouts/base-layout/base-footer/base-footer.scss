@@ -1,0 +1,40 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.footer {
+  padding: 1.5rem 2rem;
+  background: rgba(15, 18, 28, 0.8);
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  box-sizing: border-box;
+
+  .footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-size: 0.85rem;
+    color: oklch(48% 0.02 245);
+
+    .copyright {
+      margin: 0;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.5rem;
+
+      .footer-link {
+        color: oklch(48% 0.02 245);
+        text-decoration: none;
+        transition: color 0.2s ease;
+
+        &:hover {
+          color: oklch(72% 0.02 245);
+        }
+      }
+    }
+  }
+}

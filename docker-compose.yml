@@ -1,0 +1,7 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: angular-frontend-signalstore-template-with-agentic-skills
+    restart: unless-stopped

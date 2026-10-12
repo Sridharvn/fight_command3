@@ -1,0 +1,17 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.layout-container {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100dvh;
+  box-sizing: border-box;
+}
+
+.layout-content {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
