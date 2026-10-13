@@ -86,7 +86,7 @@
       width: 2.25rem;
       height: 2.25rem;
       border-radius: 0.5rem;
-      background: linear-gradient(135deg, oklch(62% 0.22 25) 0%, oklch(50% 0.25 25) 100%);
+      background: var(--accent-gradient);
       color: #ffffff;
       flex-shrink: 0;
     }
@@ -160,13 +160,13 @@
     }
 
     &.active {
-      background: oklch(25% 0.04 25 / 0.5);
-      border-left: 3px solid oklch(62% 0.22 25);
+      background: var(--accent-primary-subtle);
+      border-left: 3px solid var(--accent-primary);
       color: #ffffff;
       font-weight: 600;
 
       .nav-icon {
-        color: oklch(65% 0.22 25);
+        color: var(--accent-primary-light);
       }
     }
   }
@@ -191,8 +191,8 @@
       width: 2.25rem;
       height: 2.25rem;
       border-radius: 50%;
-      background: linear-gradient(135deg, oklch(40% 0.12 25) 0%, oklch(30% 0.1 25) 100%);
-      border: 1px solid oklch(45% 0.15 25);
+      background: var(--accent-gradient);
+      border: 1px solid var(--accent-primary-border);
       color: #ffffff;
       font-size: 0.8rem;
       font-weight: 700;
@@ -232,8 +232,9 @@
         font-weight: 700;
         padding: 0.1rem 0.4rem;
         border-radius: 0.25rem;
-        background: oklch(24% 0.05 25);
-        color: oklch(85% 0.12 25);
+        background: var(--accent-primary-subtle);
+        color: var(--accent-primary-light);
+        border: 1px solid var(--accent-primary-border);
         text-transform: uppercase;
         letter-spacing: 0.04em;
         margin-top: 0.25rem;

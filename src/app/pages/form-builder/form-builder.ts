@@ -1,0 +1,346 @@
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  inject,
+  signal,
+} from '@angular/core';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
+import { BaseLayout } from '../../layouts/base-layout/base-layout';
+import { DynamicFormRendererComponent } from '../../components/dynamic-form-renderer/dynamic-form-renderer';
+import { FormBuilderStore } from '../../stores/form-builder.store';
+import { FormDefinitionStore } from '../../stores/form-definition.store';
+import { FormDefinitionService } from '../../services/form-definition.service';
+import { RuleStore } from '../../stores/rule.store';
+import {
+  ComparisonOperator,
+  CrossFieldValidation,
+  FormDefinition,
+  FormField,
+  FormFieldType,
+} from '../../models/dynamic-form.models';
+import { FieldDefinition } from '../../models/form-definition.models';
+
+@Component({
+  selector: 'app-form-builder',
+  imports: [
+    BaseLayout,
+    DynamicFormRendererComponent,
+    DragDropModule,
+    ReactiveFormsModule,
+    RouterLink,
+  ],
+  templateUrl: './form-builder.html',
+  styleUrl: './form-builder.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class FormBuilderPage implements OnInit {
+  protected readonly builderStore = inject(FormBuilderStore);
+  protected readonly formDefStore = inject(FormDefinitionStore);
+  private readonly formDefinitionService = inject(FormDefinitionService);
+  protected readonly ruleStore = inject(RuleStore);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+
+  readonly activeTab = signal<'canvas' | 'rules' | 'settings'>('canvas');
+  readonly isRuleModalOpen = signal(false);
+  readonly saveSuccessMessage = signal<string | null>(null);
+
+  // Field Palette Types
+  readonly paletteTypes: { type: FormFieldType; label: string; icon: string }[] = [
+    { type: 'text', label: 'Text Input', icon: 'T' },
+    { type: 'number', label: 'Number', icon: '#' },
+    { type: 'email', label: 'Email', icon: '@' },
+    { type: 'select', label: 'Dropdown', icon: '▼' },
+    { type: 'radio', label: 'Radio Group', icon: '◉' },
+    { type: 'checkbox', label: 'Checkbox', icon: '☑' },
+    { type: 'boolean', label: 'Toggle Switch', icon: '◨' },
+    { type: 'date', label: 'Date Picker', icon: '📅' },
+    { type: 'textarea', label: 'Text Area', icon: '¶' },
+  ];
+
+  // Rule Modal Form
+  readonly ruleForm = new FormGroup({
+    name: new FormControl('', [Validators.required]),
+    errorMessage: new FormControl('', [Validators.required]),
+    whenField: new FormControl('', [Validators.required]),
+    whenOperator: new FormControl<ComparisonOperator>('equals', [Validators.required]),
+    whenValue: new FormControl('', [Validators.required]),
+    thenField: new FormControl('', [Validators.required]),
+    thenOperator: new FormControl<ComparisonOperator>('equals', [Validators.required]),
+    thenValue: new FormControl('', [Validators.required]),
+  });
+
+  ngOnInit(): void {
+    this.formDefStore.loadFieldDefinitions();
+
+    const templateId = this.route.snapshot.paramMap.get('id');
+    if (templateId && templateId !== 'new') {
+      this.loadTemplate(+templateId);
+    } else {
+      this.builderStore.initNewTemplate(1, 1);
+    }
+
+    this.ruleStore.loadRules?.();
+  }
+
+  onUpdateTemplateSettings(
+    settings: Partial<
+      Pick<
+        FormDefinition,
+        'sportType' | 'tournamentType' | 'description' | 'templateName'
+      >
+    >,
+  ): void {
+    this.builderStore.updateTemplateMetadata(settings);
+  }
+
+  private loadTemplate(id: number): void {
+    this.formDefinitionService.getTemplateById(id).subscribe({
+      next: (tmpl) => {
+        const fields: FormField[] = (tmpl.fields || []).map((tf) => ({
+          id: `field_${tf.fieldDefinitionId}`,
+          fieldDefinitionId: tf.fieldDefinitionId,
+          key: tf.fieldDefinition?.fieldName || `field_${tf.fieldDefinitionId}`,
+          label: tf.fieldLabelOverride || tf.fieldDefinition?.fieldLabel || 'Field',
+          type: (tf.fieldDefinition?.fieldType || 'text') as FormFieldType,
+          required: tf.isRequired,
+          columnSpan: 1,
+        }));
+
+        const compoundRules: CrossFieldValidation[] =
+          tmpl.formSchema?.compoundRules?.map((r) => ({
+            id: `rule_${r.ruleId || Date.now()}`,
+            name: r.ruleName,
+            errorMessage: r.errorMessage,
+            when: r.conditions as any,
+            then: r.actions as any,
+          })) || [];
+
+        this.builderStore.setTemplate({
+          id: tmpl.templateId,
+          templateName: tmpl.templateName,
+          sportType: tmpl.sportType,
+          tournamentType: tmpl.tournamentType,
+          fields,
+          validations: compoundRules,
+        });
+      },
+      error: (err) => {
+        this.builderStore.setError('Failed to load template');
+      },
+    });
+  }
+
+  onDropField(event: CdkDragDrop<FormField[]>): void {
+    this.builderStore.moveField(event.previousIndex, event.currentIndex);
+  }
+
+  onAddField(type: FormFieldType, label?: string): void {
+    this.builderStore.addField(type, label || `New ${type} field`);
+  }
+
+  onAddFieldFromDefinition(def: FieldDefinition): void {
+    this.builderStore.addFieldFromDefinition(def);
+  }
+
+  onSelectField(fieldId: string): void {
+    this.builderStore.setActiveField(fieldId);
+  }
+
+  onUpdateFieldLabel(fieldId: string, event: Event): void {
+    const val = (event.target as HTMLInputElement).value;
+    this.builderStore.updateField(fieldId, { label: val });
+  }
+
+  onUpdateFieldPlaceholder(fieldId: string, event: Event): void {
+    const val = (event.target as HTMLInputElement).value;
+    this.builderStore.updateField(fieldId, { placeholder: val });
+  }
+
+  onToggleFieldRequired(fieldId: string, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    this.builderStore.updateField(fieldId, { required: checked });
+  }
+
+  onToggleColumnSpan(fieldId: string): void {
+    const field = this.builderStore.template()?.fields.find((f) => f.id === fieldId);
+    if (!field) return;
+    this.builderStore.updateField(fieldId, {
+      columnSpan: field.columnSpan === 2 ? 1 : 2,
+    });
+  }
+
+  onDuplicateField(fieldId: string): void {
+    this.builderStore.duplicateField(fieldId);
+  }
+
+  onRemoveField(fieldId: string): void {
+    this.builderStore.removeField(fieldId);
+  }
+
+  openLivePreview(): void {
+    this.builderStore.setPreviewOpen(true);
+  }
+
+  closeLivePreview(): void {
+    this.builderStore.setPreviewOpen(false);
+  }
+
+  onPreviewSubmit(data: Record<string, any>): void {
+    alert(`Preview Submission Successful!\n\nPayload:\n${JSON.stringify(data, null, 2)}`);
+  }
+
+  // Cross-Field Validations
+  openAddRuleModal(): void {
+    this.ruleForm.reset({
+      whenOperator: 'equals',
+      thenOperator: 'equals',
+    });
+    this.isRuleModalOpen.set(true);
+  }
+
+  closeRuleModal(): void {
+    this.isRuleModalOpen.set(false);
+  }
+
+  onSaveRule(): void {
+    if (this.ruleForm.invalid) {
+      this.ruleForm.markAllAsTouched();
+      return;
+    }
+
+    const val = this.ruleForm.value;
+    const rule: CrossFieldValidation = {
+      id: `rule_${Date.now()}`,
+      name: val.name!,
+      errorMessage: val.errorMessage!,
+      when: {
+        conjunction: 'AND',
+        conditions: [
+          {
+            fieldId: val.whenField!,
+            operator: val.whenOperator!,
+            value: this.parseValue(val.whenValue),
+          },
+        ],
+      },
+      then: {
+        conjunction: 'AND',
+        conditions: [
+          {
+            fieldId: val.thenField!,
+            operator: val.thenOperator!,
+            value: this.parseValue(val.thenValue),
+          },
+        ],
+      },
+    };
+
+    this.onAddCompoundRule(rule);
+    this.closeRuleModal();
+  }
+
+  onAddCompoundRule(rule: CrossFieldValidation): void {
+    this.builderStore.addValidation(rule);
+  }
+
+  onRemoveCompoundRule(id: string): void {
+    this.builderStore.removeValidation(id);
+  }
+
+  private parseValue(raw: any): any {
+    if (raw === 'true') return true;
+    if (raw === 'false') return false;
+    if (!isNaN(Number(raw)) && raw.trim() !== '') return Number(raw);
+    return raw;
+  }
+
+  onSaveTemplate(): void {
+    const tmpl = this.builderStore.template();
+    if (!tmpl) return;
+
+    this.builderStore.setSaving(true);
+    this.saveSuccessMessage.set(null);
+
+    // Save to server
+    const dto = {
+      templateName: tmpl.templateName,
+      sportType: tmpl.sportType,
+      tournamentType: tmpl.tournamentType,
+      formSchema: {
+        fields: tmpl.fields.map((f, i) => ({
+          fieldDefinitionId: f.fieldDefinitionId || 1, // Preserve master definition ID
+          displayOrder: i + 1,
+          isRequired: !!f.required,
+          fieldLabelOverride: f.label,
+        })),
+        compoundRules: tmpl.validations.map((v, i) => ({
+          ruleId: i + 1,
+          ruleName: v.name,
+          description: null,
+          conditions: v.when as any,
+          actions: v.then as any,
+          errorMessage: v.errorMessage,
+          isActive: true,
+        })),
+      },
+    };
+
+    if (tmpl.id) {
+      this.formDefinitionService.updateTemplate(+tmpl.id, dto).subscribe({
+        next: () => {
+          this.builderStore.setSaving(false);
+          this.saveSuccessMessage.set('Form template saved successfully!');
+          setTimeout(() => this.saveSuccessMessage.set(null), 3000);
+        },
+        error: (err) => {
+          this.builderStore.setSaving(false);
+          this.builderStore.setError('Failed to update template: ' + (err.error?.message || err.message));
+        },
+      });
+    } else {
+      this.formDefinitionService.createTemplate(dto as any).subscribe({
+        next: (created) => {
+          this.builderStore.setSaving(false);
+          this.saveSuccessMessage.set('Form template created successfully!');
+          if (created.templateId) {
+            this.builderStore.updateTemplateMetadata({ id: created.templateId });
+          }
+          this.router.navigate(['/form-builder', created.templateId]);
+        },
+        error: (err) => {
+          this.builderStore.setSaving(false);
+          this.builderStore.setError('Failed to create template: ' + (err.error?.message || err.message));
+        },
+      });
+    }
+  }
+
+  onDeleteTemplate(): void {
+    const tmpl = this.builderStore.template();
+    if (!tmpl || !tmpl.id) return;
+
+    if (
+      confirm(
+        `Are you sure you want to delete template "${tmpl.templateName}"? This action cannot be undone.`,
+      )
+    ) {
+      this.builderStore.setSaving(true);
+      this.formDefinitionService.deleteTemplate(+tmpl.id).subscribe({
+        next: () => {
+          this.builderStore.setSaving(false);
+          this.router.navigate(['/form-definitions']);
+        },
+        error: (err) => {
+          this.builderStore.setSaving(false);
+          this.builderStore.setError(
+            'Failed to delete template: ' + (err.error?.message || err.message),
+          );
+        },
+      });
+    }
+  }
+}

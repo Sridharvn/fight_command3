@@ -5,6 +5,7 @@ export const APP_ROUTES = {
   roles: '/roles',
   ruleManagement: '/rule-management',
   formDefinitions: '/form-definitions',
+  formBuilder: '/form-builder',
   events: '/events',
 } as const;
 

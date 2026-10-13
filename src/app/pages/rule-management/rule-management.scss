@@ -43,18 +43,19 @@
   border: 1px solid transparent;
 
   &:focus-visible {
-    outline: 2px solid #3b82f6;
+    outline: var(--focus-outline);
     outline-offset: 2px;
   }
 }
 
 .btn-primary {
-  background-color: #2563eb;
+  background: var(--accent-gradient);
   color: #ffffff;
-  border-color: #3b82f6;
+  border-color: var(--accent-primary-border-strong);
 
   &:hover:not(:disabled) {
-    background-color: #1d4ed8;
+    background: var(--accent-gradient-hover);
+    box-shadow: 0 0 12px var(--accent-primary-glow);
   }
 
   &:disabled {
@@ -105,7 +106,7 @@
 
   .search-input {
     width: 100%;
-    padding: 0.625rem 1rem 0.625rem 2.625rem;
+    padding: 0.625rem 1rem 0.625rem 2.5rem;
     background-color: #111827;
     border: 1px solid #1f2937;
     border-radius: 0.5rem;
@@ -115,7 +116,8 @@
     transition: border-color 0.15s ease-in-out;
 
     &:focus {
-      border-color: #3b82f6;
+      border-color: var(--accent-primary);
+      box-shadow: var(--focus-ring);
     }
 
     &::placeholder {
@@ -162,8 +164,8 @@
 .spinner {
   width: 2rem;
   height: 2rem;
-  border: 3px solid #1e293b;
-  border-top-color: #3b82f6;
+  border: 3px solid var(--accent-primary-glow);
+  border-top-color: var(--accent-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -338,8 +340,8 @@
   border-radius: 0.25rem;
 
   &.when {
-    background-color: rgba(59, 130, 246, 0.2);
-    color: #60a5fa;
+    background-color: var(--accent-primary-bg);
+    color: var(--accent-primary-light);
   }
 
   &.then {
@@ -365,7 +367,7 @@
   color: #e2e8f0;
 
   strong {
-    color: #93c5fd;
+    color: var(--accent-primary-light);
     font-weight: 600;
   }
 
@@ -506,7 +508,8 @@
   transition: border-color 0.15s ease-in-out;
 
   &:focus {
-    border-color: #3b82f6;
+    border-color: var(--accent-primary);
+    box-shadow: var(--focus-ring);
   }
 
   &::placeholder {
@@ -528,7 +531,7 @@
   .builder-legend {
     font-size: 0.75rem;
     font-weight: 700;
-    color: #60a5fa;
+    color: var(--accent-primary-light);
     padding: 0 0.5rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;

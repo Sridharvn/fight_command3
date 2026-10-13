@@ -11,14 +11,14 @@
 
       <div class="header-actions">
         @if (formStore.activeTab() === 'templates') {
-          <button type="button" class="btn btn-primary create-template-btn" (click)="openTemplateModal()">
+          <a routerLink="/form-builder/new" class="btn btn-primary create-template-btn">
             <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
               <path
                 d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
               />
             </svg>
             Add Template
-          </button>
+          </a>
         } @else {
           <button type="button" class="btn btn-primary create-field-btn" (click)="openFieldModal()">
             <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
@@ -103,7 +103,7 @@
           </svg>
           <p class="empty-title">No form templates found</p>
           <p class="empty-desc">Create tournament registration templates to assemble fields and enforce validation rules.</p>
-          <button type="button" class="btn btn-primary" (click)="openTemplateModal()">Create First Template</button>
+          <a routerLink="/form-builder/new" class="btn btn-primary">Create First Template</a>
         </div>
       } @else {
         <div class="templates-grid">
@@ -123,7 +123,20 @@
                   </div>
                 </div>
 
-                @if (tmpl.templateType === 'CUSTOM') {
+                <div class="card-top-actions">
+                  <a
+                    [routerLink]="['/form-builder', tmpl.templateId]"
+                    class="btn-action btn-edit"
+                    title="Edit template in Form Builder"
+                    aria-label="Edit template"
+                  >
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                      <path
+                        d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"
+                      />
+                    </svg>
+                  </a>
+
                   <button
                     type="button"
                     class="btn-action btn-delete"
@@ -139,7 +152,7 @@
                       />
                     </svg>
                   </button>
-                }
+                </div>
               </div>
 
               <div class="card-stats">
@@ -154,6 +167,12 @@
               </div>
 
               <div class="card-footer">
+                <a
+                  [routerLink]="['/form-builder', tmpl.templateId]"
+                  class="btn btn-primary btn-sm btn-builder"
+                >
+                  Open Form Builder
+                </a>
                 <button
                   type="button"
                   class="btn btn-secondary btn-sm"
@@ -358,116 +377,5 @@
       </div>
     }
 
-    <!-- Modal: Create Form Template -->
-    @if (isTemplateModalOpen()) {
-      <div class="modal-backdrop" (click)="closeTemplateModal()">
-        <div
-          class="modal-dialog modal-dialog-large"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="template-modal-title"
-          (click)="$event.stopPropagation()"
-        >
-          <header class="modal-header">
-            <h2 id="template-modal-title" class="modal-title">Create Form Template</h2>
-            <button
-              type="button"
-              class="btn-close"
-              (click)="closeTemplateModal()"
-              aria-label="Close dialog"
-            >
-              &times;
-            </button>
-          </header>
-
-          <form [formGroup]="templateForm" (ngSubmit)="onSubmitTemplate()" class="modal-form">
-            <div class="form-group">
-              <label for="templateName" class="form-label">Template Name *</label>
-              <input
-                id="templateName"
-                type="text"
-                formControlName="templateName"
-                class="form-input"
-                placeholder="e.g., 2026 National Sambo Registration Template"
-              />
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="sportType" class="form-label">Sport Discipline</label>
-                <select id="sportType" formControlName="sportType" class="form-select">
-                  <option [value]="1">Sambo</option>
-                  <option [value]="2">MMA</option>
-                  <option [value]="3">Brazilian Jiu-Jitsu</option>
-                  <option [value]="4">Judo</option>
-                  <option [value]="5">Muay Thai</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="tournamentType" class="form-label">Tournament Level</label>
-                <select id="tournamentType" formControlName="tournamentType" class="form-select">
-                  <option [value]="1">National</option>
-                  <option [value]="2">State</option>
-                  <option [value]="3">District</option>
-                  <option [value]="4">Club / Invitational</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Field Picker -->
-            <div class="picker-section">
-              <h3 class="picker-heading">Select Fields from Library</h3>
-              <p class="picker-desc">Choose which fields are included in this tournament form schema.</p>
-
-              <div class="picker-chips-grid">
-                @for (field of formStore.fieldDefinitions(); track field.fieldDefinitionId) {
-                  <button
-                    type="button"
-                    class="field-picker-chip"
-                    [class.selected]="templateForm.controls.selectedFieldIds.value?.includes(field.fieldDefinitionId)"
-                    (click)="toggleFieldSelection(field.fieldDefinitionId)"
-                  >
-                    <span class="chip-label">{{ field.fieldLabel }}</span>
-                    <span class="chip-type">{{ field.fieldType }}</span>
-                  </button>
-                }
-              </div>
-            </div>
-
-            <!-- Compound Rule Picker -->
-            <div class="picker-section">
-              <h3 class="picker-heading">Attach Validation Rules</h3>
-              <p class="picker-desc">Attach cross-field compound rules defined in Rule Management.</p>
-
-              <div class="picker-chips-grid">
-                @for (rule of ruleStore.rules(); track rule.ruleId) {
-                  <button
-                    type="button"
-                    class="field-picker-chip rule-chip"
-                    [class.selected]="templateForm.controls.selectedRuleIds.value?.includes(rule.ruleId)"
-                    (click)="toggleRuleSelection(rule.ruleId)"
-                  >
-                    <span class="chip-label">{{ rule.ruleName }}</span>
-                    <span class="chip-type">Rule #{{ rule.ruleId }}</span>
-                  </button>
-                }
-              </div>
-            </div>
-
-            <footer class="modal-footer">
-              <button type="button" class="btn btn-secondary" (click)="closeTemplateModal()">Cancel</button>
-              <button type="submit" class="btn btn-primary" [disabled]="templateForm.invalid || isSubmitting()">
-                @if (isSubmitting()) {
-                  <span class="spinner-small"></span> Saving...
-                } @else {
-                  Create Template
-                }
-              </button>
-            </footer>
-          </form>
-        </div>
-      </div>
-    }
   </div>
 </app-base-layout>

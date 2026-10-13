@@ -40,6 +40,7 @@ describe('FormDefinitionsPage', () => {
   let ruleStoreMock: any;
 
   beforeEach(async () => {
+    activeTabSignal.set('templates');
     formStoreMock = {
       fieldDefinitions: fieldsSignal,
       filteredFieldDefinitions: fieldsSignal,
@@ -111,19 +112,33 @@ describe('FormDefinitionsPage', () => {
     expect(formStoreMock.setActiveTab).toHaveBeenCalledWith('fields');
   });
 
-  it('should toggle field modal and template modal', () => {
+  it('should toggle field modal for field library', () => {
     expect(component.isFieldModalOpen()).toBe(false);
     component.openFieldModal();
     fixture.detectChanges();
     expect(component.isFieldModalOpen()).toBe(true);
     component.closeFieldModal();
     expect(component.isFieldModalOpen()).toBe(false);
+  });
 
-    expect(component.isTemplateModalOpen()).toBe(false);
-    component.openTemplateModal();
-    fixture.detectChanges();
-    expect(component.isTemplateModalOpen()).toBe(true);
-    component.closeTemplateModal();
-    expect(component.isTemplateModalOpen()).toBe(false);
+  it('should render Add Template link directing to Form Builder without a popup modal', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const addTemplateBtn = compiled.querySelector('.create-template-btn') as HTMLAnchorElement;
+    expect(addTemplateBtn).toBeTruthy();
+    expect(addTemplateBtn.getAttribute('href')).toBe('/form-builder/new');
+    expect(compiled.querySelector('.template-modal-dialog')).toBeFalsy();
+  });
+
+  it('should render Edit button on template card directing to /form-builder/:id', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const editBtn = compiled.querySelector('.btn-edit') as HTMLAnchorElement;
+    expect(editBtn).toBeTruthy();
+    expect(editBtn.getAttribute('href')).toBe('/form-builder/1');
+  });
+
+  it('should call deleteTemplate when confirming deletion', () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    component.onDeleteTemplate(1);
+    expect(formStoreMock.deleteTemplate).toHaveBeenCalledWith(1);
   });
 });

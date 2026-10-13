@@ -24,7 +24,7 @@
     right: 0;
     width: 300px;
     height: 100%;
-    background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 70%);
+    background: radial-gradient(circle at top right, var(--accent-primary-glow), transparent 70%);
     pointer-events: none;
   }
 }
@@ -45,9 +45,9 @@
   letter-spacing: 0.05em;
   padding: 0.25rem 0.625rem;
   border-radius: 9999px;
-  background-color: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background-color: var(--accent-primary-bg);
+  color: var(--accent-primary-light);
+  border: 1px solid var(--accent-primary-border);
 }
 
 .hero-title {
@@ -86,12 +86,13 @@
 }
 
 .btn-primary {
-  background-color: #2563eb;
+  background: var(--accent-gradient);
   color: #ffffff;
-  border: 1px solid #3b82f6;
+  border: 1px solid var(--accent-primary-border-strong);
 
   &:hover {
-    background-color: #1d4ed8;
+    background: var(--accent-gradient-hover);
+    box-shadow: 0 0 12px var(--accent-primary-glow);
   }
 }
 
@@ -133,8 +134,8 @@
   }
 
   &.icon-users {
-    background-color: rgba(59, 130, 246, 0.15);
-    color: #60a5fa;
+    background-color: var(--accent-primary-bg);
+    color: var(--accent-primary-light);
   }
 
   &.icon-roles {
@@ -176,7 +177,7 @@
   gap: 0.375rem;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #3b82f6;
+  color: var(--accent-primary);
   text-decoration: none;
   margin-top: 0.75rem;
   transition: color 0.15s ease-in-out;
@@ -187,7 +188,7 @@
   }
 
   &:hover {
-    color: #60a5fa;
+    color: var(--accent-primary-light);
   }
 }
 

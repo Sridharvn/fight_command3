@@ -1,4 +1,29 @@
 /* Global CSS Reset & Variables */
+:root {
+  /* ========================================================
+     Centralized Brand Tokens — Unified Reddish Accent System
+     ======================================================== */
+  --accent-primary: oklch(62% 0.22 25);
+  --accent-primary-hover: oklch(56% 0.24 25);
+  --accent-primary-active: oklch(50% 0.25 25);
+  --accent-primary-light: oklch(75% 0.16 25);
+  --accent-primary-subtle: oklch(25% 0.05 25 / 0.5);
+  --accent-primary-bg: rgba(225, 29, 72, 0.12);
+  --accent-primary-border: oklch(62% 0.22 25 / 0.4);
+  --accent-primary-border-strong: oklch(62% 0.22 25);
+  --accent-primary-glow: oklch(62% 0.22 25 / 0.35);
+  --accent-gradient: linear-gradient(135deg, oklch(62% 0.22 25) 0%, oklch(50% 0.25 25) 100%);
+  --accent-gradient-hover: linear-gradient(135deg, oklch(65% 0.22 25) 0%, oklch(53% 0.25 25) 100%);
+
+  /* Semantic UI Tokens */
+  --primary-color: var(--accent-primary);
+  --primary-hover: var(--accent-primary-hover);
+  --primary-active: var(--accent-primary-active);
+  --primary-border: var(--accent-primary-border-strong);
+  --focus-ring: 0 0 0 2px var(--accent-primary-glow);
+  --focus-outline: 2px solid var(--accent-primary);
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -15,6 +40,7 @@ html, body {
   color: oklch(96% 0.01 245);
   overflow-x: hidden;
 }
+
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {

@@ -2,13 +2,14 @@ import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@ang
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FormDefinitionStore } from '../../stores/form-definition.store';
 import { RuleStore } from '../../stores/rule.store';
-import { FieldType } from '../../models/form-definition.models';
+import { FieldType, FormTemplate } from '../../models/form-definition.models';
 
+import { RouterLink } from '@angular/router';
 import { BaseLayout } from '../../layouts/base-layout/base-layout';
 
 @Component({
   selector: 'app-form-definitions',
-  imports: [BaseLayout, ReactiveFormsModule],
+  imports: [BaseLayout, ReactiveFormsModule, RouterLink],
   templateUrl: './form-definitions.html',
   styleUrl: './form-definitions.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -18,7 +19,6 @@ export class FormDefinitionsPage implements OnInit {
   protected readonly ruleStore = inject(RuleStore);
 
   readonly isFieldModalOpen = signal(false);
-  readonly isTemplateModalOpen = signal(false);
   readonly isSubmitting = signal(false);
 
   readonly searchControl = new FormControl('');
@@ -35,15 +35,6 @@ export class FormDefinitionsPage implements OnInit {
     isFilterable: new FormControl(false),
     isSortable: new FormControl(false),
     isSearchable: new FormControl(false),
-  });
-
-  // Template creation form
-  readonly templateForm = new FormGroup({
-    templateName: new FormControl('', [Validators.required, Validators.minLength(3)]),
-    sportType: new FormControl(1, [Validators.required]),
-    tournamentType: new FormControl(1, [Validators.required]),
-    selectedFieldIds: new FormControl<number[]>([]),
-    selectedRuleIds: new FormControl<number[]>([]),
   });
 
   ngOnInit(): void {
@@ -115,76 +106,6 @@ export class FormDefinitionsPage implements OnInit {
     if (confirm('Are you sure you want to delete this field definition?')) {
       this.formStore.deleteFieldDefinition(id);
     }
-  }
-
-  // ── Template Modal ─────────────────────────────────────────────────────────
-  openTemplateModal(): void {
-    this.templateForm.reset({
-      templateName: '',
-      sportType: 1,
-      tournamentType: 1,
-      selectedFieldIds: [],
-      selectedRuleIds: [],
-    });
-    this.isTemplateModalOpen.set(true);
-  }
-
-  closeTemplateModal(): void {
-    this.isTemplateModalOpen.set(false);
-  }
-
-  toggleFieldSelection(fieldId: number): void {
-    const current = this.templateForm.controls.selectedFieldIds.value || [];
-    if (current.includes(fieldId)) {
-      this.templateForm.controls.selectedFieldIds.setValue(current.filter((id) => id !== fieldId));
-    } else {
-      this.templateForm.controls.selectedFieldIds.setValue([...current, fieldId]);
-    }
-  }
-
-  toggleRuleSelection(ruleId: number): void {
-    const current = this.templateForm.controls.selectedRuleIds.value || [];
-    if (current.includes(ruleId)) {
-      this.templateForm.controls.selectedRuleIds.setValue(current.filter((id) => id !== ruleId));
-    } else {
-      this.templateForm.controls.selectedRuleIds.setValue([...current, ruleId]);
-    }
-  }
-
-  onSubmitTemplate(): void {
-    if (this.templateForm.invalid) {
-      this.templateForm.markAllAsTouched();
-      return;
-    }
-
-    const val = this.templateForm.getRawValue();
-    this.isSubmitting.set(true);
-
-    const fieldsPayload = (val.selectedFieldIds || []).map((id, index) => ({
-      fieldDefinitionId: id,
-      displayOrder: index + 1,
-      isRequired: true,
-    }));
-
-    const selectedRules = this.ruleStore
-      .rules()
-      .filter((r) => (val.selectedRuleIds || []).includes(r.ruleId));
-
-    this.formStore.createTemplate({
-      templateName: val.templateName!,
-      sportType: Number(val.sportType),
-      tournamentType: Number(val.tournamentType),
-      fields: fieldsPayload,
-      formSchema: {
-        fields: [],
-        compoundRules: selectedRules,
-      },
-    });
-
-    setTimeout(() => {
-      this.isSubmitting.set(false);
-      this.closeTemplateModal();
-    }, 200);
   }
 
   onToggleTemplateStatus(id: number, currentStatus: boolean): void {

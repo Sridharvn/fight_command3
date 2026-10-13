@@ -43,18 +43,19 @@
   border: 1px solid transparent;
 
   &:focus-visible {
-    outline: 2px solid #3b82f6;
+    outline: var(--focus-outline);
     outline-offset: 2px;
   }
 }
 
 .btn-primary {
-  background-color: #2563eb;
+  background: var(--accent-gradient);
   color: #ffffff;
-  border-color: #3b82f6;
+  border-color: var(--accent-primary-border-strong);
 
   &:hover:not(:disabled) {
-    background-color: #1d4ed8;
+    background: var(--accent-gradient-hover);
+    box-shadow: 0 0 12px var(--accent-primary-glow);
   }
 
   &:disabled {
@@ -120,7 +121,8 @@
     transition: border-color 0.15s ease-in-out;
 
     &:focus {
-      border-color: #3b82f6;
+      border-color: var(--accent-primary);
+      box-shadow: var(--focus-ring);
     }
 
     &::placeholder {
@@ -154,9 +156,10 @@
   }
 
   &.active {
-    background-color: #1e293b;
+    background-color: var(--accent-primary-subtle);
     color: #ffffff;
     font-weight: 600;
+    border: 1px solid var(--accent-primary-border);
   }
 }
 
@@ -183,8 +186,8 @@
 .spinner {
   width: 2rem;
   height: 2rem;
-  border: 3px solid #1e293b;
-  border-top-color: #3b82f6;
+  border: 3px solid var(--accent-primary-glow);
+  border-top-color: var(--accent-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -370,7 +373,9 @@
   border-top: 1px solid #1e293b;
   padding-top: 0.75rem;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 /* Fields Table */
@@ -436,7 +441,7 @@
 .code-key {
   font-family: ui-monospace, monospace;
   font-size: 0.8125rem;
-  color: #93c5fd;
+  color: var(--accent-primary-light);
   background-color: #1e293b;
   padding: 0.15rem 0.4rem;
   border-radius: 0.25rem;
@@ -450,9 +455,9 @@
 
 .flag-badge {
   font-size: 0.6875rem;
-  background-color: rgba(59, 130, 246, 0.1);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  background-color: var(--accent-primary-bg);
+  color: var(--accent-primary-light);
+  border: 1px solid var(--accent-primary-border);
   padding: 0.15rem 0.45rem;
   border-radius: 0.25rem;
   font-weight: 500;
@@ -473,6 +478,22 @@
   svg {
     width: 1rem;
     height: 1rem;
+  }
+
+.card-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+  &.btn-edit {
+    color: #94a3b8;
+
+    &:hover {
+      background-color: var(--accent-primary-bg);
+      color: var(--accent-primary-light);
+      border-color: var(--accent-primary-border);
+    }
   }
 
   &.btn-delete {
@@ -590,7 +611,8 @@
   transition: border-color 0.15s ease-in-out;
 
   &:focus {
-    border-color: #3b82f6;
+    border-color: var(--accent-primary);
+    box-shadow: var(--focus-ring);
   }
 
   &::placeholder {
@@ -616,7 +638,7 @@
   input[type='checkbox'] {
     width: 1rem;
     height: 1rem;
-    accent-color: #3b82f6;
+    accent-color: var(--accent-primary);
   }
 }
 
@@ -679,13 +701,13 @@
   }
 
   &.selected {
-    background-color: rgba(59, 130, 246, 0.2);
-    border-color: #3b82f6;
-    color: #93c5fd;
+    background-color: var(--accent-primary-bg);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary-light);
 
     .chip-type {
-      background-color: rgba(59, 130, 246, 0.3);
-      color: #bfdbfe;
+      background-color: var(--accent-primary-glow);
+      color: #ffffff;
     }
   }
 

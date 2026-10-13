@@ -37,6 +37,18 @@ export const routes: Routes = [
       import('./pages/form-definitions/form-definitions').then((m) => m.FormDefinitionsPage),
   },
   {
+    path: toSegment(APP_ROUTES.formBuilder),
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/form-builder/form-builder').then((m) => m.FormBuilderPage),
+  },
+  {
+    path: toSegment(APP_ROUTES.formBuilder) + '/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/form-builder/form-builder').then((m) => m.FormBuilderPage),
+  },
+  {
     path: '**',
     redirectTo: '',
   },

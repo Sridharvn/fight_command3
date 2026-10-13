@@ -29,9 +29,9 @@
     width: 3.5rem;
     height: 3.5rem;
     border-radius: 0.875rem;
-    background: linear-gradient(135deg, oklch(62% 0.22 25) 0%, oklch(50% 0.25 25) 100%);
+    background: var(--accent-gradient);
     color: #ffffff;
-    box-shadow: 0 10px 20px -5px oklch(55% 0.24 25 / 0.5);
+    box-shadow: 0 10px 20px -5px var(--accent-primary-glow);
     margin-bottom: 1.25rem;
   }
 
@@ -181,16 +181,16 @@
   font-weight: 600;
   letter-spacing: 0.02em;
   color: #ffffff;
-  background: linear-gradient(135deg, oklch(60% 0.22 25) 0%, oklch(50% 0.24 25) 100%);
+  background: var(--accent-gradient);
   border: none;
   border-radius: 0.625rem;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 8px 16px -4px oklch(55% 0.24 25 / 0.4);
+  box-shadow: 0 8px 16px -4px var(--accent-primary-glow);
 
   &:hover:not(:disabled) {
-    background: linear-gradient(135deg, oklch(64% 0.22 25) 0%, oklch(54% 0.24 25) 100%);
-    box-shadow: 0 10px 20px -4px oklch(55% 0.24 25 / 0.6);
+    background: var(--accent-gradient-hover);
+    box-shadow: 0 10px 20px -4px var(--accent-primary-glow);
     transform: translateY(-1px);
   }
 
@@ -200,7 +200,7 @@
 
   &:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3px oklch(60% 0.22 25 / 0.5);
+    box-shadow: 0 0 0 3px var(--accent-primary-glow);
   }
 
   &:disabled {

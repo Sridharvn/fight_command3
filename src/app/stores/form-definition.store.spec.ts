@@ -13,6 +13,7 @@ describe('FormDefinitionStore', () => {
     createFieldDefinition: ReturnType<typeof vi.fn>;
     deleteFieldDefinition: ReturnType<typeof vi.fn>;
     createTemplate: ReturnType<typeof vi.fn>;
+    updateTemplate: ReturnType<typeof vi.fn>;
     deleteTemplate: ReturnType<typeof vi.fn>;
     toggleTemplateStatus: ReturnType<typeof vi.fn>;
   };
@@ -45,6 +46,7 @@ describe('FormDefinitionStore', () => {
       createFieldDefinition: vi.fn(),
       deleteFieldDefinition: vi.fn(),
       createTemplate: vi.fn(),
+      updateTemplate: vi.fn(),
       deleteTemplate: vi.fn(),
       toggleTemplateStatus: vi.fn(),
     };
@@ -106,5 +108,36 @@ describe('FormDefinitionStore', () => {
     await new Promise((r) => setTimeout(r, 20));
 
     expect(store.fieldDefinitions().some((f) => f.fieldDefinitionId === 2)).toBe(true);
+  });
+
+  it('should update an existing template in state via updateTemplate', async () => {
+    store.loadAll();
+    await new Promise((r) => setTimeout(r, 20));
+
+    const updatedTmpl: FormTemplate = {
+      ...mockTemplate,
+      templateName: 'Updated State Championship',
+    };
+    formServiceMock.updateTemplate = vi.fn().mockReturnValue(of(updatedTmpl));
+
+    store.updateTemplate({
+      id: 1,
+      dto: { templateName: 'Updated State Championship' },
+    });
+    await new Promise((r) => setTimeout(r, 20));
+
+    const found = store.templates().find((t) => t.templateId === 1);
+    expect(found?.templateName).toBe('Updated State Championship');
+  });
+
+  it('should remove template from state via deleteTemplate', async () => {
+    store.loadAll();
+    await new Promise((r) => setTimeout(r, 20));
+
+    formServiceMock.deleteTemplate.mockReturnValue(of({ message: 'Deleted' }));
+    store.deleteTemplate(1);
+    await new Promise((r) => setTimeout(r, 20));
+
+    expect(store.templates().find((t) => t.templateId === 1)).toBeUndefined();
   });
 });

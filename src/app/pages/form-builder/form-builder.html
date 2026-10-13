@@ -1,0 +1,597 @@
+<app-base-layout>
+  <div class="form-builder-container">
+    <!-- Top Bar -->
+    <header class="builder-header">
+      <div class="header-left">
+        <a routerLink="/form-definitions" class="btn-back" title="Back to Form Definitions">
+          <svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20">
+            <path
+              fill-rule="evenodd"
+              d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          Templates
+        </a>
+
+        <div class="template-title-box">
+          <input
+            type="text"
+            class="template-title-input"
+            [value]="builderStore.template()?.templateName || 'Untitled Registration Form'"
+            (change)="builderStore.updateTemplateMetadata({ templateName: $any($event.target).value })"
+            placeholder="Form Template Name"
+          />
+          <span class="badge-version">v{{ builderStore.template()?.version || '1.0.0' }}</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        @if (saveSuccessMessage()) {
+          <span class="save-toast">{{ saveSuccessMessage() }}</span>
+        }
+
+        <button
+          type="button"
+          class="btn btn-secondary btn-preview"
+          (click)="openLivePreview()"
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+          Live Preview
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-primary btn-save"
+          [disabled]="builderStore.isSaving()"
+          (click)="onSaveTemplate()"
+        >
+          @if (builderStore.isSaving()) {
+            <span class="spinner-small"></span>
+            Saving...
+          } @else {
+            <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18">
+              <path
+                d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l6-6a1 1 0 00-1.414-1.414l-5.293 5.293-2.293-2.293z"
+              />
+            </svg>
+            Save Template
+          }
+        </button>
+
+        @if (builderStore.template()?.id) {
+          <button
+            type="button"
+            class="btn btn-danger btn-delete-tmpl"
+            (click)="onDeleteTemplate()"
+            [disabled]="builderStore.isSaving()"
+            title="Delete this template"
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+              <path
+                fill-rule="evenodd"
+                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            Delete
+          </button>
+        }
+      </div>
+    </header>
+
+    <!-- Navigation Sub-Tabs -->
+    <div class="builder-nav-tabs">
+      <button
+        type="button"
+        class="nav-tab-btn"
+        [class.active]="activeTab() === 'canvas'"
+        (click)="activeTab.set('canvas')"
+      >
+        Form Canvas ({{ builderStore.fieldCount() }})
+      </button>
+
+      <button
+        type="button"
+        class="nav-tab-btn"
+        [class.active]="activeTab() === 'rules'"
+        (click)="activeTab.set('rules')"
+      >
+        Cross-Field Rules ({{ builderStore.validationCount() }})
+      </button>
+
+      <button
+        type="button"
+        class="nav-tab-btn"
+        [class.active]="activeTab() === 'settings'"
+        (click)="activeTab.set('settings')"
+      >
+        Template Settings
+      </button>
+    </div>
+
+    <!-- TAB 1: FORM CANVAS -->
+    @if (activeTab() === 'canvas') {
+      <div class="canvas-workspace">
+        <!-- Palette Toolbar -->
+        <div class="palette-bar">
+          <div class="palette-section">
+            <span class="palette-title">Standard Elements</span>
+            <div class="palette-buttons">
+              @for (p of paletteTypes; track p.type) {
+                <button
+                  type="button"
+                  class="palette-btn"
+                  (click)="onAddField(p.type, p.label)"
+                  title="Add {{ p.label }}"
+                >
+                  <span class="palette-icon">{{ p.icon }}</span>
+                  <span class="palette-label">{{ p.label }}</span>
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="palette-divider" role="separator" aria-orientation="vertical"></div>
+
+          <div class="palette-section library-palette-section">
+            <div class="palette-section-header">
+              <span class="palette-title">Custom Field Library</span>
+              <span class="library-count-badge">{{ formDefStore.fieldDefinitions().length }}</span>
+            </div>
+            <div class="palette-buttons library-chips-group">
+              @if (formDefStore.isLoading()) {
+                <span class="palette-hint">Loading library fields...</span>
+              } @else if (formDefStore.fieldDefinitions().length === 0) {
+                <span class="palette-hint">No custom fields registered in library</span>
+              } @else {
+                @for (def of formDefStore.fieldDefinitions(); track def.fieldDefinitionId) {
+                  <button
+                    type="button"
+                    class="palette-btn library-field-btn"
+                    (click)="onAddFieldFromDefinition(def)"
+                    [title]="'Add ' + def.fieldLabel + ' (' + def.fieldType + ')'"
+                  >
+                    <span class="palette-icon library-icon">🏷</span>
+                    <span class="palette-label">{{ def.fieldLabel }}</span>
+                    <span class="library-type-tag">{{ def.fieldType }}</span>
+                  </button>
+                }
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- CDK Drop Canvas -->
+        <div
+          class="fields-canvas"
+          cdkDropList
+          (cdkDropListDropped)="onDropField($event)"
+        >
+          @for (field of builderStore.template()?.fields; track field.id; let i = $index) {
+            <div
+              class="field-card"
+              [class.system-field]="field.isSystemField"
+              [class.col-span-2]="field.columnSpan === 2"
+              [class.col-span-1]="field.columnSpan !== 2"
+              cdkDrag
+            >
+              <!-- Field Drag Handle & Header -->
+              <div class="field-card-header">
+                <div class="field-header-left">
+                  <div class="drag-handle" cdkDragHandle title="Drag to reorder">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                      <circle cx="9" cy="6" r="1.5" />
+                      <circle cx="15" cy="6" r="1.5" />
+                      <circle cx="9" cy="12" r="1.5" />
+                      <circle cx="15" cy="12" r="1.5" />
+                      <circle cx="9" cy="18" r="1.5" />
+                      <circle cx="15" cy="18" r="1.5" />
+                    </svg>
+                  </div>
+
+                  <span class="field-index">#{{ i + 1 }}</span>
+                  <span class="type-badge">{{ field.type }}</span>
+
+                  @if (field.isSystemField) {
+                    <span class="system-badge" title="Locked core identity field">System Field</span>
+                  } @else if (field.fieldDefinitionId) {
+                    <span class="library-badge" title="Linked to Library Definition #{{ field.fieldDefinitionId }}">
+                      Library Field
+                    </span>
+                  }
+
+                  <span class="field-label-text">{{ field.label }}</span>
+                </div>
+
+                <div class="field-header-actions">
+                  <button
+                    type="button"
+                    class="action-pill-btn"
+                    (click)="onToggleColumnSpan(field.id)"
+                    title="Toggle Grid Span"
+                  >
+                    {{ field.columnSpan === 2 ? 'Span: 2 Columns' : 'Span: 1 Column' }}
+                  </button>
+
+                  @if (!field.isSystemField) {
+                    <button
+                      type="button"
+                      class="btn-icon-action"
+                      (click)="onDuplicateField(field.id)"
+                      title="Duplicate field"
+                    >
+                      <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                        <path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z" />
+                        <path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z" />
+                      </svg>
+                    </button>
+
+                    <button
+                      type="button"
+                      class="btn-icon-action delete-action"
+                      (click)="onRemoveField(field.id)"
+                      title="Delete field"
+                    >
+                      <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                        <path
+                          fill-rule="evenodd"
+                          d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- Field Content Settings -->
+              <div class="field-card-body">
+                <div class="form-row">
+                  <div class="form-col">
+                    <label class="input-label">Field Label</label>
+                    <input
+                      type="text"
+                      class="field-input"
+                      [value]="field.label"
+                      (input)="onUpdateFieldLabel(field.id, $event)"
+                    />
+                  </div>
+
+                  <div class="form-col">
+                    <label class="input-label">Payload Key</label>
+                    <input
+                      type="text"
+                      class="field-input disabled-input"
+                      [value]="field.key"
+                      readonly
+                    />
+                  </div>
+                </div>
+
+                <div class="form-row-compact">
+                  <label class="checkbox-setting">
+                    <input
+                      type="checkbox"
+                      [checked]="field.required"
+                      [disabled]="field.isSystemField"
+                      (change)="onToggleFieldRequired(field.id, $event)"
+                    />
+                    <span>Required Field</span>
+                  </label>
+
+                  <div class="field-placeholder-col">
+                    <input
+                      type="text"
+                      class="field-input-sm"
+                      [placeholder]="'Placeholder hint...'"
+                      [value]="field.placeholder || ''"
+                      (input)="onUpdateFieldPlaceholder(field.id, $event)"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- TAB 2: CROSS-FIELD COMPOUND RULES -->
+    @if (activeTab() === 'rules') {
+      <div class="rules-workspace">
+        <div class="rules-header">
+          <div>
+            <h3 class="rules-title">Cross-Field Compliance Rules</h3>
+            <p class="rules-subtitle">
+              Compound conditions evaluated in real-time. If WHEN conditions are met, THEN conditions must evaluate to true.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="openAddRuleModal()"
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+              <path d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" />
+            </svg>
+            Add Compliance Rule
+          </button>
+        </div>
+
+        <div class="rules-list">
+          @if ((builderStore.template()?.validations || []).length === 0) {
+            <div class="empty-rules">
+              <p>No cross-field rules configured yet.</p>
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                (click)="openAddRuleModal()"
+              >
+                Create your first rule
+              </button>
+            </div>
+          } @else {
+            @for (rule of builderStore.template()?.validations; track rule.id) {
+              <div class="rule-card">
+                <div class="rule-card-header">
+                  <h4 class="rule-name">{{ rule.name }}</h4>
+                  <button
+                    type="button"
+                    class="btn-icon-action delete-action"
+                    (click)="onRemoveCompoundRule(rule.id)"
+                    title="Delete rule"
+                  >
+                    <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                      <path
+                        fill-rule="evenodd"
+                        d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                <div class="rule-logic">
+                  <div class="rule-condition-block when-block">
+                    <span class="block-tag">WHEN:</span>
+                    <span class="condition-text">
+                      @for (c of rule.when.conditions; track $index) {
+                        <span>
+                          {{ $any(c).fieldId }} {{ $any(c).operator }} {{ $any(c).value }}
+                        </span>
+                      }
+                    </span>
+                  </div>
+
+                  <div class="rule-condition-block then-block">
+                    <span class="block-tag">THEN MUST BE:</span>
+                    <span class="condition-text">
+                      @for (c of rule.then.conditions; track $index) {
+                        <span>
+                          {{ $any(c).fieldId }} {{ $any(c).operator }} {{ $any(c).value }}
+                        </span>
+                      }
+                    </span>
+                  </div>
+                </div>
+
+                <div class="rule-error-msg">
+                  <span class="error-label">Error Message:</span>
+                  <span class="error-value">"{{ rule.errorMessage }}"</span>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    }
+
+    <!-- TAB 3: TEMPLATE SETTINGS -->
+    @if (activeTab() === 'settings') {
+      <div class="settings-workspace">
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <h3 class="settings-title">Template General Settings</h3>
+            <p class="settings-sub">
+              Configure sport discipline, tournament category, and registration metadata.
+            </p>
+          </div>
+
+          <div class="settings-form">
+            <div class="form-group">
+              <label class="form-label" for="settingTemplateName">Template Name *</label>
+              <input
+                id="settingTemplateName"
+                type="text"
+                class="field-input"
+                [value]="builderStore.template()?.templateName || ''"
+                (input)="onUpdateTemplateSettings({ templateName: $any($event.target).value })"
+                placeholder="e.g. 2026 National Sambo Registration"
+              />
+            </div>
+
+            <div class="form-row">
+              <div class="form-group form-col">
+                <label class="form-label" for="settingSportType">Sport Discipline</label>
+                <select
+                  id="settingSportType"
+                  class="field-input"
+                  [value]="builderStore.template()?.sportType || 1"
+                  (change)="onUpdateTemplateSettings({ sportType: +$any($event.target).value })"
+                >
+                  <option [value]="1">Sambo</option>
+                  <option [value]="2">MMA</option>
+                  <option [value]="3">Brazilian Jiu-Jitsu</option>
+                  <option [value]="4">Judo</option>
+                  <option [value]="5">Muay Thai</option>
+                </select>
+              </div>
+
+              <div class="form-group form-col">
+                <label class="form-label" for="settingTournamentType">Tournament Level</label>
+                <select
+                  id="settingTournamentType"
+                  class="field-input"
+                  [value]="builderStore.template()?.tournamentType || 1"
+                  (change)="onUpdateTemplateSettings({ tournamentType: +$any($event.target).value })"
+                >
+                  <option [value]="1">National</option>
+                  <option [value]="2">State</option>
+                  <option [value]="3">District</option>
+                  <option [value]="4">Club / Invitational</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="settingDescription">Template Description</label>
+              <textarea
+                id="settingDescription"
+                rows="3"
+                class="field-input"
+                [value]="builderStore.template()?.description || ''"
+                (input)="onUpdateTemplateSettings({ description: $any($event.target).value })"
+                placeholder="Provide details or athlete requirements for this tournament form..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- LIVE PREVIEW MODAL -->
+    @if (builderStore.isPreviewOpen()) {
+      <div class="preview-modal-backdrop" (click)="closeLivePreview()">
+        <div class="preview-modal-card" (click)="$event.stopPropagation()">
+          <div class="preview-modal-header">
+            <div>
+              <h3 class="preview-modal-title">Live Registration Form Preview</h3>
+              <p class="preview-modal-sub">
+                Interactive real-time preview powered by <code>DynamicFormRendererComponent</code>
+              </p>
+            </div>
+            <button
+              type="button"
+              class="btn-close"
+              (click)="closeLivePreview()"
+              title="Close Preview"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div class="preview-modal-body">
+            @if (builderStore.template()) {
+              <app-dynamic-form-renderer
+                [schema]="builderStore.template()!"
+                (formSubmit)="onPreviewSubmit($event)"
+              ></app-dynamic-form-renderer>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ADD RULE MODAL -->
+    @if (isRuleModalOpen()) {
+      <div class="preview-modal-backdrop" (click)="closeRuleModal()">
+        <div class="rule-modal-card" (click)="$event.stopPropagation()">
+          <div class="preview-modal-header">
+            <h3 class="preview-modal-title">Add Cross-Field Compliance Rule</h3>
+            <button type="button" class="btn-close" (click)="closeRuleModal()">✕</button>
+          </div>
+
+          <form [formGroup]="ruleForm" (ngSubmit)="onSaveRule()" class="rule-modal-form">
+            <div class="modal-form-group">
+              <label class="modal-label">Rule Name</label>
+              <input
+                type="text"
+                formControlName="name"
+                class="field-input"
+                placeholder="e.g. Minor Consent Requirement"
+              />
+            </div>
+
+            <div class="modal-form-group">
+              <label class="modal-label">Error Message If Non-Compliant</label>
+              <input
+                type="text"
+                formControlName="errorMessage"
+                class="field-input"
+                placeholder="e.g. Minors under 18 must have guardian consent."
+              />
+            </div>
+
+            <!-- WHEN -->
+            <div class="rule-builder-section">
+              <h4 class="section-heading">WHEN (Trigger Condition):</h4>
+              <div class="builder-columns">
+                <select formControlName="whenField" class="field-input">
+                  <option value="" disabled>Select Trigger Field</option>
+                  @for (f of builderStore.template()?.fields; track f.id) {
+                    <option [value]="f.key">{{ f.label }} ({{ f.key }})</option>
+                  }
+                </select>
+
+                <select formControlName="whenOperator" class="field-input">
+                  <option value="equals">equals</option>
+                  <option value="notEquals">not equals</option>
+                  <option value="greaterThan">greater than</option>
+                  <option value="lessThan">less than</option>
+                </select>
+
+                <input
+                  type="text"
+                  formControlName="whenValue"
+                  class="field-input"
+                  placeholder="Target value"
+                />
+              </div>
+            </div>
+
+            <!-- THEN -->
+            <div class="rule-builder-section">
+              <h4 class="section-heading">THEN (Enforced Condition):</h4>
+              <div class="builder-columns">
+                <select formControlName="thenField" class="field-input">
+                  <option value="" disabled>Select Target Field</option>
+                  @for (f of builderStore.template()?.fields; track f.id) {
+                    <option [value]="f.key">{{ f.label }} ({{ f.key }})</option>
+                  }
+                </select>
+
+                <select formControlName="thenOperator" class="field-input">
+                  <option value="equals">equals</option>
+                  <option value="notEquals">not equals</option>
+                  <option value="greaterThan">greater than</option>
+                  <option value="lessThan">less than</option>
+                </select>
+
+                <input
+                  type="text"
+                  formControlName="thenValue"
+                  class="field-input"
+                  placeholder="Required value"
+                />
+              </div>
+            </div>
+
+            <div class="modal-actions">
+              <button type="button" class="btn btn-secondary" (click)="closeRuleModal()">
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary" [disabled]="ruleForm.invalid">
+                Save Rule
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+  </div>
+</app-base-layout>

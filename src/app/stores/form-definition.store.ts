@@ -37,7 +37,8 @@ const initialState: FormDefinitionState = {
 export const FormDefinitionStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
-  withComputed(({ fieldDefinitions, templates, searchQuery }) => ({
+  withComputed(({ fieldDefinitions, templates, searchQuery, status }) => ({
+    isLoading: computed(() => status() === 'loading'),
     filteredFieldDefinitions: computed(() => {
       const q = searchQuery().toLowerCase().trim();
       if (!q) return fieldDefinitions();
@@ -172,6 +173,26 @@ export const FormDefinitionStore = signalStore(
             }),
             catchError((err) => {
               const error = err?.error?.message || 'Failed to create template';
+              patchState(store, { status: 'error', error });
+              return of(null);
+            }),
+          ),
+        ),
+      ),
+    ),
+    updateTemplate: rxMethod<{ id: number; dto: UpdateTemplateDto }>(
+      pipe(
+        tap(() => patchState(store, { status: 'loading', error: null })),
+        switchMap(({ id, dto }) =>
+          formService.updateTemplate(id, dto).pipe(
+            tap((updated) => {
+              patchState(store, (state) => ({
+                templates: state.templates.map((t) => (t.templateId === id ? updated : t)),
+                status: 'success' as const,
+              }));
+            }),
+            catchError((err) => {
+              const error = err?.error?.message || 'Failed to update template';
               patchState(store, { status: 'error', error });
               return of(null);
             }),
