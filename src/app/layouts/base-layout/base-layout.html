@@ -1,7 +1,12 @@
-<div class="layout-container">
-  <app-base-header></app-base-header>
-  <main class="layout-content">
-    <ng-content></ng-content>
-  </main>
-  <app-base-footer></app-base-footer>
+<div class="layout-container" [class.authenticated]="authStore.isAuthenticated()">
+  @if (authStore.isAuthenticated()) {
+    <app-base-sidebar></app-base-sidebar>
+  }
+  <div class="main-column">
+    <app-base-header></app-base-header>
+    <main class="layout-content">
+      <ng-content></ng-content>
+    </main>
+    <app-base-footer></app-base-footer>
+  </div>
 </div>

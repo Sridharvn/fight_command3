@@ -1,191 +1,110 @@
 <app-base-layout>
-  <div class="dashboard">
-    <!-- Left Column: Main Counter and Controls -->
-    <section class="counter-panel">
-      <!-- Display Card -->
-      <div class="glass-card counter-display-card">
-        <span class="count-label" id="counter-label">Current Telemetry</span>
-        <div 
-          class="count-number" 
-          [class.pulse]="isPulsing()"
-          aria-labelledby="counter-label"
-          aria-live="polite">
-          {{ store.count() }}
-        </div>
-        
-        <div class="badges-row">
-          <!-- Odd/Even status badge -->
-          @if (store.oddOrEven() === 'even') {
-            <span class="status-badge even" aria-label="Current value is even">
-              <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor">
-                <circle cx="4" cy="4" r="4"/>
-              </svg>
-              Even
-            </span>
-          } @else {
-            <span class="status-badge odd" aria-label="Current value is odd">
-              <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor">
-                <path d="M4 0 L8 8 L0 8 Z"/>
-              </svg>
-              Odd
-            </span>
-          }
-
-          <!-- Active Step Size badge -->
-          <span class="status-badge even" style="color: var(--accent-cyan); background: rgba(135, 230, 245, 0.05); border-color: rgba(135, 230, 245, 0.15)">
-            Step: {{ store.step() }}
-          </span>
-        </div>
-      </div>
-
-      <!-- Primary Control Buttons (Large tactile layout) -->
-      <div class="primary-controls">
-        <button 
-          class="control-btn btn-decrement" 
-          (click)="store.decrement()"
-          aria-label="Decrement count by step size">
-          - <span>Dec</span>
-        </button>
-        <button 
-          class="control-btn btn-increment" 
-          (click)="store.increment()"
-          aria-label="Increment count by step size">
-          + <span>Inc</span>
-        </button>
-      </div>
-
-      <!-- Secondary Utilities and Custom Step Configuration -->
-      <div class="glass-card utility-controls">
-        <!-- Undo / Redo / Reset Group -->
-        <div class="history-operations">
-          <button 
-            class="util-btn" 
-            [disabled]="!store.canUndo()" 
-            (click)="store.undo()"
-            aria-label="Undo last action">
-            <!-- Undo Arrow Icon -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 7v6h6"/>
-              <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>
-            </svg>
-            Undo
-          </button>
-
-          <button 
-            class="util-btn" 
-            [disabled]="!store.canRedo()" 
-            (click)="store.redo()"
-            aria-label="Redo undone action">
-            <!-- Redo Arrow Icon -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 7v6h-6"/>
-              <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/>
-            </svg>
-            Redo
-          </button>
-
-          <button 
-            class="util-btn btn-reset" 
-            [disabled]="store.count() === 0" 
-            (click)="store.reset()"
-            aria-label="Reset count to zero">
-            <!-- Reset Circle Icon -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-            </svg>
-            Reset
-          </button>
-        </div>
-
-        <!-- Step size field -->
-        <div class="step-control-box">
-          <label for="step-input">Step size</label>
-          <div class="step-actions">
-            <button class="step-btn" (click)="adjustStep(-1)" aria-label="Decrease step size">-</button>
-            <input 
-              id="step-input" 
-              type="number" 
-              min="1" 
-              [value]="store.step()" 
-              (input)="onStepChange($event)"
-              aria-label="Numeric step size value" />
-            <button class="step-btn" (click)="adjustStep(1)" aria-label="Increase step size">+</button>
+  <div class="home-container">
+    <!-- Hero / Welcome Banner -->
+    <header class="dashboard-hero">
+      <div class="hero-content">
+        @if (authStore.isAuthenticated()) {
+          <span class="hero-badge">Authenticated Portal</span>
+          <h1 class="hero-title">Welcome back, {{ authStore.userFullName() }}</h1>
+          <p class="hero-subtitle">
+            Manage your martial arts tournaments, user registrations, regional assignments, and
+            security roles.
+          </p>
+        } @else {
+          <span class="hero-badge">Tournament Operations Platform</span>
+          <h1 class="hero-title">Martial Arts Events Manager</h1>
+          <p class="hero-subtitle">
+            Enterprise command center for martial arts tournaments, bracket management,
+            registrations, and official scoring.
+          </p>
+          <div class="hero-actions">
+            <a [routerLink]="appRoutes.login" class="btn btn-primary">Sign In to Dashboard</a>
           </div>
-        </div>
+        }
       </div>
-    </section>
+    </header>
 
-    <!-- Right Column: Live Telemetry, Audit Logs, and Feed -->
-    <section class="telemetry-panel">
-      <!-- Telemetry Metrics Grid -->
-      <div class="stats-grid">
-        <div class="stat-widget">
-          <span class="stat-label">Undo Stack</span>
-          <span class="stat-value">{{ store.past().length }}</span>
+    <!-- Quick Navigation & Modules Grid -->
+    <section class="dashboard-grid" aria-label="Quick management modules">
+      <article class="module-card">
+        <div class="module-icon icon-users" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
         </div>
-        <div class="stat-widget">
-          <span class="stat-label">Redo Stack</span>
-          <span class="stat-value">{{ store.future().length }}</span>
-        </div>
-      </div>
-
-      <!-- Live Action Feed / Audit Log -->
-      <div class="glass-card audit-log-section">
-        <div class="section-header">
-          <h2>Action Feed Log</h2>
-          <button 
-            class="clear-btn" 
-            [disabled]="store.history().length === 0" 
-            (click)="store.clearHistory()"
-            aria-label="Clear action feed history">
-            Clear Feed
-          </button>
-        </div>
-
-        <div class="log-list">
-          @for (entry of store.history(); track entry.id) {
-            <div class="log-item">
-              <span class="item-action">{{ entry.action }}</span>
-              <div class="item-meta">
-                <span class="item-transition" aria-label="Value transitioned from {{ entry.valueBefore }} to {{ entry.valueAfter }}">
-                  {{ entry.valueBefore }} → {{ entry.valueAfter }}
-                </span>
-                <span class="item-time" aria-label="Logged at {{ entry.timestamp }}">{{ entry.timestamp }}</span>
-              </div>
-            </div>
-          } @empty {
-            <div class="empty-state">
-              <!-- Feed Icon -->
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                <line x1="9" y1="9" x2="15" y2="9"/>
-                <line x1="9" y1="13" x2="15" y2="13"/>
-                <line x1="9" y1="17" x2="13" y2="17"/>
+        <div class="module-body">
+          <h2 class="module-title">User Management</h2>
+          <p class="module-description">
+            Maintain participants, tournament organizers, and staff credentials with regional
+            geographic hierarchy.
+          </p>
+          @if (authStore.isAuthenticated()) {
+            <a [routerLink]="appRoutes.users" class="module-link">
+              Open Users
+              <svg viewBox="0 0 20 20" fill="currentColor">
+                <path
+                  fill-rule="evenodd"
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                  clip-rule="evenodd"
+                />
               </svg>
-              <p>No actions logged yet.</p>
-            </div>
+            </a>
+          } @else {
+            <span class="module-locked">Requires Sign In</span>
           }
         </div>
-      </div>
-    </section>
+      </article>
 
-    <!-- Keyboard Shortcuts Footer -->
-    <footer class="shortcuts-footer">
-      <div class="shortcut">
-        <kbd>▲</kbd> / <kbd>+</kbd> Increment
-      </div>
-      <div class="shortcut">
-        <kbd>▼</kbd> / <kbd>-</kbd> Decrement
-      </div>
-      <div class="shortcut">
-        <kbd>R</kbd> Reset
-      </div>
-      <div class="shortcut">
-        <kbd>U</kbd> Undo
-      </div>
-      <div class="shortcut">
-        <kbd>Y</kbd> Redo
-      </div>
-    </footer>
+      <article class="module-card">
+        <div class="module-icon icon-roles" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+        </div>
+        <div class="module-body">
+          <h2 class="module-title">Role Management</h2>
+          <p class="module-description">
+            Configure granular permissions, delegation capabilities, and administrative scopes from
+            district to global.
+          </p>
+          @if (authStore.isAuthenticated()) {
+            <a [routerLink]="appRoutes.roles" class="module-link">
+              Open Roles
+              <svg viewBox="0 0 20 20" fill="currentColor">
+                <path
+                  fill-rule="evenodd"
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </a>
+          } @else {
+            <span class="module-locked">Requires Sign In</span>
+          }
+        </div>
+      </article>
+
+      <article class="module-card">
+        <div class="module-icon icon-events" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+        </div>
+        <div class="module-body">
+          <h2 class="module-title">Tournaments & Brackets</h2>
+          <p class="module-description">
+            Coordinate upcoming martial arts competitions, weight categories, tatami rings, and
+            participant weigh-ins.
+          </p>
+          <span class="module-badge">Active Tournaments</span>
+        </div>
+      </article>
+    </section>
   </div>
 </app-base-layout>

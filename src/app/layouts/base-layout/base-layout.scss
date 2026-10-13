@@ -4,10 +4,26 @@
 }
 
 .layout-container {
-  display: grid;
-  grid-template-rows: auto 1fr auto;
   min-height: 100dvh;
   box-sizing: border-box;
+
+  &.authenticated {
+    display: flex;
+    width: 100%;
+  }
+
+  .main-column {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    min-height: 100dvh;
+
+    .layout-content {
+      flex: 1;
+      width: 100%;
+    }
+  }
 }
 
 .layout-content {
