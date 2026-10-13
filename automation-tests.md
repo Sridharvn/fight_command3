@@ -192,6 +192,48 @@ The application provides an accessible login screen (`/login`) allowing users to
   - Tokens cleared, user redirected to `/login`, header switches to public "Sign In" button.
 - **Final state:** Session terminated; unauthenticated view displayed.
 
+**HF-022: Rule Management - List Global Compound Rules**
+- **Preconditions:** User is authenticated on `/rule-management`.
+- **User/System actions:** Page loads.
+- **Expected results:** `GET /templates/global-compound-rules` is called; rules are rendered in a clean grid showing rule name, description, condition logic summary, error message, and active status.
+- **Final state:** Rules displayed.
+
+**HF-023: Rule Management - Create Global Compound Rule**
+- **Preconditions:** User is authenticated on `/rule-management`.
+- **User/System actions:** User clicks "Create Rule", fills name, description, adds WHEN condition (`fieldId`, `operator`, `value`), adds THEN action assertion, enters error message, and clicks "Create Rule".
+- **Expected results:** `POST /templates/global-compound-rules` is sent with payload; modal closes; rules list refreshes with the new rule.
+- **Final state:** Rule saved and visible in grid.
+
+**HF-024: Rule Management - Update and Delete Compound Rule**
+- **Preconditions:** Rule exists in list.
+- **User/System actions:** User edits rule fields (`PUT /templates/global-compound-rules/:id`) or clicks delete and confirms dialog (`DELETE /templates/global-compound-rules/:id`).
+- **Expected results:** API call succeeds; UI state updates accordingly.
+- **Final state:** Rule updated or removed from state.
+
+**HF-025: Form Definitions - List Field Definitions Library**
+- **Preconditions:** User is authenticated on `/form-definitions`.
+- **User/System actions:** User selects "Field Library" tab.
+- **Expected results:** `GET /templates/field-definitions` is called; table displays registered field definitions (machine key, human label, input type, filterable/sortable badges).
+- **Final state:** Field definitions listed.
+
+**HF-026: Form Definitions - Create Reusable Field Definition**
+- **Preconditions:** User on "Field Library" tab.
+- **User/System actions:** User clicks "Create Field", enters `fieldName` (snake_case), `fieldLabel`, selects `fieldType` (e.g. `select`), enters options if applicable, toggles filterable/sortable flags, and submits.
+- **Expected results:** `POST /templates/field-definitions` is sent; modal closes; new field definition appears in list.
+- **Final state:** Field definition created.
+
+**HF-027: Form Definitions - List Form Templates**
+- **Preconditions:** User on `/form-definitions` under "Form Templates" tab.
+- **User/System actions:** Page loads.
+- **Expected results:** `GET /templates` is called; templates are displayed with name, sport type, tournament type, preset/custom badges, active status toggle, and fields count.
+- **Final state:** Form templates listed.
+
+**HF-028: Form Definitions - Create Custom Form Template**
+- **Preconditions:** Field definitions and compound rules exist.
+- **User/System actions:** User clicks "Create Template", chooses Sport Type, Tournament Type, selects base parent preset or adds fields from library, attaches compound rules, and submits.
+- **Expected results:** `POST /templates` is sent; template is created with `formSchema`; modal closes; template listed.
+- **Final state:** Template created.
+
 ---
 
 ### Negative Flows

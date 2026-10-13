@@ -3,6 +3,8 @@ export const APP_ROUTES = {
   login: '/login',
   users: '/users',
   roles: '/roles',
+  ruleManagement: '/rule-management',
+  formDefinitions: '/form-definitions',
   events: '/events',
 } as const;
 

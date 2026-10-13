@@ -1,0 +1,387 @@
+<div class="form-definitions-container">
+  <header class="page-header">
+    <div class="header-content">
+      <div class="title-row">
+        <h1 class="page-title">Form Definitions</h1>
+      </div>
+      <p class="page-subtitle">
+        Manage modular field schemas in the master Field Library and construct full tournament registration form templates with attached compound rules.
+      </p>
+    </div>
+
+    <div class="header-actions">
+      @if (formStore.activeTab() === 'templates') {
+        <button type="button" class="btn-create" (click)="openTemplateModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          Create Template
+        </button>
+      } @else {
+        <button type="button" class="btn-create" (click)="openFieldModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          Create Field
+        </button>
+      }
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <div class="tabs-nav" role="tablist">
+    <button
+      type="button"
+      role="tab"
+      class="tab-btn"
+      [class.active]="formStore.activeTab() === 'templates'"
+      [attr.aria-selected]="formStore.activeTab() === 'templates'"
+      (click)="switchTab('templates')"
+    >
+      Form Templates ({{ formStore.templates().length }})
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="tab-btn"
+      [class.active]="formStore.activeTab() === 'fields'"
+      [attr.aria-selected]="formStore.activeTab() === 'fields'"
+      (click)="switchTab('fields')"
+    >
+      Field Library ({{ formStore.fieldDefinitions().length }})
+    </button>
+  </div>
+
+  <div class="controls-bar">
+    <div class="search-box">
+      <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+      <input
+        type="search"
+        [formControl]="searchControl"
+        [placeholder]="formStore.activeTab() === 'templates' ? 'Search form templates by name or type...' : 'Search reusable field definitions by label, key, or type...'"
+        class="search-input"
+        aria-label="Search"
+      />
+    </div>
+  </div>
+
+  <!-- TAB 1: FORM TEMPLATES -->
+  @if (formStore.activeTab() === 'templates') {
+    @if (formStore.filteredTemplates().length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <h3>No Form Templates Found</h3>
+        <p>Create tournament registration templates to assemble fields and enforce validation rules.</p>
+        <button type="button" class="btn-primary" (click)="openTemplateModal()">Create First Template</button>
+      </div>
+    } @else {
+      <div class="templates-grid">
+        @for (tmpl of formStore.filteredTemplates(); track tmpl.templateId) {
+          <div class="template-card">
+            <div class="card-header">
+              <div class="title-group">
+                <h3 class="template-name">{{ tmpl.templateName }}</h3>
+                <div class="badges-row">
+                  <span class="type-badge" [class.preset]="tmpl.templateType === 'PRESET'">
+                    {{ tmpl.templateType }}
+                  </span>
+                  <span class="sport-badge">Sport #{{ tmpl.sportType }}</span>
+                  <span class="status-indicator" [class.active]="tmpl.isActive">
+                    {{ tmpl.isActive ? 'Active' : 'Draft' }}
+                  </span>
+                </div>
+              </div>
+
+              @if (tmpl.templateType === 'CUSTOM') {
+                <button
+                  type="button"
+                  class="btn-delete"
+                  (click)="onDeleteTemplate(tmpl.templateId)"
+                  title="Delete template"
+                  aria-label="Delete template"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
+                </button>
+              }
+            </div>
+
+            <div class="card-stats">
+              <div class="stat-item">
+                <span class="stat-label">Attached Fields</span>
+                <span class="stat-value">{{ tmpl.fields?.length || 0 }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Compound Rules</span>
+                <span class="stat-value">{{ tmpl.formSchema?.compoundRules?.length || 0 }}</span>
+              </div>
+            </div>
+
+            <div class="card-footer">
+              <button
+                type="button"
+                class="btn-status-toggle"
+                (click)="onToggleTemplateStatus(tmpl.templateId, tmpl.isActive)"
+              >
+                {{ tmpl.isActive ? 'Deactivate' : 'Activate' }}
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+
+  <!-- TAB 2: FIELD LIBRARY -->
+  @if (formStore.activeTab() === 'fields') {
+    @if (formStore.filteredFieldDefinitions().length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">🗂️</div>
+        <h3>No Field Definitions Found</h3>
+        <p>Register reusable field types (e.g. Weight, DOB, Medical Certificate, Belt Rank) in the master library.</p>
+        <button type="button" class="btn-primary" (click)="openFieldModal()">Create New Field</button>
+      </div>
+    } @else {
+      <div class="table-card">
+        <table class="fields-table">
+          <thead>
+            <tr>
+              <th>FIELD LABEL</th>
+              <th>KEY (SNAKE_CASE)</th>
+              <th>DATA TYPE</th>
+              <th>FLAGS</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (field of formStore.filteredFieldDefinitions(); track field.fieldDefinitionId) {
+              <tr>
+                <td class="primary-cell">
+                  <strong>{{ field.fieldLabel }}</strong>
+                </td>
+                <td class="key-cell">
+                  <code>{{ field.fieldName }}</code>
+                </td>
+                <td>
+                  <span class="type-pill {{ field.fieldType }}">{{ field.fieldType }}</span>
+                </td>
+                <td>
+                  <div class="flags-group">
+                    @if (field.isFilterable) { <span class="flag-badge">Filterable</span> }
+                    @if (field.isSortable) { <span class="flag-badge">Sortable</span> }
+                    @if (field.isSearchable) { <span class="flag-badge">Searchable</span> }
+                  </div>
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    class="btn-delete"
+                    (click)="onDeleteField(field.fieldDefinitionId)"
+                    title="Delete field"
+                    aria-label="Delete field"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+</div>
+
+<!-- Modal: Create Field Definition -->
+@if (isFieldModalOpen()) {
+  <div class="modal-backdrop" (click)="closeFieldModal()" role="dialog" aria-modal="true" aria-labelledby="field-modal-title">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 id="field-modal-title" class="modal-title">Create Field Definition</h2>
+        <button type="button" class="btn-close" (click)="closeFieldModal()" aria-label="Close modal">×</button>
+      </div>
+
+      <form [formGroup]="fieldForm" (ngSubmit)="onSubmitField()" class="modal-body">
+        <div class="form-group">
+          <label for="fieldLabel" class="form-label">Field Label *</label>
+          <input
+            id="fieldLabel"
+            type="text"
+            formControlName="fieldLabel"
+            class="form-control"
+            placeholder="e.g., Medical Insurance Policy"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="fieldName" class="form-label">Field Key (snake_case) *</label>
+          <input
+            id="fieldName"
+            type="text"
+            formControlName="fieldName"
+            class="form-control"
+            placeholder="e.g., medical_insurance_policy"
+          />
+          @if (fieldForm.get('fieldName')?.touched && fieldForm.get('fieldName')?.hasError('pattern')) {
+            <span class="field-error">Key must be lowercase alphanumeric and underscores only</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="fieldType" class="form-label">Field Data Type *</label>
+          <select id="fieldType" formControlName="fieldType" class="form-control">
+            <option value="text">Single Line Text</option>
+            <option value="textarea">Multi-line Text</option>
+            <option value="number">Number</option>
+            <option value="date">Date</option>
+            <option value="select">Dropdown Select</option>
+            <option value="radio">Radio Buttons</option>
+            <option value="checkbox">Checkboxes</option>
+            <option value="file">File / Photo Upload</option>
+            <option value="boolean">Yes / No Toggle</option>
+          </select>
+        </div>
+
+        @if (['select', 'radio', 'checkbox'].includes(fieldForm.get('fieldType')?.value || '')) {
+          <div class="form-group">
+            <label for="optionsInput" class="form-label">Choice Options (comma-separated)</label>
+            <input
+              id="optionsInput"
+              type="text"
+              formControlName="optionsInput"
+              class="form-control"
+              placeholder="e.g., White Belt, Blue Belt, Purple Belt, Brown Belt, Black Belt"
+            />
+          </div>
+        }
+
+        <div class="checkbox-row">
+          <label class="checkbox-item">
+            <input type="checkbox" formControlName="isFilterable" />
+            <span>Filterable in Admin</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" formControlName="isSortable" />
+            <span>Sortable</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" formControlName="isSearchable" />
+            <span>Searchable</span>
+          </label>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" (click)="closeFieldModal()">Cancel</button>
+          <button type="submit" class="btn-submit" [disabled]="fieldForm.invalid || isSubmitting()">
+            {{ isSubmitting() ? 'Saving...' : 'Create Field' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Modal: Create Form Template -->
+@if (isTemplateModalOpen()) {
+  <div class="modal-backdrop" (click)="closeTemplateModal()" role="dialog" aria-modal="true" aria-labelledby="template-modal-title">
+    <div class="modal-card modal-large" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 id="template-modal-title" class="modal-title">Create Form Template</h2>
+        <button type="button" class="btn-close" (click)="closeTemplateModal()" aria-label="Close modal">×</button>
+      </div>
+
+      <form [formGroup]="templateForm" (ngSubmit)="onSubmitTemplate()" class="modal-body">
+        <div class="form-group">
+          <label for="templateName" class="form-label">Template Name *</label>
+          <input
+            id="templateName"
+            type="text"
+            formControlName="templateName"
+            class="form-control"
+            placeholder="e.g., 2026 National Sambo Registration Template"
+          />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="sportType" class="form-label">Sport Discipline</label>
+            <select id="sportType" formControlName="sportType" class="form-control">
+              <option [value]="1">Sambo</option>
+              <option [value]="2">MMA</option>
+              <option [value]="3">Brazilian Jiu-Jitsu</option>
+              <option [value]="4">Judo</option>
+              <option [value]="5">Muay Thai</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="tournamentType" class="form-label">Tournament Level</label>
+            <select id="tournamentType" formControlName="tournamentType" class="form-control">
+              <option [value]="1">National</option>
+              <option [value]="2">State</option>
+              <option [value]="3">District</option>
+              <option [value]="4">Club / Invitational</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Field Picker -->
+        <div class="picker-section">
+          <h4 class="picker-heading">Select Fields from Library</h4>
+          <p class="picker-desc">Choose which fields are included in this tournament form schema.</p>
+
+          <div class="picker-chips-grid">
+            @for (field of formStore.fieldDefinitions(); track field.fieldDefinitionId) {
+              <button
+                type="button"
+                class="field-picker-chip"
+                [class.selected]="templateForm.controls.selectedFieldIds.value?.includes(field.fieldDefinitionId)"
+                (click)="toggleFieldSelection(field.fieldDefinitionId)"
+              >
+                <span class="chip-label">{{ field.fieldLabel }}</span>
+                <span class="chip-type">{{ field.fieldType }}</span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Compound Rule Picker -->
+        <div class="picker-section">
+          <h4 class="picker-heading">Attach Validation Rules</h4>
+          <p class="picker-desc">Attach cross-field compound rules defined in Rule Management.</p>
+
+          <div class="picker-chips-grid">
+            @for (rule of ruleStore.rules(); track rule.ruleId) {
+              <button
+                type="button"
+                class="field-picker-chip rule-chip"
+                [class.selected]="templateForm.controls.selectedRuleIds.value?.includes(rule.ruleId)"
+                (click)="toggleRuleSelection(rule.ruleId)"
+              >
+                <span class="chip-label">{{ rule.ruleName }}</span>
+                <span class="chip-type">Rule #{{ rule.ruleId }}</span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" (click)="closeTemplateModal()">Cancel</button>
+          <button type="submit" class="btn-submit" [disabled]="templateForm.invalid || isSubmitting()">
+            {{ isSubmitting() ? 'Saving...' : 'Create Template' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

@@ -25,6 +25,18 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/roles/roles').then((m) => m.RolesPage),
   },
   {
+    path: toSegment(APP_ROUTES.ruleManagement),
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/rule-management/rule-management').then((m) => m.RuleManagementPage),
+  },
+  {
+    path: toSegment(APP_ROUTES.formDefinitions),
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/form-definitions/form-definitions').then((m) => m.FormDefinitionsPage),
+  },
+  {
     path: '**',
     redirectTo: '',
   },
