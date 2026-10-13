@@ -9,6 +9,39 @@
         </p>
       </div>
       <div class="header-actions">
+        <button
+          type="button"
+          class="btn btn-secondary export-csv-btn"
+          (click)="exportUsersToCsv()"
+          title="Export displayed users as CSV"
+        >
+          <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path
+              fill-rule="evenodd"
+              d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          Export CSV
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-secondary refresh-btn"
+          (click)="refreshUsers()"
+          title="Refresh user list"
+          aria-label="Refresh users list"
+        >
+          <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path
+              fill-rule="evenodd"
+              d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.047a1 1 0 011.885-.666A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          Refresh
+        </button>
+
         <button type="button" class="btn btn-primary create-user-btn" (click)="openCreateModal()">
           <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
             <path
@@ -37,37 +70,55 @@
         />
       </div>
 
-      <div class="status-filters" role="tablist" aria-label="Filter users by status">
-        <button
-          type="button"
-          role="tab"
-          class="status-tab"
-          [class.active]="usersStore.activeStatus() === 'active'"
-          [attr.aria-selected]="usersStore.activeStatus() === 'active'"
-          (click)="setStatus('active')"
-        >
-          Active
-        </button>
-        <button
-          type="button"
-          role="tab"
-          class="status-tab"
-          [class.active]="usersStore.activeStatus() === 'deleted'"
-          [attr.aria-selected]="usersStore.activeStatus() === 'deleted'"
-          (click)="setStatus('deleted')"
-        >
-          Deactivated
-        </button>
-        <button
-          type="button"
-          role="tab"
-          class="status-tab"
-          [class.active]="usersStore.activeStatus() === 'all'"
-          [attr.aria-selected]="usersStore.activeStatus() === 'all'"
-          (click)="setStatus('all')"
-        >
-          All
-        </button>
+      <div class="toolbar-right">
+        <div class="sort-control">
+          <label for="user-sort-select" class="sort-label">Sort By:</label>
+          <select
+            id="user-sort-select"
+            class="sort-select"
+            [value]="usersStore.sort()"
+            (change)="onSortChange($any($event.target).value)"
+            aria-label="Sort users list"
+          >
+            <option value="name-asc">Name (A-Z)</option>
+            <option value="name-desc">Name (Z-A)</option>
+            <option value="role">Role</option>
+            <option value="status">Status</option>
+          </select>
+        </div>
+
+        <div class="status-filters" role="tablist" aria-label="Filter users by status">
+          <button
+            type="button"
+            role="tab"
+            class="status-tab"
+            [class.active]="usersStore.activeStatus() === 'active'"
+            [attr.aria-selected]="usersStore.activeStatus() === 'active'"
+            (click)="setStatus('active')"
+          >
+            Active
+          </button>
+          <button
+            type="button"
+            role="tab"
+            class="status-tab"
+            [class.active]="usersStore.activeStatus() === 'deleted'"
+            [attr.aria-selected]="usersStore.activeStatus() === 'deleted'"
+            (click)="setStatus('deleted')"
+          >
+            Deactivated
+          </button>
+          <button
+            type="button"
+            role="tab"
+            class="status-tab"
+            [class.active]="usersStore.activeStatus() === 'all'"
+            [attr.aria-selected]="usersStore.activeStatus() === 'all'"
+            (click)="setStatus('all')"
+          >
+            All
+          </button>
+        </div>
       </div>
     </div>
 
@@ -110,6 +161,7 @@
               <tr>
                 <th scope="col">User</th>
                 <th scope="col">Role</th>
+                <th scope="col">Jurisdiction</th>
                 <th scope="col">Designation</th>
                 <th scope="col">Phone</th>
                 <th scope="col">Status</th>
@@ -117,7 +169,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (user of usersStore.users(); track user.id) {
+              @for (user of usersStore.sortedUsers(); track user.id) {
                 <tr>
                   <td>
                     <div class="user-identity">
@@ -133,6 +185,11 @@
                   <td>
                     <span class="badge badge-role">
                       {{ user.role.name }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge badge-jurisdiction" [title]="getJurisdiction(user)">
+                      {{ getJurisdiction(user) }}
                     </span>
                   </td>
                   <td>

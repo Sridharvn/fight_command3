@@ -247,8 +247,8 @@ export const FormBuilderStore = signalStore(
       if (!current) return;
 
       const target = current.fields.find((f) => f.id === fieldId);
-      if (target?.isSystemField) {
-        // Protected invariant: cannot delete Full Name or Email
+      if (target?.isSystemField || target?.isInherited) {
+        // Protected invariant: cannot delete Full Name, Email, or Inherited Preset fields
         return;
       }
 

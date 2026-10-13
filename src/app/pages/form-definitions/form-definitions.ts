@@ -3,13 +3,15 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { FormDefinitionStore } from '../../stores/form-definition.store';
 import { RuleStore } from '../../stores/rule.store';
 import { FieldType, FormTemplate } from '../../models/form-definition.models';
+import { FormDefinition, FormField, FormFieldType } from '../../models/dynamic-form.models';
+import { DynamicFormRendererComponent } from '../../components/dynamic-form-renderer/dynamic-form-renderer';
 
 import { RouterLink } from '@angular/router';
 import { BaseLayout } from '../../layouts/base-layout/base-layout';
 
 @Component({
   selector: 'app-form-definitions',
-  imports: [BaseLayout, ReactiveFormsModule, RouterLink],
+  imports: [BaseLayout, ReactiveFormsModule, RouterLink, DynamicFormRendererComponent],
   templateUrl: './form-definitions.html',
   styleUrl: './form-definitions.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -19,6 +21,10 @@ export class FormDefinitionsPage implements OnInit {
   protected readonly ruleStore = inject(RuleStore);
 
   readonly isFieldModalOpen = signal(false);
+  readonly isCreateTemplateModalOpen = signal(false);
+  readonly selectedBasePresetId = signal<number | null>(null);
+  readonly previewingTemplate = signal<FormTemplate | null>(null);
+  readonly previewFormDefinition = signal<FormDefinition | null>(null);
   readonly isSubmitting = signal(false);
 
   readonly searchControl = new FormControl('');
@@ -116,5 +122,72 @@ export class FormDefinitionsPage implements OnInit {
     if (confirm('Are you sure you want to delete this template?')) {
       this.formStore.deleteTemplate(id);
     }
+  }
+
+  // ── Template Creation Setup Modal ──────────────────────────────────────────
+  openCreateTemplateModal(): void {
+    this.selectedBasePresetId.set(null);
+    this.isCreateTemplateModalOpen.set(true);
+  }
+
+  closeCreateTemplateModal(): void {
+    this.isCreateTemplateModalOpen.set(false);
+  }
+
+  onSelectBasePreset(presetId: number | null): void {
+    this.selectedBasePresetId.set(presetId);
+  }
+
+  // ── Template Preview Modal ─────────────────────────────────────────────────
+  openPreviewModal(template: FormTemplate): void {
+    this.previewingTemplate.set(template);
+
+    const fields: FormField[] = (template.fields || []).map((tf) => ({
+      id: `field_${tf.fieldDefinitionId}`,
+      fieldDefinitionId: tf.fieldDefinitionId,
+      key: tf.fieldDefinition?.fieldName || `field_${tf.fieldDefinitionId}`,
+      label: tf.fieldLabelOverride || tf.fieldDefinition?.fieldLabel || 'Field',
+      type: (tf.fieldDefinition?.fieldType || 'text') as FormFieldType,
+      required: tf.isRequired,
+      columnSpan: 1,
+    }));
+
+    // Ensure Full Name & Email exist in preview
+    if (!fields.some((f) => f.key === 'fullName')) {
+      fields.unshift({
+        id: 'fullName',
+        key: 'fullName',
+        label: 'Full Name',
+        type: 'text',
+        required: true,
+        isSystemField: true,
+        columnSpan: 1,
+      });
+    }
+    if (!fields.some((f) => f.key === 'email')) {
+      fields.splice(1, 0, {
+        id: 'email',
+        key: 'email',
+        label: 'Email Address',
+        type: 'email',
+        required: true,
+        isSystemField: true,
+        columnSpan: 1,
+      });
+    }
+
+    this.previewFormDefinition.set({
+      id: template.templateId,
+      templateName: template.templateName,
+      sportType: template.sportType,
+      tournamentType: template.tournamentType,
+      fields,
+      validations: [],
+    });
+  }
+
+  closePreviewModal(): void {
+    this.previewingTemplate.set(null);
+    this.previewFormDefinition.set(null);
   }
 }

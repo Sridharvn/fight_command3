@@ -121,24 +121,70 @@ describe('FormDefinitionsPage', () => {
     expect(component.isFieldModalOpen()).toBe(false);
   });
 
-  it('should render Add Template link directing to Form Builder without a popup modal', () => {
+  it('should render Add Template button opening inheritance setup modal', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    const addTemplateBtn = compiled.querySelector('.create-template-btn') as HTMLAnchorElement;
+    const addTemplateBtn = compiled.querySelector('.create-template-btn') as HTMLButtonElement;
     expect(addTemplateBtn).toBeTruthy();
-    expect(addTemplateBtn.getAttribute('href')).toBe('/form-builder/new');
-    expect(compiled.querySelector('.template-modal-dialog')).toBeFalsy();
+    expect(component.isCreateTemplateModalOpen()).toBe(false);
+    addTemplateBtn.click();
+    expect(component.isCreateTemplateModalOpen()).toBe(true);
   });
 
-  it('should render Edit button on template card directing to /form-builder/:id', () => {
+  it('should render Edit button on custom template card directing to /form-builder/:id', () => {
+    templatesSignal.set([
+      {
+        templateId: 2,
+        templateName: 'Regional Championship Custom',
+        templateType: 'CUSTOM',
+        sportType: 1,
+        tournamentType: 1,
+        isActive: true,
+      },
+    ]);
+    fixture.detectChanges();
+
     const compiled = fixture.nativeElement as HTMLElement;
     const editBtn = compiled.querySelector('.btn-edit') as HTMLAnchorElement;
     expect(editBtn).toBeTruthy();
-    expect(editBtn.getAttribute('href')).toBe('/form-builder/1');
+    expect(editBtn.getAttribute('href')).toBe('/form-builder/2');
   });
 
-  it('should call deleteTemplate when confirming deletion', () => {
+  it('should call deleteTemplate when confirming deletion for custom template', () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     component.onDeleteTemplate(1);
     expect(formStoreMock.deleteTemplate).toHaveBeenCalledWith(1);
+  });
+
+  it('should handle template preview modal open and close', () => {
+    expect(component.previewingTemplate()).toBeNull();
+    component.openPreviewModal(mockTemplate);
+    expect(component.previewingTemplate()).toEqual(mockTemplate);
+    expect(component.previewFormDefinition()).toBeTruthy();
+    expect(component.previewFormDefinition()?.templateName).toBe(mockTemplate.templateName);
+
+    component.closePreviewModal();
+    expect(component.previewingTemplate()).toBeNull();
+    expect(component.previewFormDefinition()).toBeNull();
+  });
+
+  it('should handle template creation inheritance modal open and close', () => {
+    expect(component.isCreateTemplateModalOpen()).toBe(false);
+    component.openCreateTemplateModal();
+    expect(component.isCreateTemplateModalOpen()).toBe(true);
+
+    component.closeCreateTemplateModal();
+    expect(component.isCreateTemplateModalOpen()).toBe(false);
+  });
+
+  it('should safeguard PRESET templates: delete is hidden and clone link is rendered', () => {
+    templatesSignal.set([mockTemplate]);
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    // Template 1 is PRESET
+    expect(compiled.querySelector('.btn-delete')).toBeFalsy();
+    expect(compiled.querySelector('.btn-clone')).toBeTruthy();
+    const cloneBtn = compiled.querySelector('.btn-clone') as HTMLAnchorElement;
+    expect(cloneBtn.getAttribute('href')).toContain('cloneFrom=1');
   });
 });

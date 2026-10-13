@@ -1,10 +1,12 @@
-import { inject } from '@angular/core';
-import { signalStore, withState, withMethods, patchState } from '@ngrx/signals';
+import { computed, inject } from '@angular/core';
+import { signalStore, withState, withComputed, withMethods, patchState } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { pipe, of } from 'rxjs';
 import { switchMap, tap, catchError } from 'rxjs/operators';
 import { UserService } from '../services/user.service';
 import { CreateUserPayload, UpdateUserPayload, UserResponseModel } from '../models/user.models';
+
+export type UserSortOption = 'name-asc' | 'name-desc' | 'role' | 'status';
 
 export interface UsersState {
   users: UserResponseModel[];
@@ -14,6 +16,7 @@ export interface UsersState {
   totalPages: number;
   search: string;
   activeStatus: 'active' | 'deleted' | 'all';
+  sort: UserSortOption;
   status: 'idle' | 'loading' | 'success' | 'error';
   error: string | null;
 }
@@ -26,6 +29,7 @@ const initialState: UsersState = {
   totalPages: 1,
   search: '',
   activeStatus: 'active',
+  sort: 'name-asc',
   status: 'idle',
   error: null,
 };
@@ -33,6 +37,33 @@ const initialState: UsersState = {
 export const UsersStore = signalStore(
   { providedIn: 'root' },
   withState<UsersState>(initialState),
+  withComputed(({ users, sort }) => ({
+    sortedUsers: computed(() => {
+      const list = [...users()];
+      const s = sort();
+      return list.sort((a, b) => {
+        if (s === 'name-asc') {
+          const nameA = `${a.firstName} ${a.lastName}`.toLowerCase();
+          const nameB = `${b.firstName} ${b.lastName}`.toLowerCase();
+          return nameA.localeCompare(nameB);
+        }
+        if (s === 'name-desc') {
+          const nameA = `${a.firstName} ${a.lastName}`.toLowerCase();
+          const nameB = `${b.firstName} ${b.lastName}`.toLowerCase();
+          return nameB.localeCompare(nameA);
+        }
+        if (s === 'role') {
+          const roleA = (a.role?.name || '').toLowerCase();
+          const roleB = (b.role?.name || '').toLowerCase();
+          return roleA.localeCompare(roleB);
+        }
+        if (s === 'status') {
+          return Number(b.isActive) - Number(a.isActive);
+        }
+        return 0;
+      });
+    }),
+  })),
   withMethods((store, userService = inject(UserService)) => {
     const fetchUsers = () => {
       patchState(store, { status: 'loading', error: null });
@@ -81,6 +112,10 @@ export const UsersStore = signalStore(
       setStatus(activeStatus: 'active' | 'deleted' | 'all'): void {
         patchState(store, { activeStatus, page: 1 });
         fetchUsers().subscribe();
+      },
+
+      setSort(sort: UserSortOption): void {
+        patchState(store, { sort });
       },
 
       createUser(payload: CreateUserPayload) {

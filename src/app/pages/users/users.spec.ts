@@ -20,9 +20,10 @@ describe('UsersPage', () => {
       firstName: 'John',
       lastName: 'Doe',
       email: 'john@example.com',
-      role: { id: 1, name: 'SUPERADMIN' },
+      role: { id: 1, name: 'SUPERADMIN', scopeType: 'GLOBAL' },
       isActive: true,
       isDeleted: false,
+      country: { countryId: 1, name: 'USA' },
     },
   ]);
 
@@ -35,18 +36,21 @@ describe('UsersPage', () => {
           provide: UsersStore,
           useValue: {
             users: usersSignal,
+            sortedUsers: usersSignal,
             page: signal(1),
             limit: signal(10),
             total: signal(1),
             totalPages: signal(1),
             search: signal(''),
             activeStatus: signal('active'),
+            sort: signal('name-asc'),
             status: signal('success'),
             error: signal(null),
             loadUsers: vi.fn(),
             setPage: vi.fn(),
             setSearch: vi.fn(),
             setStatus: vi.fn(),
+            setSort: vi.fn(),
             createUser: vi.fn(),
             updateUser: vi.fn(),
             deleteUser: vi.fn(),
@@ -110,5 +114,28 @@ describe('UsersPage', () => {
     expect(component.isModalOpen()).toBe(true);
     component.closeModal();
     expect(component.isModalOpen()).toBe(false);
+  });
+
+  it('should format jurisdiction correctly for users', () => {
+    const globalUser: any = { role: { scopeType: 'GLOBAL' } };
+    expect(component.getJurisdiction(globalUser)).toBe('Global Scope');
+
+    const countryUser: any = { country: { name: 'Canada' }, role: { scopeType: 'COUNTRY' } };
+    expect(component.getJurisdiction(countryUser)).toBe('Canada');
+
+    const stateUser: any = { state: { name: 'Ontario' }, country: { name: 'Canada' }, role: { scopeType: 'STATE' } };
+    expect(component.getJurisdiction(stateUser)).toBe('Ontario, Canada');
+
+    const districtUser: any = { district: { name: 'Toronto' }, state: { name: 'Ontario' }, role: { scopeType: 'DISTRICT' } };
+    expect(component.getJurisdiction(districtUser)).toBe('Toronto, Ontario');
+  });
+
+  it('should invoke sort and refresh on usersStore', () => {
+    const usersStore = TestBed.inject(UsersStore);
+    component.onSortChange('role');
+    expect(usersStore.setSort).toHaveBeenCalledWith('role');
+
+    component.refreshUsers();
+    expect(usersStore.loadUsers).toHaveBeenCalled();
   });
 });

@@ -126,6 +126,42 @@
   }
 }
 
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.sort-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .sort-label {
+    font-size: 0.8125rem;
+    color: #94a3b8;
+    font-weight: 500;
+  }
+
+  .sort-select {
+    padding: 0.4rem 0.75rem;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 0.5rem;
+    color: #f8fafc;
+    font-size: 0.8125rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: var(--focus-ring);
+    }
+  }
+}
+
 .status-filters {
   display: inline-flex;
   padding: 0.25rem;
@@ -257,6 +293,22 @@
   background-color: var(--accent-primary-bg);
   color: var(--accent-primary-light);
   border: 1px solid var(--accent-primary-border);
+}
+
+.badge-jurisdiction {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: #1e293b;
+  color: #cbd5e1;
+  border: 1px solid #334155;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
 }
 
 .status-pill {

@@ -198,6 +198,10 @@
 
                   @if (field.isSystemField) {
                     <span class="system-badge" title="Locked core identity field">System Field</span>
+                  } @else if (field.isInherited) {
+                    <span class="inherited-badge" title="Inherited from Base Preset (Protected)">
+                      Preset Inherited
+                    </span>
                   } @else if (field.fieldDefinitionId) {
                     <span class="library-badge" title="Linked to Library Definition #{{ field.fieldDefinitionId }}">
                       Library Field
@@ -217,7 +221,7 @@
                     {{ field.columnSpan === 2 ? 'Span: 2 Columns' : 'Span: 1 Column' }}
                   </button>
 
-                  @if (!field.isSystemField) {
+                  @if (!field.isSystemField && !field.isInherited) {
                     <button
                       type="button"
                       class="btn-icon-action"

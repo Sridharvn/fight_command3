@@ -83,7 +83,38 @@ describe('RolesPage', () => {
     expect(component.isModalOpen()).toBe(false);
     component.openCreateModal();
     expect(component.isModalOpen()).toBe(true);
+    expect(component.parentRoleId()).toBeNull();
     component.closeModal();
     expect(component.isModalOpen()).toBe(false);
+  });
+
+  it('should open child role creation modal with parent role id and filtered permissions', () => {
+    const parentRole: any = {
+      id: 1,
+      name: 'SUPERADMIN',
+      scopeType: 'GLOBAL',
+      isSystem: true,
+      canCreateRoles: true,
+      permissions: ['user.create'],
+    };
+
+    component.openCreateChildModal(parentRole);
+    expect(component.isModalOpen()).toBe(true);
+    expect(component.parentRoleId()).toBe(1);
+    expect(component.parentRoleName()).toBe('SUPERADMIN');
+    // Group permissions should be filtered to parent permissions only
+    const filteredGroups = component.filteredPermissionGroups();
+    expect(filteredGroups.length).toBeGreaterThan(0);
+    expect(filteredGroups[0].permissions.every((p: { key: string }) => parentRole.permissions.includes(p.key))).toBe(true);
+  });
+
+  it('should render System ID, Hierarchy Level, and explicit delegation indicators', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.system-id-badge')).toBeTruthy();
+    expect(compiled.textContent).toContain('ROLE #1');
+    expect(compiled.querySelector('.hierarchy-badge')).toBeTruthy();
+    expect(compiled.textContent).toContain('Level 0');
+    expect(compiled.querySelector('.delegation-badge')).toBeTruthy();
+    expect(compiled.textContent).toContain('Can Delegate: YES');
   });
 });

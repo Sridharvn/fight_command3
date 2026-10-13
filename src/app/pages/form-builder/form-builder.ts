@@ -77,8 +77,15 @@ export class FormBuilderPage implements OnInit {
     this.formDefStore.loadFieldDefinitions();
 
     const templateId = this.route.snapshot.paramMap.get('id');
+    const basePresetId = this.route.snapshot.queryParamMap.get('basePresetId');
+    const cloneFrom = this.route.snapshot.queryParamMap.get('cloneFrom');
+
     if (templateId && templateId !== 'new') {
       this.loadTemplate(+templateId);
+    } else if (basePresetId) {
+      this.loadBasePreset(+basePresetId);
+    } else if (cloneFrom) {
+      this.loadCloneTemplate(+cloneFrom);
     } else {
       this.builderStore.initNewTemplate(1, 1);
     }
@@ -95,6 +102,61 @@ export class FormBuilderPage implements OnInit {
     >,
   ): void {
     this.builderStore.updateTemplateMetadata(settings);
+  }
+
+  private loadBasePreset(presetId: number): void {
+    this.formDefinitionService.getTemplateById(presetId).subscribe({
+      next: (tmpl) => {
+        const fields: FormField[] = (tmpl.fields || []).map((tf) => ({
+          id: `field_inherited_${tf.fieldDefinitionId}`,
+          fieldDefinitionId: tf.fieldDefinitionId,
+          key: tf.fieldDefinition?.fieldName || `field_${tf.fieldDefinitionId}`,
+          label: tf.fieldLabelOverride || tf.fieldDefinition?.fieldLabel || 'Field',
+          type: (tf.fieldDefinition?.fieldType || 'text') as FormFieldType,
+          required: tf.isRequired,
+          columnSpan: 1,
+          isInherited: true,
+        }));
+
+        this.builderStore.setTemplate({
+          templateName: `${tmpl.templateName} (Derived)`,
+          sportType: tmpl.sportType,
+          tournamentType: tmpl.tournamentType,
+          fields,
+          validations: [],
+        });
+      },
+      error: () => {
+        this.builderStore.initNewTemplate(1, 1);
+      },
+    });
+  }
+
+  private loadCloneTemplate(cloneId: number): void {
+    this.formDefinitionService.getTemplateById(cloneId).subscribe({
+      next: (tmpl) => {
+        const fields: FormField[] = (tmpl.fields || []).map((tf) => ({
+          id: `field_${Date.now()}_${tf.fieldDefinitionId}`,
+          fieldDefinitionId: tf.fieldDefinitionId,
+          key: tf.fieldDefinition?.fieldName || `field_${tf.fieldDefinitionId}`,
+          label: tf.fieldLabelOverride || tf.fieldDefinition?.fieldLabel || 'Field',
+          type: (tf.fieldDefinition?.fieldType || 'text') as FormFieldType,
+          required: tf.isRequired,
+          columnSpan: 1,
+        }));
+
+        this.builderStore.setTemplate({
+          templateName: `${tmpl.templateName} (Copy)`,
+          sportType: tmpl.sportType,
+          tournamentType: tmpl.tournamentType,
+          fields,
+          validations: [],
+        });
+      },
+      error: () => {
+        this.builderStore.initNewTemplate(1, 1);
+      },
+    });
   }
 
   private loadTemplate(id: number): void {

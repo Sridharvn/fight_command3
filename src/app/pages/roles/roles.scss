@@ -174,16 +174,45 @@
   }
 }
 
+.role-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.system-id-badge {
+  background-color: #0f172a;
+  color: #94a3b8;
+  border: 1px solid #334155;
+  font-family: monospace;
+}
+
+.hierarchy-badge {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
 .system-badge {
   background-color: rgba(100, 116, 139, 0.2);
   color: #cbd5e1;
   border: 1px solid rgba(100, 116, 139, 0.3);
 }
 
-.delegator-badge {
-  background-color: rgba(236, 72, 153, 0.15);
-  color: #f472b6;
-  border: 1px solid rgba(236, 72, 153, 0.3);
+.delegation-badge {
+  border: 1px solid transparent;
+
+  &.delegation-yes {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border-color: rgba(34, 197, 94, 0.3);
+  }
+
+  &.delegation-no {
+    background-color: rgba(100, 116, 139, 0.15);
+    color: #94a3b8;
+    border-color: rgba(100, 116, 139, 0.25);
+  }
 }
 
 .role-card-actions {
@@ -212,6 +241,22 @@
   &:hover {
     color: #ffffff;
     background-color: #334155;
+  }
+
+  &.btn-child-role {
+    width: auto;
+    padding: 0 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    gap: 0.25rem;
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #60a5fa;
+    border-color: rgba(59, 130, 246, 0.3);
+
+    &:hover {
+      background-color: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+    }
   }
 
   &.btn-delete:hover {
@@ -308,6 +353,24 @@
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid #1f2937;
   flex-shrink: 0;
+}
+
+.parent-role-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 1.5rem;
+  background-color: rgba(59, 130, 246, 0.1);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.25);
+  font-size: 0.8125rem;
+  color: #93c5fd;
+
+  .notice-icon {
+    width: 1.125rem;
+    height: 1.125rem;
+    flex-shrink: 0;
+    color: #60a5fa;
+  }
 }
 
 .modal-title {

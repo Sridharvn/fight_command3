@@ -6,6 +6,7 @@ import { RolesStore } from '../../stores/roles.store';
 import { MasterDataService } from '../../services/master-data.service';
 import { CountryItem, DistrictItem, StateItem } from '../../models/master-data.models';
 import { UserResponseModel } from '../../models/user.models';
+import { UserSortOption } from '../../stores/users.store';
 
 @Component({
   selector: 'app-users',
@@ -233,5 +234,56 @@ export class UsersPage implements OnInit {
     if (this.usersStore.page() < this.usersStore.totalPages()) {
       this.usersStore.setPage(this.usersStore.page() + 1);
     }
+  }
+
+  getJurisdiction(user: UserResponseModel): string {
+    if (user.district?.name) {
+      return `${user.district.name}, ${user.state?.name || ''}`.replace(/,\s*$/, '');
+    }
+    if (user.state?.name) {
+      return `${user.state.name}, ${user.country?.name || ''}`.replace(/,\s*$/, '');
+    }
+    if (user.country?.name) {
+      return user.country.name;
+    }
+    if (user.role?.scopeType === 'GLOBAL') {
+      return 'Global Scope';
+    }
+    return 'National / Unassigned';
+  }
+
+  onSortChange(sort: string): void {
+    this.usersStore.setSort(sort as UserSortOption);
+  }
+
+  refreshUsers(): void {
+    this.usersStore.loadUsers();
+  }
+
+  exportUsersToCsv(): void {
+    const users = this.usersStore.sortedUsers();
+    if (!users || users.length === 0) return;
+
+    const headers = ['User ID', 'First Name', 'Last Name', 'Email', 'Role', 'Jurisdiction', 'Designation', 'Phone', 'Status'];
+    const rows = users.map((u) => [
+      u.id,
+      `"${(u.firstName || '').replace(/"/g, '""')}"`,
+      `"${(u.lastName || '').replace(/"/g, '""')}"`,
+      `"${(u.email || '').replace(/"/g, '""')}"`,
+      `"${(u.role?.name || '').replace(/"/g, '""')}"`,
+      `"${this.getJurisdiction(u).replace(/"/g, '""')}"`,
+      `"${(u.designation || '').replace(/"/g, '""')}"`,
+      `"${(u.phoneNumber || '').replace(/"/g, '""')}"`,
+      u.isDeleted ? 'Deactivated' : u.isActive ? 'Active' : 'Pending',
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `users-export-${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 }

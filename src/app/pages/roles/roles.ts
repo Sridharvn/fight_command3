@@ -17,11 +17,28 @@ export class RolesPage implements OnInit {
 
   readonly isModalOpen = signal(false);
   readonly editingRoleId = signal<number | null>(null);
+  readonly parentRoleId = signal<number | null>(null);
+  readonly parentRoleName = signal<string | null>(null);
+  readonly parentRolePermissions = signal<string[] | null>(null);
   readonly modalError = signal<string | null>(null);
   readonly isSubmitting = signal(false);
   readonly selectedPermissions = signal<string[]>([]);
 
   readonly scopeOptions: ScopeType[] = ['GLOBAL', 'COUNTRY', 'STATE', 'DISTRICT'];
+
+  readonly filteredPermissionGroups = () => {
+    const parentPerms = this.parentRolePermissions();
+    const groups = this.rolesStore.permissionGroups();
+    if (!parentPerms) {
+      return groups;
+    }
+    return groups
+      .map((g) => ({
+        ...g,
+        permissions: g.permissions.filter((p) => parentPerms.includes(p.key)),
+      }))
+      .filter((g) => g.permissions.length > 0);
+  };
 
   readonly roleForm = this.fb.group({
     name: ['', [Validators.required, Validators.pattern(/^[A-Za-z0-9_ -]+$/)]],
@@ -36,6 +53,9 @@ export class RolesPage implements OnInit {
 
   openCreateModal(): void {
     this.editingRoleId.set(null);
+    this.parentRoleId.set(null);
+    this.parentRoleName.set(null);
+    this.parentRolePermissions.set(null);
     this.modalError.set(null);
     this.selectedPermissions.set([]);
     this.roleForm.reset({
@@ -46,8 +66,26 @@ export class RolesPage implements OnInit {
     this.isModalOpen.set(true);
   }
 
+  openCreateChildModal(parentRole: RoleItem): void {
+    this.editingRoleId.set(null);
+    this.parentRoleId.set(parentRole.id);
+    this.parentRoleName.set(parentRole.name);
+    this.parentRolePermissions.set(parentRole.permissions || []);
+    this.modalError.set(null);
+    this.selectedPermissions.set([]);
+    this.roleForm.reset({
+      name: '',
+      scopeType: parentRole.scopeType,
+      canCreateRoles: false,
+    });
+    this.isModalOpen.set(true);
+  }
+
   openEditModal(role: RoleItem): void {
     this.editingRoleId.set(role.id);
+    this.parentRoleId.set(role.parentRoleId || null);
+    this.parentRoleName.set(null);
+    this.parentRolePermissions.set(null);
     this.modalError.set(null);
     this.selectedPermissions.set([...(role.permissions || [])]);
     this.roleForm.reset({
@@ -122,13 +160,18 @@ export class RolesPage implements OnInit {
           },
         });
     } else {
+      const payload: any = {
+        name: formVal.name,
+        scopeType: formVal.scopeType,
+        canCreateRoles: formVal.canCreateRoles,
+        permissions: this.selectedPermissions(),
+      };
+      if (this.parentRoleId()) {
+        payload.parentRoleId = this.parentRoleId();
+      }
+
       this.rolesStore
-        .createRole({
-          name: formVal.name,
-          scopeType: formVal.scopeType,
-          canCreateRoles: formVal.canCreateRoles,
-          permissions: this.selectedPermissions(),
-        })
+        .createRole(payload)
         .subscribe({
           next: () => {
             this.isSubmitting.set(false);

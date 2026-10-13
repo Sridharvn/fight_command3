@@ -195,4 +195,33 @@ describe('FormBuilderPage', () => {
     expect(added?.label).toBe('Belt Rank');
     expect(added?.type).toBe('select');
   });
+
+  it('should render Preset Inherited badge and lock delete button for inherited preset fields', () => {
+    builderStore.setTemplate({
+      templateName: 'Extended Template',
+      sportType: 1,
+      tournamentType: 1,
+      fields: [
+        {
+          id: 'field_inherited_5',
+          key: 'weight_class',
+          label: 'Weight Class',
+          type: 'text',
+          isInherited: true,
+          columnSpan: 1,
+        },
+      ],
+      validations: [],
+    });
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.inherited-badge')).toBeTruthy();
+    expect(compiled.textContent).toContain('Preset Inherited');
+
+    // Inherited field cannot be removed by builderStore.removeField
+    const countBefore = builderStore.template()!.fields.length;
+    builderStore.removeField('field_inherited_5');
+    expect(builderStore.template()!.fields.length).toBe(countBefore);
+  });
 });

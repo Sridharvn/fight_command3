@@ -38,21 +38,47 @@
           <article class="role-card" [class.system-card]="role.isSystem">
             <header class="role-card-header">
               <div class="role-header-left">
-                <h2 class="role-name">{{ role.name }}</h2>
+                <div class="role-title-row">
+                  <h2 class="role-name">{{ role.name }}</h2>
+                  <span class="badge system-id-badge">ROLE #{{ role.id }}</span>
+                </div>
                 <div class="role-badges">
+                  <span class="badge hierarchy-badge">Level {{ role.hierarchyLevel ?? 0 }}</span>
                   <span class="badge scope-badge" [class]="'scope-' + role.scopeType.toLowerCase()">
                     {{ role.scopeType }}
                   </span>
                   @if (role.isSystem) {
                     <span class="badge system-badge">System</span>
                   }
-                  @if (role.canCreateRoles) {
-                    <span class="badge delegator-badge">Can Delegate</span>
-                  }
+                  <span
+                    class="badge delegation-badge"
+                    [class.delegation-yes]="role.canCreateRoles"
+                    [class.delegation-no]="!role.canCreateRoles"
+                  >
+                    Can Delegate: {{ role.canCreateRoles ? 'YES' : 'NO' }}
+                  </span>
                 </div>
               </div>
 
               <div class="role-card-actions">
+                @if (role.canCreateRoles) {
+                  <button
+                    type="button"
+                    class="btn-action btn-child-role"
+                    title="Create subordinate child role under this role"
+                    (click)="openCreateChildModal(role)"
+                    aria-label="Create child role"
+                  >
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    <span>+ Child Role</span>
+                  </button>
+                }
                 <button
                   type="button"
                   class="btn-action btn-edit"
@@ -120,7 +146,7 @@
         >
           <header class="modal-header">
             <h2 id="role-modal-title" class="modal-title">
-              {{ editingRoleId() ? 'Edit Role' : 'Create New Role' }}
+              {{ editingRoleId() ? 'Edit Role' : (parentRoleId() ? 'Create Child Role' : 'Create New Role') }}
             </h2>
             <button
               type="button"
@@ -131,6 +157,19 @@
               &times;
             </button>
           </header>
+
+          @if (parentRoleId()) {
+            <div class="parent-role-notice">
+              <svg viewBox="0 0 20 20" fill="currentColor" class="notice-icon">
+                <path
+                  fill-rule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              <span>Subordinate to <strong>{{ parentRoleName() }} (ROLE #{{ parentRoleId() }})</strong>. Permissions are strictly constrained to parent's permissions.</span>
+            </div>
+          }
 
           @if (modalError()) {
             <div class="alert alert-error" role="alert">
@@ -181,7 +220,7 @@
               </div>
 
               <div class="permission-groups">
-                @for (group of rolesStore.permissionGroups(); track group.category) {
+                @for (group of filteredPermissionGroups(); track group.category) {
                   <div class="permission-group-card">
                     <div class="group-header">
                       <span class="group-category">{{ group.category }}</span>

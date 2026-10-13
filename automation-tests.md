@@ -393,6 +393,60 @@ The application provides an accessible login screen (`/login`) allowing users to
   - When the template is saved (`POST /templates` or `PUT /templates/:id`), each field in the payload preserves its `fieldDefinitionId`.
 - **Final state:** Custom field definition from the library is embedded directly into the template canvas and saved with its master definition association.
 
+**HF-047: User Accounts - Jurisdiction Column, Sort Dropdown, Export to CSV, and Manual Refresh**
+- **Preconditions:** User is authenticated and on `/users`. User directory table contains loaded users.
+- **User/System actions:**
+  - View directory table: inspect column headers and rows.
+  - Select sort option from the new sort dropdown (e.g. `Sort: Name (A-Z)` or `Sort: Role`).
+  - Click the manual "Refresh" button.
+  - Click the "Export CSV" button.
+- **Expected results:**
+  - Table renders a distinct "Jurisdiction" column displaying geographic assignment tags (e.g., Country, State, District or "Global Scope").
+  - The sort dropdown reactively reorders the displayed users according to the chosen criterion.
+  - Clicking "Refresh" triggers `usersStore.loadUsers()` and updates the table without a page reload.
+  - Clicking "Export CSV" converts the currently filtered/sorted user roster into a CSV blob and initiates browser file download (`users_export_YYYY-MM-DD.csv`).
+- **Final state:** User directory table provides full geographic visibility, sorting, instant refresh, and data export.
+
+**HF-048: Role Management - System ID, Hierarchy Level, Delegation Indicator, and Parent-Subset Child Role Creation**
+- **Preconditions:** User is authenticated and on `/roles`.
+- **User/System actions:**
+  - Inspect role cards.
+  - Locate a role with delegation authority (`canCreateRoles: true`) and click "+ Create Child Role".
+  - Inspect the permissions matrix in the child role creation modal.
+  - Fill in child role name and save.
+- **Expected results:**
+  - Role cards prominently display their System ID badge (e.g. `ROLE #1`), numeric Hierarchy Level badge (e.g. `Level 0 (Global)`, `Level 1 (Country)`, `Level 2 (State)`), and explicit delegation indicator (`Can Delegate: YES` / `Can Delegate: NO`).
+  - Clicking "+ Create Child Role" opens the role creation modal pre-configured with the parent role's scope and ID.
+  - The permissions matrix strictly restricts available checkboxes to ONLY the parent role's granted permissions, disabling permissions that exceed the parent's authority.
+  - Successfully creates the child role respecting the hierarchical parent-subset invariant.
+- **Final state:** Hierarchical role delegation and permissions boundaries are visually explicit and strictly enforced.
+
+**HF-049: Form Templates - Preset Immutability Safeguards & Direct "VIEW FORM" Preview on Template Cards**
+- **Preconditions:** User is authenticated and on `/form-definitions` (Templates tab). Directory contains both canonical PRESET templates and CUSTOM templates.
+- **User/System actions:**
+  - Inspect PRESET template cards vs CUSTOM template cards.
+  - Attempt to edit/delete a PRESET template.
+  - Click "VIEW FORM" on any template card.
+- **Expected results:**
+  - PRESET template cards have delete actions disabled or hidden, and the edit button is replaced with "Clone as Custom Template" or locked view, safeguarding canonical sport standards from accidental mutation.
+  - Each template card features a direct "VIEW FORM" preview button.
+  - Clicking "VIEW FORM" immediately opens a read-only modal powered by `DynamicFormRendererComponent` displaying the actual athlete registration fields without routing to the builder canvas.
+- **Final state:** Official presets are protected from deletion/mutation, and admins can quickly inspect form layouts directly from the directory.
+
+**HF-050: Form Templates - Base Preset Inheritance Creation Workflow & Read-Only Inherited Fields in Form Builder**
+- **Preconditions:** User is on `/form-definitions`.
+- **User/System actions:**
+  - Click "+ Add Template".
+  - Choose between "Start from Scratch" or "Extend Base Preset Template" (e.g. Sambo or MMA Preset).
+  - When extending a preset, proceed to Form Builder.
+  - Inspect the inherited fields on the canvas and add a custom field.
+- **Expected results:**
+  - A setup modal provides the inheritance choice before routing to the builder.
+  - If a base preset is selected, its canonical fields are imported onto the canvas with an `isInherited: true` flag.
+  - Inherited fields cannot be deleted or have their core identity modified, but custom fields can be added alongside them.
+  - Saving creates a new CUSTOM template extending the official preset foundation.
+- **Final state:** Clean inheritance model preserving base sport rules while allowing tournament-specific extensions.
+
 ---
 
 ### Negative Flows

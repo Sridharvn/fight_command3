@@ -64,6 +64,7 @@ export interface FormField {
   validationRules?: FormFieldValidationRules;
   columnSpan?: 1 | 2; // Support responsive 2-column paired layout
   isSystemField?: boolean; // Locked for Full Name & Email
+  isInherited?: boolean; // Inherited from base preset, locked on canvas
   fieldDefinitionId?: number; // Origin custom field definition ID
 }
 
