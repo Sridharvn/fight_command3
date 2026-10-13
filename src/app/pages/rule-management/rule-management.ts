@@ -4,9 +4,11 @@ import { RuleStore } from '../../stores/rule.store';
 import { FormDefinitionStore } from '../../stores/form-definition.store';
 import { ComparisonOperator } from '../../models/rule-engine.models';
 
+import { BaseLayout } from '../../layouts/base-layout/base-layout';
+
 @Component({
   selector: 'app-rule-management',
-  imports: [ReactiveFormsModule],
+  imports: [BaseLayout, ReactiveFormsModule],
   templateUrl: './rule-management.html',
   styleUrl: './rule-management.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

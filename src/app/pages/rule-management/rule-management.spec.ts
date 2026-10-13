@@ -1,6 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RuleManagementPage } from './rule-management';
 import { RuleStore } from '../../stores/rule.store';
+import { AuthStore } from '../../stores/auth.store';
+import { LayoutStore } from '../../stores/layout.store';
+import { FormDefinitionStore } from '../../stores/form-definition.store';
 import { signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { GlobalCompoundRule } from '../../models/rule-engine.models';
@@ -47,7 +50,36 @@ describe('RuleManagementPage', () => {
 
     await TestBed.configureTestingModule({
       imports: [RuleManagementPage],
-      providers: [provideRouter([]), { provide: RuleStore, useValue: ruleStoreMock }],
+      providers: [
+        provideRouter([]),
+        { provide: RuleStore, useValue: ruleStoreMock },
+        {
+          provide: FormDefinitionStore,
+          useValue: {
+            fieldDefinitions: signal([]),
+            loadFieldDefinitions: vi.fn(),
+          },
+        },
+        {
+          provide: AuthStore,
+          useValue: {
+            isAuthenticated: signal(true),
+            user: signal({ firstName: 'Super', lastName: 'Admin' }),
+            userFullName: signal('Super Admin'),
+            userEmail: signal('admin@test.com'),
+            userRoleName: signal('SUPERADMIN'),
+            userInitials: signal('SA'),
+            logout: vi.fn(),
+          },
+        },
+        {
+          provide: LayoutStore,
+          useValue: {
+            isSidebarCollapsed: signal(false),
+            toggleSidebar: vi.fn(),
+          },
+        },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(RuleManagementPage);
@@ -55,9 +87,10 @@ describe('RuleManagementPage', () => {
     fixture.detectChanges();
   });
 
-  it('should create and render rules list', () => {
+  it('should create and render rules list inside BaseLayout', () => {
     expect(component).toBeTruthy();
     const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('app-base-layout')).toBeTruthy();
     expect(compiled.textContent).toContain('Minor Consent Rule');
     expect(compiled.textContent).toContain('Guardian consent required');
   });

@@ -234,6 +234,26 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Expected results:** `POST /templates` is sent; template is created with `formSchema`; modal closes; template listed.
 - **Final state:** Template created.
 
+**HF-029: Rule Management - BaseLayout, Header & Sidemenu Integration**
+- **Preconditions:** User is authenticated on `/rule-management`.
+- **User/System actions:** User accesses or refreshes `/rule-management`.
+- **Expected results:**
+  - Page is enclosed in `<app-base-layout>`.
+  - Authenticated sidemenu (`<app-base-sidebar>`) is rendered with collapsible toggle, navigation links, and user bottom details.
+  - Header (`<app-base-header>`) is rendered with navigation links, user profile details pill, and logout button.
+  - Page visuals (header, title typography, search toolbar, buttons, cards, modals) match the design system established in Users and Roles.
+- **Final state:** Consistent shell and theme displayed.
+
+**HF-030: Form Definitions - BaseLayout, Header & Sidemenu Integration**
+- **Preconditions:** User is authenticated on `/form-definitions`.
+- **User/System actions:** User accesses or refreshes `/form-definitions`.
+- **Expected results:**
+  - Page is enclosed in `<app-base-layout>`.
+  - Authenticated sidemenu (`<app-base-sidebar>`) is rendered with collapsible toggle, navigation links, and user bottom details.
+  - Header (`<app-base-header>`) is rendered with navigation links, user profile details pill, and logout button.
+  - Page visuals (header, title typography, tab navigation, search toolbar, table, badges, modals) match the design system established in Users and Roles.
+- **Final state:** Consistent shell and theme displayed.
+
 ---
 
 ### Negative Flows

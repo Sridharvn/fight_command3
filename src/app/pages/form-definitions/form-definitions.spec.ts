@@ -2,6 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormDefinitionsPage } from './form-definitions';
 import { FormDefinitionStore } from '../../stores/form-definition.store';
 import { RuleStore } from '../../stores/rule.store';
+import { AuthStore } from '../../stores/auth.store';
+import { LayoutStore } from '../../stores/layout.store';
 import { signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { FieldDefinition, FormTemplate } from '../../models/form-definition.models';
@@ -68,6 +70,25 @@ describe('FormDefinitionsPage', () => {
         provideRouter([]),
         { provide: FormDefinitionStore, useValue: formStoreMock },
         { provide: RuleStore, useValue: ruleStoreMock },
+        {
+          provide: AuthStore,
+          useValue: {
+            isAuthenticated: signal(true),
+            user: signal({ firstName: 'Super', lastName: 'Admin' }),
+            userFullName: signal('Super Admin'),
+            userEmail: signal('admin@test.com'),
+            userRoleName: signal('SUPERADMIN'),
+            userInitials: signal('SA'),
+            logout: vi.fn(),
+          },
+        },
+        {
+          provide: LayoutStore,
+          useValue: {
+            isSidebarCollapsed: signal(false),
+            toggleSidebar: vi.fn(),
+          },
+        },
       ],
     }).compileComponents();
 
@@ -76,9 +97,10 @@ describe('FormDefinitionsPage', () => {
     fixture.detectChanges();
   });
 
-  it('should create and render templates tab by default', () => {
+  it('should create and render templates tab by default inside BaseLayout', () => {
     expect(component).toBeTruthy();
     const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('app-base-layout')).toBeTruthy();
     expect(compiled.textContent).toContain('National Championship Template');
   });
 

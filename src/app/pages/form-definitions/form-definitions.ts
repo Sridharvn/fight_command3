@@ -4,9 +4,11 @@ import { FormDefinitionStore } from '../../stores/form-definition.store';
 import { RuleStore } from '../../stores/rule.store';
 import { FieldType } from '../../models/form-definition.models';
 
+import { BaseLayout } from '../../layouts/base-layout/base-layout';
+
 @Component({
   selector: 'app-form-definitions',
-  imports: [ReactiveFormsModule],
+  imports: [BaseLayout, ReactiveFormsModule],
   templateUrl: './form-definitions.html',
   styleUrl: './form-definitions.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
