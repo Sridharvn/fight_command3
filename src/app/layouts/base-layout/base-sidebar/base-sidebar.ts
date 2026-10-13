@@ -14,14 +14,6 @@ export class BaseSidebar {
   protected readonly layoutStore = inject(LayoutStore);
   protected readonly authStore = inject(AuthStore);
 
-  get initials(): string {
-    const user = this.authStore.user();
-    if (!user) return '?';
-    const first = user.firstName ? user.firstName[0].toUpperCase() : '';
-    const last = user.lastName ? user.lastName[0].toUpperCase() : '';
-    return `${first}${last}` || user.email[0].toUpperCase();
-  }
-
   onLogout(): void {
     this.authStore.logout();
   }

@@ -112,4 +112,15 @@ describe('AuthStore', () => {
     expect(store.user()).toBeNull();
     expect(localStorage.getItem(AUTH_STORAGE_KEYS.accessToken)).toBeNull();
   });
+
+  it('should compute userFullName, userEmail, userRoleName, and userInitials', () => {
+    localStorage.setItem(AUTH_STORAGE_KEYS.accessToken, 'cached-access');
+    localStorage.setItem(AUTH_STORAGE_KEYS.user, JSON.stringify(mockUser));
+
+    const newStore = TestBed.runInInjectionContext(() => new (AuthStore as any)());
+    expect(newStore.userFullName()).toBe('Master Admin');
+    expect(newStore.userEmail()).toBe('admin@arena.com');
+    expect(newStore.userRoleName()).toBe('SUPERADMIN');
+    expect(newStore.userInitials()).toBe('MA');
+  });
 });

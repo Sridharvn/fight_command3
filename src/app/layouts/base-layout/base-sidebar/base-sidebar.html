@@ -139,13 +139,17 @@
   </nav>
 
   <div class="sidebar-footer">
-    <div class="user-profile">
-      <div class="avatar" [title]="authStore.userFullName()">
-        {{ initials }}
+    <div
+      class="user-profile"
+      [title]="authStore.userFullName() + ' (' + authStore.userRoleName() + ') - ' + authStore.userEmail()"
+    >
+      <div class="avatar">
+        {{ authStore.userInitials() }}
       </div>
       @if (!layoutStore.isSidebarCollapsed()) {
         <div class="user-meta">
           <span class="user-name">{{ authStore.userFullName() || 'Admin User' }}</span>
+          <span class="user-email">{{ authStore.userEmail() }}</span>
           <span class="user-role">{{ authStore.userRoleName() || 'Authorized' }}</span>
         </div>
       }
@@ -154,8 +158,8 @@
       type="button"
       class="btn-logout"
       (click)="onLogout()"
-      title="Sign Out"
-      aria-label="Sign Out"
+      title="Logout"
+      aria-label="Logout"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -172,6 +176,9 @@
         <polyline points="16 17 21 12 16 7" />
         <line x1="21" y1="12" x2="9" y2="12" />
       </svg>
+      @if (!layoutStore.isSidebarCollapsed()) {
+        <span class="logout-text">Logout</span>
+      }
     </button>
   </div>
 </aside>

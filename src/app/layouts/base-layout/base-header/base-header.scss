@@ -83,48 +83,103 @@
     gap: 1rem;
   }
 
-  .user-pill {
+  .user-profile-header {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.65rem;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 0.35rem 0.75rem;
+    padding: 0.3rem 0.75rem;
     border-radius: 9999px;
+    max-width: 320px;
 
-    .user-badge {
-      font-size: 0.7rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      padding: 0.15rem 0.4rem;
-      border-radius: 4px;
-      background: oklch(55% 0.2 25);
+    .avatar-header {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, oklch(50% 0.18 25) 0%, oklch(40% 0.15 25) 100%);
       color: #ffffff;
-      letter-spacing: 0.03em;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border: 1px solid oklch(55% 0.18 25);
     }
 
-    .user-name {
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: oklch(90% 0.01 245);
+    .user-meta-header {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+
+      .user-meta-top {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        overflow: hidden;
+
+        .user-name {
+          font-size: 0.825rem;
+          font-weight: 600;
+          color: oklch(95% 0.01 245);
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
+        }
+
+        .user-badge {
+          font-size: 0.625rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          padding: 0.075rem 0.35rem;
+          border-radius: 4px;
+          background: oklch(55% 0.2 25);
+          color: #ffffff;
+          letter-spacing: 0.03em;
+          flex-shrink: 0;
+        }
+      }
+
+      .user-email {
+        font-size: 0.7rem;
+        color: oklch(70% 0.02 245);
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .user-meta-header .user-email {
+        display: none;
+      }
     }
   }
 
   .btn-outline {
     background: transparent;
-    color: oklch(80% 0.02 245);
+    color: oklch(85% 0.02 245);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    padding: 0.5rem 1rem;
+    padding: 0.45rem 0.85rem;
     border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 500;
+    font-size: 0.825rem;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+
+    svg {
+      flex-shrink: 0;
+    }
 
     &:hover {
-      background: rgba(255, 255, 255, 0.08);
-      color: #ffffff;
-      border-color: rgba(255, 255, 255, 0.3);
+      background: oklch(25% 0.1 25 / 0.4);
+      color: oklch(92% 0.18 25);
+      border-color: oklch(45% 0.18 25);
     }
   }
 

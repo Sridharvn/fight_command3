@@ -158,6 +158,40 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Expected results:** Role is deleted; disappears from list.
 - **Final state:** Role removed.
 
+**HF-018: Sidemenu Footer User Details Display**
+- **Preconditions:** User is authenticated.
+- **User/System actions:** User views the sidemenu in expanded or collapsed mode.
+- **Expected results:**
+  - In expanded mode: Sidemenu bottom footer displays user avatar (initials), full name, email address, role badge, and a distinct full-width "Logout" button with icon and text.
+  - In collapsed mode: Sidemenu bottom footer displays user avatar with title tooltip (name, email, role), and a compact logout icon button.
+- **Final state:** User details and logout button clearly visible in sidemenu bottom.
+
+**HF-019: Sidemenu Logout Action**
+- **Preconditions:** User is authenticated and sidemenu is visible.
+- **User/System actions:** User clicks the "Logout" button in the sidemenu footer.
+- **Expected results:**
+  - `authStore.logout()` is called.
+  - Auth tokens and user profile are removed from `localStorage` and memory.
+  - Sidemenu is removed from the DOM.
+  - User is navigated to `/login`.
+- **Final state:** Session terminated; unauthenticated view displayed.
+
+**HF-020: Header User Details Display**
+- **Preconditions:** User is authenticated.
+- **User/System actions:** User views the application header.
+- **Expected results:**
+  - Header displays user profile container with user avatar (initials), full name, email address, and role badge.
+  - Header displays a "Logout" button.
+- **Final state:** User details and logout button clearly visible in header.
+
+**HF-021: Header Logout Action**
+- **Preconditions:** User is authenticated and header is visible.
+- **User/System actions:** User clicks the "Logout" button in the header.
+- **Expected results:**
+  - `authStore.logout()` is called.
+  - Tokens cleared, user redirected to `/login`, header switches to public "Sign In" button.
+- **Final state:** Session terminated; unauthenticated view displayed.
+
 ---
 
 ### Negative Flows

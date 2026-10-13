@@ -15,8 +15,11 @@ describe('BaseSidebar', () => {
     role: { name: 'SUPERADMIN' },
   });
 
+  let logoutMock: ReturnType<typeof vi.fn>;
+
   beforeEach(async () => {
     isCollapsedSignal.set(false);
+    logoutMock = vi.fn();
 
     await TestBed.configureTestingModule({
       imports: [BaseSidebar],
@@ -34,8 +37,10 @@ describe('BaseSidebar', () => {
           useValue: {
             user: userSignal,
             userFullName: signal('Super Admin'),
+            userEmail: signal('admin@arena.com'),
             userRoleName: signal('SUPERADMIN'),
-            logout: vi.fn(),
+            userInitials: signal('SA'),
+            logout: logoutMock,
           },
         },
       ],
@@ -60,5 +65,38 @@ describe('BaseSidebar', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const sidebar = compiled.querySelector('.sidebar');
     expect(sidebar?.classList.contains('collapsed')).toBe(true);
+  });
+
+  it('should render user full name, email, role badge, and avatar initials in the footer when expanded', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const footer = compiled.querySelector('.sidebar-footer');
+    expect(footer).toBeTruthy();
+    expect(footer?.textContent).toContain('Super Admin');
+    expect(footer?.textContent).toContain('admin@arena.com');
+    expect(footer?.textContent).toContain('SUPERADMIN');
+    expect(footer?.textContent).toContain('SA');
+  });
+
+  it('should render logout button and trigger logout on click', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const logoutBtn = compiled.querySelector('.btn-logout') as HTMLButtonElement;
+    expect(logoutBtn).toBeTruthy();
+    expect(logoutBtn.textContent).toContain('Logout');
+
+    logoutBtn.click();
+    expect(logoutMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('should render compact logout button and avatar when collapsed', () => {
+    isCollapsedSignal.set(true);
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const avatar = compiled.querySelector('.avatar');
+    expect(avatar).toBeTruthy();
+    expect(avatar?.textContent?.trim()).toBe('SA');
+
+    const logoutBtn = compiled.querySelector('.btn-logout') as HTMLButtonElement;
+    expect(logoutBtn).toBeTruthy();
   });
 });

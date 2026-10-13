@@ -48,7 +48,15 @@ export const AuthStore = signalStore(
       const u = user();
       return u ? `${u.firstName} ${u.lastName}`.trim() : '';
     }),
+    userEmail: computed(() => user()?.email ?? ''),
     userRoleName: computed(() => user()?.role?.name ?? ''),
+    userInitials: computed(() => {
+      const u = user();
+      if (!u) return '?';
+      const first = u.firstName ? u.firstName[0].toUpperCase() : '';
+      const last = u.lastName ? u.lastName[0].toUpperCase() : '';
+      return `${first}${last}` || (u.email ? u.email[0].toUpperCase() : '?');
+    }),
   })),
   withMethods((store, authService = inject(AuthService)) => ({
     updateTokens(accessToken: string, refreshToken: string): void {

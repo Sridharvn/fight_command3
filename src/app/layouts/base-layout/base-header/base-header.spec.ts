@@ -9,7 +9,13 @@ describe('BaseHeader', () => {
   let component: BaseHeader;
   let fixture: ComponentFixture<BaseHeader>;
 
+  let logoutMock: ReturnType<typeof vi.fn>;
+  let isAuthSignal = signal(true);
+
   beforeEach(async () => {
+    logoutMock = vi.fn();
+    isAuthSignal.set(true);
+
     await TestBed.configureTestingModule({
       imports: [BaseHeader],
       providers: [
@@ -17,11 +23,13 @@ describe('BaseHeader', () => {
         {
           provide: AuthStore,
           useValue: {
-            isAuthenticated: signal(true),
-            user: signal({ firstName: 'Test', lastName: 'User' }),
+            isAuthenticated: isAuthSignal,
+            user: signal({ firstName: 'Test', lastName: 'User', email: 'test@arena.com' }),
             userFullName: signal('Test User'),
+            userEmail: signal('test@arena.com'),
             userRoleName: signal('SUPERADMIN'),
-            logout: vi.fn(),
+            userInitials: signal('TU'),
+            logout: logoutMock,
           },
         },
         {
@@ -41,5 +49,33 @@ describe('BaseHeader', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should render user avatar, full name, email, role badge, and logout button when authenticated', () => {
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    expect(compiled.textContent).toContain('Test User');
+    expect(compiled.textContent).toContain('test@arena.com');
+    expect(compiled.textContent).toContain('SUPERADMIN');
+    expect(compiled.textContent).toContain('TU');
+
+    const logoutBtn = compiled.querySelector('.btn-logout') as HTMLButtonElement;
+    expect(logoutBtn).toBeTruthy();
+    expect(logoutBtn.textContent).toContain('Logout');
+
+    logoutBtn.click();
+    expect(logoutMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('should render Sign In link and no user details when not authenticated', () => {
+    isAuthSignal.set(false);
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.user-profile-header')).toBeNull();
+    const signInBtn = compiled.querySelector('.btn-primary');
+    expect(signInBtn).toBeTruthy();
+    expect(signInBtn?.textContent).toContain('Sign In');
   });
 });
