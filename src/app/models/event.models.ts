@@ -124,6 +124,8 @@ export interface PublicEventTemplateField {
   fieldLabel: string;
   fieldType: string;
   isRequired: boolean;
+  customFieldName?: string | null;
+  customFieldLabel?: string | null;
   fieldOptions?: any;
   helpText?: string | null;
   defaultValue?: any;

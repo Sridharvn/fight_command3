@@ -343,24 +343,82 @@ export class FormBuilderPage implements OnInit {
     this.saveSuccessMessage.set(null);
 
     // Save to server
+    const usedSlugs = new Set<string>();
+    const templateFields = tmpl.fields
+      .filter((f) => !f.isSystemField)
+      .map((f, i) => {
+        let slug = (f.key || f.label)
+          .toLowerCase()
+          .replace(/[^a-z0-9_]/g, '_')
+          .slice(0, 45);
+        if (!slug || slug === '_') slug = `field_${f.type}`;
+        if (usedSlugs.has(slug)) {
+          slug = `${slug}_${i + 1}`;
+        }
+        usedSlugs.add(slug);
+
+        const fieldOpts =
+          f.options && f.options.length > 0
+            ? f.options.map((o) => ({
+                value: o.value || o.label,
+                label: o.label || o.value,
+              }))
+            : undefined;
+
+        if (typeof f.fieldDefinitionId === 'number' && f.fieldDefinitionId > 0) {
+          return {
+            fieldDefinitionId: f.fieldDefinitionId,
+            customFieldName: slug,
+            customFieldLabel: f.label,
+            displayOrder: i + 1,
+            isRequired: !!f.required,
+            fieldOptions: fieldOpts,
+          };
+        }
+
+        // New field definition created from palette
+        const mappedType = f.type === 'email' ? 'text' : f.type;
+        return {
+          customFieldName: slug,
+          customFieldLabel: f.label,
+          displayOrder: i + 1,
+          isRequired: !!f.required,
+          fieldOptions: fieldOpts,
+          newFieldDefinition: {
+            fieldName: slug,
+            fieldLabel: f.label,
+            fieldType: mappedType,
+            isGlobal: true,
+            defaultOptions:
+              f.options && f.options.length > 0
+                ? { options: f.options.map((o) => o.label || o.value) }
+                : undefined,
+          },
+        };
+      });
+
+    const schemaFields = tmpl.fields.map((f) => {
+      if (f.isSystemField) return f;
+      const matchingTf = templateFields.find(
+        (tf) => tf.customFieldLabel === f.label || tf.customFieldName === f.key,
+      );
+      return {
+        ...f,
+        key: matchingTf?.customFieldName || f.key,
+      };
+    });
+
     const dto = {
       templateName: tmpl.templateName,
       sportType: tmpl.sportType,
       tournamentType: tmpl.tournamentType,
-      fields: tmpl.fields
-        .filter((f) => !f.isSystemField && typeof f.fieldDefinitionId === 'number')
-        .map((f, i) => ({
-          fieldDefinitionId: f.fieldDefinitionId as number,
-          displayOrder: i + 1,
-          isRequired: !!f.required,
-          fieldLabelOverride: f.label,
-          fieldOptions: f.options ? { options: f.options.map((o) => o.label) } : undefined,
-        })),
+      templateType: 'CUSTOM' as const,
+      fields: templateFields,
       formSchema: {
         templateName: tmpl.templateName,
         sportType: tmpl.sportType,
         tournamentType: tmpl.tournamentType,
-        fields: tmpl.fields,
+        fields: schemaFields,
         compoundRules: tmpl.validations.map((v, i) => ({
           ruleId: i + 1,
           ruleName: v.name,

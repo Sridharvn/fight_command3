@@ -63,6 +63,7 @@
                   <input
                     type="checkbox"
                     [id]="field.key || field.id"
+                    [name]="field.key || field.id"
                     [formControlName]="field.key || field.id"
                   />
                   <span class="checkbox-label">{{ field.helpText || field.label }}</span>
@@ -73,17 +74,20 @@
                   <input
                     type="checkbox"
                     [id]="field.key || field.id"
+                    [name]="field.key || field.id"
                     [formControlName]="field.key || field.id"
                   />
                   <span class="checkbox-label">{{ field.helpText || field.label }}</span>
                 </label>
               }
               @case ('radio') {
-                <div class="radio-group">
+                <div class="radio-group" role="radiogroup" [attr.aria-label]="field.label">
                   @for (opt of field.options; track opt.value) {
                     <label class="radio-option">
                       <input
                         type="radio"
+                        [name]="field.key || field.id"
+                        [id]="(field.key || field.id) + '_' + opt.value"
                         [formControlName]="field.key || field.id"
                         [value]="opt.value"
                       />

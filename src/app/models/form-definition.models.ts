@@ -68,27 +68,17 @@ export interface CreateTemplateDto {
   templateName: string;
   sportType: number;
   tournamentType: number;
+  templateType?: 'PRESET' | 'CUSTOM';
   parentTemplateId?: number;
   formSchema?: any;
-  fields?: {
-    fieldDefinitionId: number;
-    displayOrder: number;
-    isRequired: boolean;
-    fieldLabelOverride?: string;
-    fieldOptions?: { options: string[] };
-  }[];
+  fields?: any[];
 }
 
 export interface UpdateTemplateDto {
   templateName?: string;
   sportType?: number;
   tournamentType?: number;
+  templateType?: 'PRESET' | 'CUSTOM';
   formSchema?: any;
-  fields?: {
-    fieldDefinitionId: number;
-    displayOrder: number;
-    isRequired: boolean;
-    fieldLabelOverride?: string;
-    fieldOptions?: { options: string[] };
-  }[];
+  fields?: any[];
 }

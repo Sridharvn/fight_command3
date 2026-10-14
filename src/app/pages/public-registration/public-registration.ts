@@ -75,14 +75,25 @@ export class PublicRegistrationPage implements OnInit {
     }
 
     // Build fields from templateFields
-    const customFields = (form.templateFields || []).map((tf) => ({
+    const customFields = (form.templateFields || [])
+      .filter(
+        (tf) =>
+          !['fullName', 'email', 'phone', 'dob', 'date_of_birth'].includes(
+            tf.fieldName,
+          ),
+      )
+      .map((tf) => ({
       id: String(tf.templateFieldId),
       key: tf.fieldName,
       label: tf.fieldLabel,
       type: (tf.fieldType || 'text') as any,
       required: tf.isRequired,
       options: tf.fieldOptions?.options
-        ? tf.fieldOptions.options.map((opt: string) => ({ label: opt, value: opt }))
+        ? tf.fieldOptions.options.map((opt: any) =>
+            typeof opt === 'string'
+              ? { label: opt, value: opt }
+              : { label: opt.label || opt.value, value: opt.value || opt.label },
+          )
         : undefined,
       helpText: tf.helpText || undefined,
       defaultValue: tf.defaultValue || undefined,
@@ -170,10 +181,29 @@ export class PublicRegistrationPage implements OnInit {
 
     if (pub && pub.templateFields) {
       for (const tf of pub.templateFields) {
+        let val: any = undefined;
         if (formData[tf.fieldName] !== undefined) {
+          val = formData[tf.fieldName];
+        } else if (tf.customFieldName && formData[tf.customFieldName] !== undefined) {
+          val = formData[tf.customFieldName];
+        } else if (formData[String(tf.templateFieldId)] !== undefined) {
+          val = formData[String(tf.templateFieldId)];
+        } else if (pub.formSchema?.fields) {
+          const matchingField = pub.formSchema.fields.find(
+            (f: any) =>
+              f.key === tf.fieldName ||
+              f.key === tf.customFieldName ||
+              f.label?.toLowerCase() === tf.fieldLabel?.toLowerCase(),
+          );
+          if (matchingField && formData[matchingField.key || matchingField.id] !== undefined) {
+            val = formData[matchingField.key || matchingField.id];
+          }
+        }
+
+        if (val !== undefined && val !== null) {
           responses.push({
             templateFieldId: tf.templateFieldId,
-            value: String(formData[tf.fieldName] ?? ''),
+            value: typeof val === 'boolean' ? (val ? 'true' : 'false') : String(val),
           });
         }
       }

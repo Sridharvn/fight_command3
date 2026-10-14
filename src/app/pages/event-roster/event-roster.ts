@@ -85,14 +85,25 @@ export class EventRosterPage implements OnInit {
     }
 
     // Build FormDefinition from templateFields
-    const fields = (pub.templateFields || []).map((tf) => ({
+    const fields = (pub.templateFields || [])
+      .filter(
+        (tf) =>
+          !['fullName', 'email', 'phone', 'dob', 'date_of_birth'].includes(
+            tf.fieldName,
+          ),
+      )
+      .map((tf) => ({
       id: String(tf.templateFieldId),
       key: tf.fieldName,
       label: tf.fieldLabel,
       type: (tf.fieldType || 'text') as any,
       required: tf.isRequired,
       options: tf.fieldOptions?.options
-        ? tf.fieldOptions.options.map((opt: string) => ({ label: opt, value: opt }))
+        ? tf.fieldOptions.options.map((opt: any) =>
+            typeof opt === 'string'
+              ? { label: opt, value: opt }
+              : { label: opt.label || opt.value, value: opt.value || opt.label },
+          )
         : undefined,
       helpText: tf.helpText || undefined,
       defaultValue: tf.defaultValue || undefined,
@@ -262,10 +273,29 @@ export class EventRosterPage implements OnInit {
 
     if (pub && pub.templateFields) {
       for (const tf of pub.templateFields) {
+        let val: any = undefined;
         if (formData[tf.fieldName] !== undefined) {
+          val = formData[tf.fieldName];
+        } else if (tf.customFieldName && formData[tf.customFieldName] !== undefined) {
+          val = formData[tf.customFieldName];
+        } else if (formData[String(tf.templateFieldId)] !== undefined) {
+          val = formData[String(tf.templateFieldId)];
+        } else if (pub.formSchema?.fields) {
+          const matchingField = pub.formSchema.fields.find(
+            (f: any) =>
+              f.key === tf.fieldName ||
+              f.key === tf.customFieldName ||
+              f.label?.toLowerCase() === tf.fieldLabel?.toLowerCase(),
+          );
+          if (matchingField && formData[matchingField.key || matchingField.id] !== undefined) {
+            val = formData[matchingField.key || matchingField.id];
+          }
+        }
+
+        if (val !== undefined && val !== null) {
           responses.push({
             templateFieldId: tf.templateFieldId,
-            value: String(formData[tf.fieldName] ?? ''),
+            value: typeof val === 'boolean' ? (val ? 'true' : 'false') : String(val),
           });
         }
       }
@@ -364,12 +394,13 @@ export class EventRosterPage implements OnInit {
 
   getFieldValue(reg: RegistrationDetail, field: FormField): string {
     const key = field.key || field.id;
-    if (
+    const isDobField =
       key === 'dob' ||
       key === 'date_of_birth' ||
-      field.type === 'date' ||
-      field.label.toLowerCase().includes('birth')
-    ) {
+      field.label.trim().toLowerCase() === 'date of birth' ||
+      field.label.trim().toLowerCase() === 'dob' ||
+      field.label.trim().toLowerCase() === 'birth date';
+    if (isDobField) {
       if (reg.dob) {
         return String(reg.dob).slice(0, 10);
       }
@@ -378,13 +409,63 @@ export class EventRosterPage implements OnInit {
       (r) =>
         r.fieldName === key ||
         String(r.templateFieldId) === String(field.id) ||
+        r.fieldLabel?.toLowerCase() === field.label?.toLowerCase() ||
         (key === 'dob' && r.fieldName === 'date_of_birth') ||
         (key === 'date_of_birth' && r.fieldName === 'dob'),
     );
     if (resp) {
-      return resp.displayValue || resp.value || '—';
+      const val = resp.displayValue ?? resp.value;
+      if (val === null || val === undefined || val === '') {
+        return '—';
+      }
+      if (String(val) === 'true') return 'Yes';
+      if (String(val) === 'false') return 'No';
+
+      if (field.options && field.options.length > 0) {
+        const matchingOpt = field.options.find(
+          (o) =>
+            String(o.value) === String(val) ||
+            String(o.label) === String(val),
+        );
+        if (matchingOpt) {
+          return matchingOpt.label;
+        }
+      }
+      return String(val);
     }
     return '—';
+  }
+
+  getResponseDisplayValue(resp: {
+    fieldLabel?: string;
+    fieldName?: string;
+    templateFieldId?: number;
+    value?: string | null;
+    displayValue?: string | null;
+  }): string {
+    if (resp.displayValue) return resp.displayValue;
+    const val = resp.value;
+    if (val === null || val === undefined || val === '') return '—';
+    if (String(val) === 'true') return 'Yes';
+    if (String(val) === 'false') return 'No';
+
+    const schema = this.dynamicFormDefinition();
+    if (schema?.fields) {
+      const matchingField = schema.fields.find(
+        (f) =>
+          f.key === resp.fieldName ||
+          String(f.id) === String(resp.templateFieldId) ||
+          f.label?.toLowerCase() === resp.fieldLabel?.toLowerCase(),
+      );
+      if (matchingField?.options && matchingField.options.length > 0) {
+        const matchingOpt = matchingField.options.find(
+          (o) =>
+            String(o.value) === String(val) || String(o.label) === String(val),
+        );
+        if (matchingOpt) return matchingOpt.label;
+      }
+    }
+    return String(val);
   }
 
   getRegistrationFormData(reg: RegistrationDetail | null): Record<string, any> {
@@ -398,12 +479,37 @@ export class EventRosterPage implements OnInit {
       date_of_birth: formattedDob,
     };
     for (const resp of reg.responses || []) {
-      const val = resp.displayValue || resp.value || '';
+      const displayVal = resp.displayValue || resp.value || '';
+      let parsedVal: any = displayVal;
+      if (resp.value === 'true' || displayVal === 'true') parsedVal = true;
+      else if (resp.value === 'false' || displayVal === 'false') parsedVal = false;
+
+      const schema = this.dynamicFormDefinition();
+      const matchingField = schema?.fields?.find(
+        (f) =>
+          f.key === resp.fieldName ||
+          String(f.id) === String(resp.templateFieldId) ||
+          f.label?.toLowerCase() === resp.fieldLabel?.toLowerCase(),
+      );
+
+      // If this is a select/radio field with options, prefer the matching option value so the form control selects it
+      if (matchingField?.options && matchingField.options.length > 0 && resp.value) {
+        const hasMatchingVal = matchingField.options.some(
+          (o) => String(o.value) === String(resp.value),
+        );
+        if (hasMatchingVal) {
+          parsedVal = resp.value;
+        }
+      }
+
       if (resp.fieldName) {
-        data[resp.fieldName] = val;
+        data[resp.fieldName] = parsedVal;
       }
       if (resp.templateFieldId) {
-        data[String(resp.templateFieldId)] = val;
+        data[String(resp.templateFieldId)] = parsedVal;
+      }
+      if (matchingField) {
+        data[matchingField.key || matchingField.id] = parsedVal;
       }
     }
     if (!data['dob'] && data['date_of_birth']) {

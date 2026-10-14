@@ -840,4 +840,49 @@ The application provides:
   - Frontend displays clear alert banner with the error message without crashing.
 - **Final state:** User alerted, no duplicate registration created.
 
+**HF-REG-009: Multi-Item Dynamic Form Creation, Event Attachment, Public Registration, & Roster Details Verification**
+- **Preconditions:** Admin creates a form template containing diverse form elements (Text, Textarea, Number, Select, Radio, Checkbox, Boolean toggle, Date) and custom fields. Event/tournament is created or updated using this form template.
+- **User/System actions:**
+  1. Multiple users/athletes register through the public registration form (`/events/:eventId/register`) filling out all diverse form fields.
+  2. Admin navigates to the event roster (`/events/:eventId/roster`).
+  3. Admin checks table columns and values.
+  4. Admin clicks the "View Details" action icon on registered athlete rows.
+- **Expected results:**
+  - All form items are rendered with appropriate inputs (dropdowns with options, radios with choices, checkboxes, number fields, date pickers, textareas).
+  - Form submission succeeds and saves responses for all template fields in the backend database.
+  - In Event Roster table, each custom field appears as a dynamic table header column (`<th>`), and the submitted values for each athlete appear under their respective columns (booleans as "Yes"/"No", numbers as values, text as text, dates as dates).
+  - In Athlete Details modal, both the read-only dynamic form renderer and the submitted responses table display all field values with 100% fidelity (checkboxes checked/unchecked accurately, select options correctly matched, custom numbers and dates displayed accurately).
+- **Final state:** All diverse form fields and entered values are completely persistent, visible, and verified across both public registration and admin roster surfaces.
+
+**EC-REG-001: Boolean and Checkbox Serialization in Read-Only Details View**
+- **Preconditions:** Form includes boolean toggles and checkboxes. Athlete submits with some checked and some unchecked.
+- **User/System actions:** Admin opens Athlete Details modal.
+- **Expected results:** Checked inputs appear checked (`true`), unchecked inputs remain unchecked (`false`). Unchecked inputs do not evaluate to true due to string truthiness.
+- **Final state:** Boolean states faithfully represented.
+
+**EC-REG-002: Distinct Date Handling Between Participant DOB and Custom Form Date Fields**
+- **Preconditions:** Form contains both athlete Date of Birth and a custom date field (e.g., "Medical Clearance Date").
+- **User/System actions:** Athlete submits different dates for DOB and custom date. Admin views roster table and details modal.
+- **Expected results:** The custom date column displays the custom date value, not the athlete's date of birth.
+- **Final state:** No cross-contamination between date fields.
+
+**EC-REG-003: Custom Option Label Resolution in Roster Table and Details Modal**
+- **Preconditions:** Form contains a select dropdown or radio choice with distinct values and labels (e.g., value "purple" -> label "Purple Belt", value "southpaw" -> label "Southpaw").
+- **User/System actions:** Athlete registers choosing these options. Admin views roster table and opens athlete details modal.
+- **Expected results:** The roster table, modal responses summary table, and Excel export resolve and display the human-readable labels ("Purple Belt", "Southpaw") instead of the raw option values ("purple", "southpaw").
+- **Final state:** Human-readable option labels rendered consistently across all viewing surfaces.
+
+**EC-REG-004: Non-DOB Fields Containing 'birth' in Label Render Submitted Values**
+- **Preconditions:** Form contains custom text or select fields containing the word "birth" in the label (e.g., "Place of Birth", "Birth City", "Birth Certificate Number").
+- **User/System actions:** Athlete enters text (e.g. "Bengaluru") in the "Place of Birth" field. Admin views roster table.
+- **Expected results:** The table renders the submitted text ("Bengaluru") under the "Place of Birth" column, rather than mistakenly intercepting the label and displaying the athlete's date of birth (`reg.dob`).
+- **Final state:** Custom birth-related text fields display submitted text accurately.
+
+**EC-REG-005: Form Schema Field Key Alignment with Template Field Slugs**
+- **Preconditions:** Admin creates a custom template with multiple palette items.
+- **User/System actions:** Form template is saved. Form schema is inspected and used in public registration.
+- **Expected results:** `formSchema.fields[].key` matches the slugified `customFieldName` of each template field, ensuring 1:1 control mapping between reactive form inputs and response submission.
+- **Final state:** Form schema keys and template field names are fully synchronized.
+
+
 

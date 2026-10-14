@@ -244,5 +244,65 @@ describe('EventRosterPage', () => {
     expect(initialData['dob']).toBe('2000-05-15');
     expect(initialData['date_of_birth']).toBe('2000-05-15');
   });
+
+  it('should format all diverse form field types properly in getFieldValue and details initialData', () => {
+    const multiItemReg: RegistrationDetail = {
+      registrationId: 201,
+      participantId: 10,
+      fullName: 'Karan Singhania',
+      email: 'karan@example.com',
+      phone: '+919876543211',
+      dob: '1998-07-22T00:00:00.000Z',
+      status: RegistrationStatus.PENDING,
+      registrationDate: '2026-03-01',
+      responses: [
+        { templateFieldId: 1, fieldName: 'belt_rank', fieldLabel: 'Belt Rank', value: 'black', displayValue: 'Black Belt' },
+        { templateFieldId: 2, fieldName: 'weight_kg', fieldLabel: 'Exact Weight (KG)', value: '77.5' },
+        { templateFieldId: 3, fieldName: 'competition_stance', fieldLabel: 'Competition Stance', value: 'orthodox' },
+        { templateFieldId: 4, fieldName: 'medical_clearance_date', fieldLabel: 'Medical Clearance Date', value: '2026-05-15' },
+        { templateFieldId: 5, fieldName: 'medical_notes', fieldLabel: 'Medical Notes', value: 'Cleared for combat.' },
+        { templateFieldId: 6, fieldName: 'has_valid_insurance', fieldLabel: 'Has Insurance', value: 'true' },
+        { templateFieldId: 7, fieldName: 'prior_injuries_count', fieldLabel: 'Prior Injuries Count', value: '0' },
+        { templateFieldId: 8, fieldName: 'needs_transport', fieldLabel: 'Needs Transport', value: 'false' },
+        { templateFieldId: 9, fieldName: 'place_of_birth', fieldLabel: 'Place of Birth', value: 'Bengaluru' },
+      ],
+    };
+
+    // 1. Check getFieldValue for various types
+    expect(component.getFieldValue(multiItemReg, { id: '1', key: 'belt_rank', label: 'Belt Rank', type: 'select' })).toBe('Black Belt');
+    expect(component.getFieldValue(multiItemReg, { id: '2', key: 'weight_kg', label: 'Exact Weight (KG)', type: 'number' })).toBe('77.5');
+    // Option label resolution from field options if displayValue is absent
+    expect(component.getFieldValue(multiItemReg, {
+      id: '3',
+      key: 'competition_stance',
+      label: 'Competition Stance',
+      type: 'radio',
+      options: [{ value: 'orthodox', label: 'Orthodox' }, { value: 'southpaw', label: 'Southpaw' }],
+    })).toBe('Orthodox');
+    // Crucial: custom date field should return its own value, NOT athlete dob
+    expect(component.getFieldValue(multiItemReg, { id: '4', key: 'medical_clearance_date', label: 'Medical Clearance Date', type: 'date' })).toBe('2026-05-15');
+    // Crucial: custom field containing 'birth' in label (Place of Birth) should return its value, NOT athlete dob
+    expect(component.getFieldValue(multiItemReg, { id: '9', key: 'place_of_birth', label: 'Place of Birth', type: 'text' })).toBe('Bengaluru');
+    // Boolean true / false display
+    expect(component.getFieldValue(multiItemReg, { id: '6', key: 'has_valid_insurance', label: 'Has Insurance', type: 'boolean' })).toBe('Yes');
+    expect(component.getFieldValue(multiItemReg, { id: '8', key: 'needs_transport', label: 'Needs Transport', type: 'boolean' })).toBe('No');
+    // Falsy value 0 should display as '0', not '—'
+    expect(component.getFieldValue(multiItemReg, { id: '7', key: 'prior_injuries_count', label: 'Prior Injuries Count', type: 'number' })).toBe('0');
+
+    // 2. Check getRegistrationFormData boolean conversion and value precedence
+    const initData = component.getRegistrationFormData(multiItemReg);
+    expect(initData['has_valid_insurance']).toBe(true);
+    expect(initData['needs_transport']).toBe(false);
+    expect(initData['weight_kg']).toBe('77.5');
+    expect(initData['medical_clearance_date']).toBe('2026-05-15');
+    expect(initData['place_of_birth']).toBe('Bengaluru');
+
+    // 3. Check getResponseDisplayValue
+    expect(component.getResponseDisplayValue(multiItemReg.responses![0])).toBe('Black Belt');
+    expect(component.getResponseDisplayValue(multiItemReg.responses![5])).toBe('Yes');
+    expect(component.getResponseDisplayValue(multiItemReg.responses![6])).toBe('0');
+    expect(component.getResponseDisplayValue(multiItemReg.responses![7])).toBe('No');
+    expect(component.getResponseDisplayValue(multiItemReg.responses![8])).toBe('Bengaluru');
+  });
 });
 

@@ -101,12 +101,18 @@ export class DynamicFormRendererComponent implements OnInit {
         }
       }
 
-      const defaultValue =
+      let defaultValue =
         initData[fieldKey] !== undefined
           ? initData[fieldKey]
-          : field.type === 'boolean' || field.type === 'checkbox'
-            ? false
-            : (field.defaultValue ?? '');
+          : (field.defaultValue ?? '');
+
+      if (field.type === 'boolean' || field.type === 'checkbox') {
+        defaultValue =
+          defaultValue === true ||
+          defaultValue === 'true' ||
+          defaultValue === '1' ||
+          defaultValue === 'yes';
+      }
 
       group[fieldKey] = new FormControl(defaultValue, validators);
     }
