@@ -70,7 +70,7 @@ export class PublicRegistrationPage implements OnInit {
     const form = this.publicForm();
     if (!form) return null;
 
-    if (form.formSchema && form.formSchema.fields) {
+    if (form.formSchema && form.formSchema.fields && form.formSchema.fields.length > 0 && form.formSchema.fields[0]?.key) {
       return form.formSchema;
     }
 
@@ -183,7 +183,7 @@ export class PublicRegistrationPage implements OnInit {
       fullName: formData['fullName'] || 'Unknown Athlete',
       email: formData['email'] || undefined,
       phone: formData['phone'] || undefined,
-      dob: formData['dob'] || undefined,
+      dob: formData['dob'] || formData['date_of_birth'] || undefined,
       responses,
     };
 

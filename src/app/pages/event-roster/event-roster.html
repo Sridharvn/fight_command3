@@ -439,6 +439,9 @@
               @if (reg.phone) {
                 <span class="meta-item"><span class="meta-label">Phone:</span> {{ reg.phone }}</span>
               }
+              @if (reg.dob) {
+                <span class="meta-item"><span class="meta-label">DOB:</span> {{ reg.dob | date:'mediumDate' }}</span>
+              }
             </div>
 
             @if (dynamicFormDefinition(); as schema) {

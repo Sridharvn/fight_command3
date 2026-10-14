@@ -60,10 +60,7 @@ export interface FormTemplate {
   isActive: boolean;
   parentTemplateId?: number | null;
   fields?: FormTemplateField[];
-  formSchema?: {
-    fields: FormTemplateField[];
-    compoundRules: GlobalCompoundRule[];
-  };
+  formSchema?: any;
   createdAt?: string;
 }
 
@@ -72,10 +69,7 @@ export interface CreateTemplateDto {
   sportType: number;
   tournamentType: number;
   parentTemplateId?: number;
-  formSchema?: {
-    fields?: FormTemplateField[];
-    compoundRules?: GlobalCompoundRule[];
-  };
+  formSchema?: any;
   fields?: {
     fieldDefinitionId: number;
     displayOrder: number;
@@ -89,6 +83,7 @@ export interface UpdateTemplateDto {
   templateName?: string;
   sportType?: number;
   tournamentType?: number;
+  formSchema?: any;
   fields?: {
     fieldDefinitionId: number;
     displayOrder: number;

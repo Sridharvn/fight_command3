@@ -162,18 +162,33 @@ export class FormBuilderPage implements OnInit {
   private loadTemplate(id: number): void {
     this.formDefinitionService.getTemplateById(id).subscribe({
       next: (tmpl) => {
-        const fields: FormField[] = (tmpl.fields || []).map((tf) => ({
-          id: `field_${tf.fieldDefinitionId}`,
-          fieldDefinitionId: tf.fieldDefinitionId,
-          key: tf.fieldDefinition?.fieldName || `field_${tf.fieldDefinitionId}`,
-          label: tf.fieldLabelOverride || tf.fieldDefinition?.fieldLabel || 'Field',
-          type: (tf.fieldDefinition?.fieldType || 'text') as FormFieldType,
-          required: tf.isRequired,
-          columnSpan: 1,
-        }));
+        let fields: FormField[] = [];
+
+        // 1. If formSchema has complete FormField definitions, use them
+        const schemaFields = tmpl.formSchema?.fields as any[];
+        if (Array.isArray(schemaFields) && schemaFields.length > 0 && schemaFields[0]?.key) {
+          fields = schemaFields as FormField[];
+        } else if (tmpl.fields && tmpl.fields.length > 0) {
+          // 2. Otherwise map from backend template fields
+          fields = tmpl.fields.map((tf: any) => ({
+            id: `field_${tf.fieldDefinitionId || tf.templateFieldId}`,
+            fieldDefinitionId: tf.fieldDefinitionId,
+            key: tf.customFieldName || tf.fieldDefinition?.fieldName || `field_${tf.fieldDefinitionId}`,
+            label: tf.fieldLabelOverride || tf.customFieldLabel || tf.fieldDefinition?.fieldLabel || 'Field',
+            type: (tf.fieldDefinition?.fieldType || 'text') as FormFieldType,
+            required: tf.isRequired,
+            columnSpan: 1,
+            options: (tf.fieldDefinition?.defaultOptions as any)?.options
+              ? (tf.fieldDefinition.defaultOptions as any).options.map((opt: string) => ({
+                  label: opt,
+                  value: opt.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+                }))
+              : undefined,
+          }));
+        }
 
         const compoundRules: CrossFieldValidation[] =
-          tmpl.formSchema?.compoundRules?.map((r) => ({
+          tmpl.formSchema?.compoundRules?.map((r: any) => ({
             id: `rule_${r.ruleId || Date.now()}`,
             name: r.ruleName,
             errorMessage: r.errorMessage,
@@ -332,13 +347,20 @@ export class FormBuilderPage implements OnInit {
       templateName: tmpl.templateName,
       sportType: tmpl.sportType,
       tournamentType: tmpl.tournamentType,
-      formSchema: {
-        fields: tmpl.fields.map((f, i) => ({
-          fieldDefinitionId: f.fieldDefinitionId || 1, // Preserve master definition ID
+      fields: tmpl.fields
+        .filter((f) => !f.isSystemField && typeof f.fieldDefinitionId === 'number')
+        .map((f, i) => ({
+          fieldDefinitionId: f.fieldDefinitionId as number,
           displayOrder: i + 1,
           isRequired: !!f.required,
           fieldLabelOverride: f.label,
+          fieldOptions: f.options ? { options: f.options.map((o) => o.label) } : undefined,
         })),
+      formSchema: {
+        templateName: tmpl.templateName,
+        sportType: tmpl.sportType,
+        tournamentType: tmpl.tournamentType,
+        fields: tmpl.fields,
         compoundRules: tmpl.validations.map((v, i) => ({
           ruleId: i + 1,
           ruleName: v.name,

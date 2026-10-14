@@ -31,6 +31,27 @@ export const DEFAULT_SYSTEM_FIELDS: FormField[] = [
     columnSpan: 1,
     placeholder: 'athlete@example.com',
   },
+  {
+    id: 'phone',
+    key: 'phone',
+    label: 'Phone Number',
+    description: 'Athlete contact phone number',
+    type: 'text',
+    required: false,
+    isSystemField: true,
+    columnSpan: 1,
+    placeholder: '+1 555-0123',
+  },
+  {
+    id: 'dob',
+    key: 'dob',
+    label: 'Date of Birth',
+    description: 'Athlete date of birth',
+    type: 'date',
+    required: false,
+    isSystemField: true,
+    columnSpan: 1,
+  },
 ];
 
 export interface FormBuilderState {
@@ -52,15 +73,18 @@ const initialState: FormBuilderState = {
 function ensureSystemFields(fields: FormField[]): FormField[] {
   const result = [...fields];
   for (const sysField of DEFAULT_SYSTEM_FIELDS) {
-    const existingIndex = result.findIndex((f) => f.key === sysField.key);
+    const existingIndex = result.findIndex(
+      (f) =>
+        f.key === sysField.key ||
+        (sysField.key === 'dob' && f.key === 'date_of_birth'),
+    );
     if (existingIndex >= 0) {
       result[existingIndex] = {
         ...result[existingIndex],
-        required: true,
         isSystemField: true,
       };
     } else {
-      result.unshift({ ...sysField });
+      result.push({ ...sysField });
     }
   }
   return result;

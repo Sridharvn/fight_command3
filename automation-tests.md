@@ -789,6 +789,30 @@ The application provides:
   - Reddish accent tokens (`var(--accent-primary)`, `#e11d48`) are preserved throughout.
 - **Final state:** 100% of application pages and components display in unified dark mode.
 
+**HF-DOB-001: Date of Birth Persistence & Visibility in Registered Users List and Athlete Details Modal**
+- **Preconditions:** Athlete registers for an event via public self-registration or manual registration with a Date of Birth (DOB).
+- **User/System actions:**
+  - Registration is submitted with `dob`.
+  - Admin navigates to `/events/:eventId/roster`.
+  - Admin views the Roster Table and opens the Athlete Details modal for the registered athlete.
+- **Expected results:**
+  - Backend API `GET /events/:eventId/registrations` returns `dob` on the registration item.
+  - Roster Table renders the athlete's Date of Birth in the "Date of Birth" column formatted as `YYYY-MM-DD` (never blank or `'—'`).
+  - Athlete Details modal displays `DOB` in the metadata summary bar and populates the Date of Birth input in the read-only dynamic form renderer with the submitted date.
+  - Excel export (`.xlsx`) includes the athlete's Date of Birth column.
+- **Final state:** Date of Birth is fully persistent and visible across the roster table, details popup, and export.
+
+**HF-FB-002: Dynamic Form Creation & Full-Fidelity Rebuilding**
+- **Preconditions:** Admin navigates to `/form-builder` or edits an existing template.
+- **User/System actions:**
+  - Admin initializes or customizes a form template with standard fields (Full Name, Email, Phone, Date of Birth) and custom fields.
+  - Admin saves the template.
+  - Admin reloads the template or links it to an event.
+- **Expected results:**
+  - Complete `FormField[]` definition (including `id`, `key`, `label`, `type`, `options`, `required`, `columnSpan`, `validationRules`) is persisted in `formSchema.fields` and synced to `template_field` rows.
+  - When reloaded in the Form Builder or rendered by `DynamicFormRendererComponent`, all fields, options, and validations rebuild with 100% fidelity.
+- **Final state:** Dynamic form templates create and rebuild completely without field metadata loss.
+
 ---
 
 ### Negative Flows & Edge Cases

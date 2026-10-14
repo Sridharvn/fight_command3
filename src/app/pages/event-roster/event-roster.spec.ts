@@ -225,5 +225,24 @@ describe('EventRosterPage', () => {
     expect(initialData['email']).toBe('john@example.com');
     expect(initialData['weight_category']).toBe('-71 kg');
   });
+
+  it('should render date of birth in roster table and format initial data for details modal', () => {
+    const regWithDob: RegistrationDetail = {
+      ...mockRegistrations[0],
+      dob: '2000-05-15T00:00:00.000Z',
+    };
+
+    const dobField = { id: 'dob', key: 'dob', label: 'Date of Birth', type: 'date' as const };
+    const val = component.getFieldValue(regWithDob, dobField);
+    expect(val).toBe('2000-05-15');
+
+    const dateOfBirthField = { id: '4', key: 'date_of_birth', label: 'Date of Birth', type: 'date' as const };
+    const val2 = component.getFieldValue(regWithDob, dateOfBirthField);
+    expect(val2).toBe('2000-05-15');
+
+    const initialData = component.getRegistrationFormData(regWithDob);
+    expect(initialData['dob']).toBe('2000-05-15');
+    expect(initialData['date_of_birth']).toBe('2000-05-15');
+  });
 });
 

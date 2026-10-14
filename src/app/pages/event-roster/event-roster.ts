@@ -80,7 +80,7 @@ export class EventRosterPage implements OnInit {
     const pub = this.store.publicEventForm();
     if (!pub) return null;
 
-    if (pub.formSchema && pub.formSchema.fields) {
+    if (pub.formSchema && pub.formSchema.fields && pub.formSchema.fields.length > 0 && pub.formSchema.fields[0]?.key) {
       return pub.formSchema;
     }
 
@@ -275,7 +275,7 @@ export class EventRosterPage implements OnInit {
       fullName: formData['fullName'] || 'Unknown Athlete',
       email: formData['email'] || undefined,
       phone: formData['phone'] || undefined,
-      dob: formData['dob'] || undefined,
+      dob: formData['dob'] || formData['date_of_birth'] || undefined,
       responses,
     };
 
@@ -364,13 +364,22 @@ export class EventRosterPage implements OnInit {
 
   getFieldValue(reg: RegistrationDetail, field: FormField): string {
     const key = field.key || field.id;
-    if (key === 'dob') {
+    if (
+      key === 'dob' ||
+      key === 'date_of_birth' ||
+      field.type === 'date' ||
+      field.label.toLowerCase().includes('birth')
+    ) {
       if (reg.dob) {
         return String(reg.dob).slice(0, 10);
       }
     }
     const resp = (reg.responses || []).find(
-      (r) => r.fieldName === key || String(r.templateFieldId) === String(field.id),
+      (r) =>
+        r.fieldName === key ||
+        String(r.templateFieldId) === String(field.id) ||
+        (key === 'dob' && r.fieldName === 'date_of_birth') ||
+        (key === 'date_of_birth' && r.fieldName === 'dob'),
     );
     if (resp) {
       return resp.displayValue || resp.value || '—';
@@ -380,11 +389,13 @@ export class EventRosterPage implements OnInit {
 
   getRegistrationFormData(reg: RegistrationDetail | null): Record<string, any> {
     if (!reg) return {};
+    const formattedDob = reg.dob ? String(reg.dob).slice(0, 10) : '';
     const data: Record<string, any> = {
       fullName: reg.fullName || '',
       email: reg.email || '',
       phone: reg.phone || '',
-      dob: reg.dob ? String(reg.dob).slice(0, 10) : '',
+      dob: formattedDob,
+      date_of_birth: formattedDob,
     };
     for (const resp of reg.responses || []) {
       const val = resp.displayValue || resp.value || '';
@@ -394,6 +405,12 @@ export class EventRosterPage implements OnInit {
       if (resp.templateFieldId) {
         data[String(resp.templateFieldId)] = val;
       }
+    }
+    if (!data['dob'] && data['date_of_birth']) {
+      data['dob'] = data['date_of_birth'];
+    }
+    if (!data['date_of_birth'] && data['dob']) {
+      data['date_of_birth'] = data['dob'];
     }
     return data;
   }

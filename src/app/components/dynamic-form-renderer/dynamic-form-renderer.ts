@@ -57,6 +57,7 @@ export class DynamicFormRendererComponent implements OnInit {
 
     effect(() => {
       const currentSchema = this.schema();
+      const initData = this.initialData();
       if (currentSchema) {
         this.buildForm(currentSchema);
       }
