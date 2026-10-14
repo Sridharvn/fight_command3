@@ -499,6 +499,19 @@ The application provides an accessible login screen (`/login`) allowing users to
   - Saving creates a new CUSTOM template extending the official preset foundation.
 - **Final state:** Clean inheritance model preserving base sport rules while allowing tournament-specific extensions.
 
+**HF-051: Form Templates - View Form Preview Loads Complete Schema & Attached Fields via getTemplateById**
+
+- **Preconditions:** User is authenticated and on `/form-definitions` under "Form Templates" tab. A template exists with multiple attached fields and custom options.
+- **User/System actions:** User clicks "View Form" on a template card.
+- **Expected results:**
+  - Preview modal opens with template title and loading indicator while fetching full details.
+  - Component triggers `FormDefinitionService.getTemplateById(templateId)` to retrieve the full `TemplateModel` including `formSchema.fields` and `fields: TemplateFieldModel[]`.
+  - All attached form fields (text, textarea, select, radio, checkbox, date, number, etc.) along with system fields (Full Name, Email) and compound validation rules are properly mapped into `previewFormDefinition`.
+  - `DynamicFormRendererComponent` renders the complete form fields and controls inside the preview modal.
+  - Preview container supports smooth scrolling (`overflow-y: auto`) without clipping or omitting fields.
+  - Template cards accurately display attached field count using `fieldCount`.
+- **Final state:** Admin can review the full, exhaustive form definition directly from the template management card.
+
 ---
 
 ### Negative Flows

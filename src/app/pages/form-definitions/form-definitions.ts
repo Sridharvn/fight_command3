@@ -2,8 +2,15 @@ import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@ang
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FormDefinitionStore } from '../../stores/form-definition.store';
 import { RuleStore } from '../../stores/rule.store';
+import { FormDefinitionService } from '../../services/form-definition.service';
 import { FieldType, FormTemplate } from '../../models/form-definition.models';
-import { FormDefinition, FormField, FormFieldType } from '../../models/dynamic-form.models';
+import {
+  CrossFieldValidation,
+  FormDefinition,
+  FormField,
+  FormFieldOption,
+  FormFieldType,
+} from '../../models/dynamic-form.models';
 import { DynamicFormRendererComponent } from '../../components/dynamic-form-renderer/dynamic-form-renderer';
 
 import { RouterLink } from '@angular/router';
@@ -19,22 +26,21 @@ import { BaseLayout } from '../../layouts/base-layout/base-layout';
 export class FormDefinitionsPage implements OnInit {
   protected readonly formStore = inject(FormDefinitionStore);
   protected readonly ruleStore = inject(RuleStore);
+  protected readonly formDefinitionService = inject(FormDefinitionService);
 
   readonly isFieldModalOpen = signal(false);
   readonly isCreateTemplateModalOpen = signal(false);
   readonly selectedBasePresetId = signal<number | null>(null);
   readonly previewingTemplate = signal<FormTemplate | null>(null);
   readonly previewFormDefinition = signal<FormDefinition | null>(null);
+  readonly isPreviewLoading = signal(false);
   readonly isSubmitting = signal(false);
 
   readonly searchControl = new FormControl('');
 
   // Field creation form
   readonly fieldForm = new FormGroup({
-    fieldName: new FormControl('', [
-      Validators.required,
-      Validators.pattern(/^[a-z0-9_]+$/),
-    ]),
+    fieldName: new FormControl('', [Validators.required, Validators.pattern(/^[a-z0-9_]+$/)]),
     fieldLabel: new FormControl('', [Validators.required]),
     fieldType: new FormControl<FieldType>('text', [Validators.required]),
     optionsInput: new FormControl(''),
@@ -87,7 +93,10 @@ export class FormDefinitionsPage implements OnInit {
     let defaultOptions: { options: string[] } | undefined;
     if (['select', 'radio', 'checkbox'].includes(val.fieldType!) && val.optionsInput?.trim()) {
       defaultOptions = {
-        options: val.optionsInput.split(',').map((s) => s.trim()).filter(Boolean),
+        options: val.optionsInput
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean),
       };
     }
 
@@ -142,18 +151,90 @@ export class FormDefinitionsPage implements OnInit {
   openPreviewModal(template: FormTemplate): void {
     this.previewingTemplate.set(template);
 
-    const fields: FormField[] = (template.fields || []).map((tf) => ({
-      id: `field_${tf.fieldDefinitionId}`,
-      fieldDefinitionId: tf.fieldDefinitionId,
-      key: tf.fieldDefinition?.fieldName || `field_${tf.fieldDefinitionId}`,
-      label: tf.fieldLabelOverride || tf.fieldDefinition?.fieldLabel || 'Field',
-      type: (tf.fieldDefinition?.fieldType || 'text') as FormFieldType,
-      required: tf.isRequired,
-      columnSpan: 1,
+    // If template already has complete formSchema fields or attached fields, use them directly
+    const schemaFields = template.formSchema?.fields as any[];
+    if (Array.isArray(schemaFields) && schemaFields.length > 0 && schemaFields[0]?.key) {
+      this.buildAndSetPreviewDefinition(
+        template,
+        schemaFields as FormField[],
+        template.formSchema?.compoundRules,
+      );
+      return;
+    }
+
+    if (template.fields && template.fields.length > 0) {
+      this.buildAndSetPreviewDefinitionFromBackendFields(
+        template,
+        template.fields,
+        template.formSchema?.compoundRules,
+      );
+      return;
+    }
+
+    // Otherwise fetch the complete template details via getTemplateById
+    this.isPreviewLoading.set(true);
+    this.previewFormDefinition.set(null);
+
+    this.formDefinitionService.getTemplateById(template.templateId).subscribe({
+      next: (fullTemplate) => {
+        this.isPreviewLoading.set(false);
+        const fullSchemaFields = fullTemplate.formSchema?.fields as any[];
+        if (
+          Array.isArray(fullSchemaFields) &&
+          fullSchemaFields.length > 0 &&
+          fullSchemaFields[0]?.key
+        ) {
+          this.buildAndSetPreviewDefinition(
+            fullTemplate,
+            fullSchemaFields as FormField[],
+            fullTemplate.formSchema?.compoundRules,
+          );
+        } else if (fullTemplate.fields && fullTemplate.fields.length > 0) {
+          this.buildAndSetPreviewDefinitionFromBackendFields(
+            fullTemplate,
+            fullTemplate.fields,
+            fullTemplate.formSchema?.compoundRules,
+          );
+        } else {
+          this.buildAndSetPreviewDefinition(
+            fullTemplate,
+            [],
+            fullTemplate.formSchema?.compoundRules,
+          );
+        }
+      },
+      error: () => {
+        this.isPreviewLoading.set(false);
+        this.buildAndSetPreviewDefinition(template, [], template.formSchema?.compoundRules);
+      },
+    });
+  }
+
+  private buildAndSetPreviewDefinition(
+    template: FormTemplate,
+    initialFields: FormField[],
+    compoundRules?: any[],
+  ): void {
+    const fields: FormField[] = initialFields.map((f) => ({
+      ...f,
+      options: f.options?.map((opt: any) =>
+        typeof opt === 'string'
+          ? { label: opt, value: opt.toLowerCase().replace(/[^a-z0-9]/g, '_') }
+          : opt,
+      ),
     }));
 
-    // Ensure Full Name & Email exist in preview
-    if (!fields.some((f) => f.key === 'fullName')) {
+    // Ensure Full Name & Email exist in preview without duplicating existing fields
+    const isFullName = (k?: string) => {
+      const norm = (k || '').toLowerCase().replace(/[^a-z]/g, '');
+      return norm === 'fullname' || norm === 'name';
+    };
+    const isEmail = (k?: string) => {
+      const norm = (k || '').toLowerCase().replace(/[^a-z]/g, '');
+      return norm === 'email' || norm === 'emailaddress';
+    };
+
+    if (!fields.some((f) => isFullName(f.key) || isFullName(f.id))) {
       fields.unshift({
         id: 'fullName',
         key: 'fullName',
@@ -164,8 +245,10 @@ export class FormDefinitionsPage implements OnInit {
         columnSpan: 1,
       });
     }
-    if (!fields.some((f) => f.key === 'email')) {
-      fields.splice(1, 0, {
+    if (!fields.some((f) => isEmail(f.key) || isEmail(f.id))) {
+      const fullNameIdx = fields.findIndex((f) => isFullName(f.key) || isFullName(f.id));
+      const insertIdx = fullNameIdx >= 0 ? fullNameIdx + 1 : 0;
+      fields.splice(insertIdx, 0, {
         id: 'email',
         key: 'email',
         label: 'Email Address',
@@ -176,18 +259,74 @@ export class FormDefinitionsPage implements OnInit {
       });
     }
 
+    const validations: CrossFieldValidation[] =
+      compoundRules?.map((r: any) => ({
+        id: `rule_${r.ruleId || Date.now()}`,
+        name: r.ruleName || 'Validation Rule',
+        errorMessage: r.errorMessage || 'Validation error',
+        when: r.conditions as any,
+        then: r.actions as any,
+      })) || [];
+
     this.previewFormDefinition.set({
       id: template.templateId,
       templateName: template.templateName,
       sportType: template.sportType,
       tournamentType: template.tournamentType,
       fields,
-      validations: [],
+      validations,
     });
+  }
+
+  private buildAndSetPreviewDefinitionFromBackendFields(
+    template: FormTemplate,
+    backendFields: any[],
+    compoundRules?: any[],
+  ): void {
+    const mappedFields: FormField[] = backendFields.map((tf: any) => {
+      let options: FormFieldOption[] | undefined;
+      const rawOpts =
+        tf.options ||
+        tf.fieldOptions?.options ||
+        tf.defaultOptions?.options ||
+        tf.fieldDefinition?.defaultOptions?.options;
+
+      if (Array.isArray(rawOpts)) {
+        options = rawOpts.map((opt: any) =>
+          typeof opt === 'string'
+            ? { label: opt, value: opt.toLowerCase().replace(/[^a-z0-9]/g, '_') }
+            : opt,
+        );
+      }
+
+      return {
+        id: `field_${tf.fieldDefinitionId || tf.templateFieldId}`,
+        fieldDefinitionId: tf.fieldDefinitionId,
+        key:
+          tf.customFieldName ||
+          tf.fieldName ||
+          tf.fieldDefinition?.fieldName ||
+          `field_${tf.fieldDefinitionId}`,
+        label:
+          tf.fieldLabelOverride ||
+          tf.customFieldLabel ||
+          tf.fieldLabel ||
+          tf.fieldDefinition?.fieldLabel ||
+          'Field',
+        type: (tf.fieldType || tf.fieldDefinition?.fieldType || 'text') as FormFieldType,
+        required: !!tf.isRequired,
+        columnSpan: 1,
+        options,
+        helpText: tf.helpText,
+      };
+    });
+
+    this.buildAndSetPreviewDefinition(template, mappedFields, compoundRules);
   }
 
   closePreviewModal(): void {
     this.previewingTemplate.set(null);
     this.previewFormDefinition.set(null);
+    this.isPreviewLoading.set(false);
   }
 }

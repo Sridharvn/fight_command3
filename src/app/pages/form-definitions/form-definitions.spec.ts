@@ -6,7 +6,9 @@ import { AuthStore } from '../../stores/auth.store';
 import { LayoutStore } from '../../stores/layout.store';
 import { signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
 import { FieldDefinition, FormTemplate } from '../../models/form-definition.models';
+import { FormDefinitionService } from '../../services/form-definition.service';
 
 describe('FormDefinitionsPage', () => {
   let component: FormDefinitionsPage;
@@ -38,6 +40,7 @@ describe('FormDefinitionsPage', () => {
 
   let formStoreMock: any;
   let ruleStoreMock: any;
+  let formDefinitionServiceMock: any;
 
   beforeEach(async () => {
     activeTabSignal.set('templates');
@@ -65,12 +68,17 @@ describe('FormDefinitionsPage', () => {
       loadRules: vi.fn(),
     };
 
+    formDefinitionServiceMock = {
+      getTemplateById: vi.fn().mockReturnValue(of(mockTemplate)),
+    };
+
     await TestBed.configureTestingModule({
       imports: [FormDefinitionsPage],
       providers: [
         provideRouter([]),
         { provide: FormDefinitionStore, useValue: formStoreMock },
         { provide: RuleStore, useValue: ruleStoreMock },
+        { provide: FormDefinitionService, useValue: formDefinitionServiceMock },
         {
           provide: AuthStore,
           useValue: {
@@ -192,5 +200,40 @@ describe('FormDefinitionsPage', () => {
     expect(compiled.querySelector('.btn-clone')).toBeTruthy();
     const cloneBtn = compiled.querySelector('.btn-clone') as HTMLAnchorElement;
     expect(cloneBtn.getAttribute('href')).toContain('cloneFrom=1');
+  });
+
+  it('should fetch complete template schema via getTemplateById when opening preview modal (HF-051)', () => {
+    const fullTemplateMock: FormTemplate = {
+      templateId: 1,
+      templateName: 'National Championship Template',
+      templateType: 'PRESET',
+      sportType: 1,
+      tournamentType: 1,
+      isActive: true,
+      formSchema: {
+        fields: [
+          { id: 'phone', key: 'phone', label: 'Phone Number', type: 'text', required: true },
+          {
+            id: 'belt_rank',
+            key: 'belt_rank',
+            label: 'Belt Rank',
+            type: 'select',
+            required: true,
+            options: [{ label: 'White', value: 'white' }],
+          },
+          { id: 'dob', key: 'dob', label: 'Date of Birth', type: 'date', required: true },
+        ],
+        compoundRules: [],
+      },
+    };
+    formDefinitionServiceMock.getTemplateById.mockReturnValue(of(fullTemplateMock));
+
+    component.openPreviewModal(mockTemplate);
+    fixture.detectChanges();
+
+    expect(formDefinitionServiceMock.getTemplateById).toHaveBeenCalledWith(1);
+    expect(component.previewFormDefinition()?.fields.length).toBeGreaterThanOrEqual(5); // fullName + email + 3 custom fields
+    expect(component.previewFormDefinition()?.fields.some((f) => f.key === 'belt_rank')).toBe(true);
+    expect(component.previewFormDefinition()?.fields.some((f) => f.key === 'dob')).toBe(true);
   });
 });

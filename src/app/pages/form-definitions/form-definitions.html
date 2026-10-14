@@ -191,7 +191,9 @@
               <div class="card-stats">
                 <div class="stat-item">
                   <span class="stat-label">Attached Fields</span>
-                  <span class="stat-value">{{ tmpl.fields?.length || 0 }}</span>
+                  <span class="stat-value">{{
+                    tmpl.fieldCount ?? (tmpl.fields?.length || 0)
+                  }}</span>
                 </div>
                 <div class="stat-item">
                   <span class="stat-label">Compound Rules</span>
@@ -580,7 +582,7 @@
     }
 
     <!-- Modal: Live Form Preview -->
-    @if (previewingTemplate() && previewFormDefinition()) {
+    @if (previewingTemplate()) {
       <div class="modal-backdrop" (click)="closePreviewModal()">
         <div
           class="modal-dialog preview-dialog modal-large"
@@ -610,25 +612,43 @@
             <p class="preview-helper-text">
               This interactive preview renders the form exactly as athletes see during registration.
             </p>
-            <div class="preview-renderer-container">
-              <app-dynamic-form-renderer
-                [schema]="previewFormDefinition()!"
-                [showSubmitButton]="false"
-              />
-            </div>
+            @if (isPreviewLoading()) {
+              <div class="loading-state" aria-live="polite">
+                <div class="spinner"></div>
+                <span>Loading complete form schema...</span>
+              </div>
+            } @else if (previewFormDefinition()) {
+              <div class="preview-renderer-container">
+                <app-dynamic-form-renderer
+                  [schema]="previewFormDefinition()!"
+                  [showSubmitButton]="false"
+                />
+              </div>
+            }
           </div>
 
           <footer class="modal-footer">
             <button type="button" class="btn btn-secondary" (click)="closePreviewModal()">
               Close Preview
             </button>
-            <a
-              [routerLink]="['/form-builder', previewingTemplate()?.templateId]"
-              (click)="closePreviewModal()"
-              class="btn btn-primary"
-            >
-              Edit Form Template
-            </a>
+            @if (previewingTemplate()?.templateType === 'PRESET') {
+              <a
+                [routerLink]="['/form-builder/new']"
+                [queryParams]="{ cloneFrom: previewingTemplate()?.templateId }"
+                (click)="closePreviewModal()"
+                class="btn btn-primary"
+              >
+                Clone to Edit
+              </a>
+            } @else {
+              <a
+                [routerLink]="['/form-builder', previewingTemplate()?.templateId]"
+                (click)="closePreviewModal()"
+                class="btn btn-primary"
+              >
+                Edit Form Template
+              </a>
+            }
           </footer>
         </div>
       </div>

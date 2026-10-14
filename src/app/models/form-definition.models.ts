@@ -60,6 +60,7 @@ export interface FormTemplate {
   isActive: boolean;
   parentTemplateId?: number | null;
   fields?: FormTemplateField[];
+  fieldCount?: number;
   formSchema?: any;
   createdAt?: string;
 }
