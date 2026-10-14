@@ -121,16 +121,17 @@ describe('FormDefinitionsPage', () => {
     expect(component.isFieldModalOpen()).toBe(false);
   });
 
-  it('should render Add Template button opening inheritance setup modal', () => {
+  it('should render New Form Template button opening inheritance setup modal (HF-NAV-009)', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const addTemplateBtn = compiled.querySelector('.create-template-btn') as HTMLButtonElement;
     expect(addTemplateBtn).toBeTruthy();
+    expect(addTemplateBtn.textContent).toContain('New Form Template');
     expect(component.isCreateTemplateModalOpen()).toBe(false);
     addTemplateBtn.click();
     expect(component.isCreateTemplateModalOpen()).toBe(true);
   });
 
-  it('should render Edit button on custom template card directing to /form-builder/:id', () => {
+  it('should render Edit Form Template button on custom template card directing to /form-builder/:id (HF-NAV-010)', () => {
     templatesSignal.set([
       {
         templateId: 2,
@@ -147,6 +148,11 @@ describe('FormDefinitionsPage', () => {
     const editBtn = compiled.querySelector('.btn-edit') as HTMLAnchorElement;
     expect(editBtn).toBeTruthy();
     expect(editBtn.getAttribute('href')).toBe('/form-builder/2');
+
+    const builderBtn = compiled.querySelector('.btn-builder') as HTMLAnchorElement;
+    expect(builderBtn).toBeTruthy();
+    expect(builderBtn.textContent?.trim()).toBe('Edit Form Template');
+    expect(builderBtn.getAttribute('href')).toBe('/form-builder/2');
   });
 
   it('should call deleteTemplate when confirming deletion for custom template', () => {

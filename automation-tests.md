@@ -1083,3 +1083,41 @@ The application provides:
   - For `COMPLETED`, `CANCELLED`, or `REGISTRATION_CLOSED`: returns HTTP 400 with "Registration for this tournament is closed".
   - For `DRAFT` or prior to `registrationOpenDate`: returns HTTP 400 with "Registration for this tournament has not opened yet".
 - **Final state:** Submissions against closed or draft tournaments rejected with accurate descriptive errors.
+
+**HF-NAV-008: Form Builder Removed from Sidemenu Navigation**
+
+- **Preconditions:** User is authenticated and viewing any internal page with `BaseSidebar`.
+- **User/System actions:** User inspects the sidebar navigation items.
+- **Expected results:**
+  - Sidemenu renders links for Dashboard (`/`), Tournaments (`/events`), Users (`/users`), Roles (`/roles`), Rules (`/rule-management`), and Form Definitions (`/form-definitions`).
+  - Sidemenu does NOT render a standalone link to Form Builder (`/form-builder`).
+- **Final state:** Sidemenu no longer contains a direct Form Builder item.
+
+**HF-NAV-009: Form Definitions Entry to New Form Builder**
+
+- **Preconditions:** User is on `/form-definitions` under the "Form Templates" tab.
+- **User/System actions:** User clicks the primary "+ New Form Template" button in the header (or "Create First Template" if the template list is empty).
+- **Expected results:**
+  - Template setup modal opens offering choices: "Blank Template" and "Inherit from a Baseline Preset".
+  - Clicking "Create Blank Template" navigates the user to `/form-builder/new`.
+  - Selecting a preset and clicking "Proceed with Selected Preset" navigates the user to `/form-builder/new?basePresetId=:id`.
+- **Final state:** User initiates template creation from Form Definitions into the Form Builder workspace.
+
+**HF-NAV-010: Form Definitions Edit Form Template Navigates to Form Builder**
+
+- **Preconditions:** User is on `/form-definitions` with custom form templates displayed.
+- **User/System actions:** User clicks the "Edit Form Template" button (`.btn-builder`) on a custom template card (or the edit pencil button `.btn-edit`).
+- **Expected results:**
+  - Button text reads "Edit Form Template" with title "Edit template in Form Builder".
+  - Clicking the button routes directly to `/form-builder/:templateId`.
+  - Form Builder loads the existing template schema with all attached fields and validation rules.
+- **Final state:** Existing templates are edited via Form Definitions cards.
+
+**NF-NAV-003: Direct Route to /form-builder Redirects to /form-definitions**
+
+- **Preconditions:** User is authenticated.
+- **User/System actions:** User types or navigates directly to `/form-builder` without a template ID.
+- **Expected results:**
+  - Application router intercepts `/form-builder` and redirects to `/form-definitions`.
+  - Form Builder is not opened in an unanchored state without a template reference.
+- **Final state:** User lands on `/form-definitions`.

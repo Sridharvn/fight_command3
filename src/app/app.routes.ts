@@ -38,15 +38,13 @@ export const routes: Routes = [
   },
   {
     path: toSegment(APP_ROUTES.formBuilder),
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./pages/form-builder/form-builder').then((m) => m.FormBuilderPage),
+    redirectTo: toSegment(APP_ROUTES.formDefinitions),
+    pathMatch: 'full',
   },
   {
     path: toSegment(APP_ROUTES.formBuilder) + '/:id',
     canActivate: [authGuard],
-    loadComponent: () =>
-      import('./pages/form-builder/form-builder').then((m) => m.FormBuilderPage),
+    loadComponent: () => import('./pages/form-builder/form-builder').then((m) => m.FormBuilderPage),
   },
   {
     path: toSegment(APP_ROUTES.events),
@@ -56,8 +54,7 @@ export const routes: Routes = [
   {
     path: 'events/:eventId/roster',
     canActivate: [authGuard],
-    loadComponent: () =>
-      import('./pages/event-roster/event-roster').then((m) => m.EventRosterPage),
+    loadComponent: () => import('./pages/event-roster/event-roster').then((m) => m.EventRosterPage),
   },
   {
     path: 'events/:eventId/register',
@@ -70,5 +67,4 @@ export const routes: Routes = [
     path: '**',
     redirectTo: '',
   },
-
 ];

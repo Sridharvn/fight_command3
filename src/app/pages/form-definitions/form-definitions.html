@@ -22,7 +22,7 @@
                 d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
               />
             </svg>
-            Add Template
+            New Form Template
           </button>
         } @else {
           <button type="button" class="btn btn-primary create-field-btn" (click)="openFieldModal()">
@@ -119,7 +119,9 @@
             Create tournament registration templates to assemble fields and enforce validation
             rules.
           </p>
-          <a routerLink="/form-builder/new" class="btn btn-primary">Create First Template</a>
+          <button type="button" (click)="openCreateTemplateModal()" class="btn btn-primary">
+            New Form Template
+          </button>
         </div>
       } @else {
         <div class="templates-grid">
@@ -228,7 +230,7 @@
                     [routerLink]="['/form-builder', tmpl.templateId]"
                     class="btn btn-primary btn-sm btn-builder"
                   >
-                    Open Form Builder
+                    Edit Form Template
                   </a>
                 }
 
@@ -625,7 +627,7 @@
               (click)="closePreviewModal()"
               class="btn btn-primary"
             >
-              Edit in Form Builder
+              Edit Form Template
             </a>
           </footer>
         </div>

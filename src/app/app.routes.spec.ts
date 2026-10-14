@@ -11,15 +11,17 @@ import { signal } from '@angular/core';
 
 describe('App Routes', () => {
   let router: Router;
+  const isAuthenticatedSignal = signal(false);
 
   beforeEach(() => {
+    isAuthenticatedSignal.set(false);
     TestBed.configureTestingModule({
       providers: [
         provideRouter(routes),
         {
           provide: AuthStore,
           useValue: {
-            isAuthenticated: signal(false),
+            isAuthenticated: isAuthenticatedSignal,
             user: signal(null),
             userFullName: signal(''),
             userRoleName: signal(''),
@@ -87,5 +89,11 @@ describe('App Routes', () => {
   it('should redirect unknown routes to root path via wildcard', async () => {
     await router.navigateByUrl('/non-existent-route-xyz');
     expect(router.url).toBe('/');
+  });
+
+  it('should redirect direct navigation to /form-builder to /form-definitions (NF-NAV-003)', async () => {
+    isAuthenticatedSignal.set(true);
+    await router.navigateByUrl('/form-builder');
+    expect(router.url).toBe('/form-definitions');
   });
 });

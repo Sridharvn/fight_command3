@@ -58,6 +58,18 @@ describe('BaseSidebar', () => {
     expect(links.length).toBeGreaterThanOrEqual(3); // Dashboard, Users, Roles
   });
 
+  it('should render Form Definitions but not standalone Form Builder in sidebar navigation (HF-NAV-008)', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const links = Array.from(compiled.querySelectorAll('.nav-link'));
+    const linkHrefs = links.map((el) => el.getAttribute('routerlink') || el.getAttribute('href'));
+    const linkTexts = links.map((el) => el.textContent?.trim());
+
+    expect(linkHrefs).toContain('/form-definitions');
+    expect(linkTexts.some((text) => text?.includes('Form Definitions'))).toBe(true);
+    expect(linkHrefs).not.toContain('/form-builder');
+    expect(linkTexts.some((text) => text?.includes('Form Builder'))).toBe(false);
+  });
+
   it('should apply collapsed class when isSidebarCollapsed is true', () => {
     isCollapsedSignal.set(true);
     fixture.detectChanges();
