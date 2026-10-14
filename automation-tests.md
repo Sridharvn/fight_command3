@@ -778,6 +778,17 @@ The application provides:
   - Status action buttons (Approve / Reject) remain available in the modal footer.
 - **Final state:** All form definition data is rendered inside the details popup in read-only form mode.
 
+**HF-TH-001: Global Dark Mode Rendering for All Pages, Modals, Tables & Portals**
+- **Preconditions:** Application is loaded on any route (`/login`, `/`, `/users`, `/roles`, `/rules`, `/form-definitions`, `/form-builder`, `/events`, `/events/:eventId/roster`, `/events/:eventId/register`).
+- **User/System actions:** User views and navigates through events management, event roster, athlete details modal, create event modal, and the public registration portal.
+- **Expected results:**
+  - All pages, containers, cards, tables, heroes, dialogs, inputs, and popups render consistently in dark mode using dark surfaces (`#0b0f19`, `#111827`, `#0f172a`, `#1e293b`) with crisp light typography (`#ffffff`, `#f8fafc`, `#94a3b8`) and dark borders (`#1f2937`, `#334155`).
+  - No white or harsh light background surfaces are rendered on any page, card, or modal dialog.
+  - Modals (including Create Event modal and Athlete Details modal with embedded form renderer) render on dark cards with dark inputs.
+  - Public registration portal (`/events/:eventId/register`) renders in dark mode with dark container, dark header, dark tournament hero, dark dynamic form inputs, and dark confirmation card.
+  - Reddish accent tokens (`var(--accent-primary)`, `#e11d48`) are preserved throughout.
+- **Final state:** 100% of application pages and components display in unified dark mode.
+
 ---
 
 ### Negative Flows & Edge Cases
