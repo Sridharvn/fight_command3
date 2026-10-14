@@ -12,6 +12,7 @@ import { DynamicFormRendererComponent } from '../../components/dynamic-form-rend
 import { EventService } from '../../services/event.service';
 import { RegistrationService } from '../../services/registration.service';
 import {
+  EventStatus,
   PublicEventForm,
   SPORT_TYPE_LABELS,
   TOURNAMENT_TYPE_LABELS,
@@ -44,60 +45,105 @@ export class PublicRegistrationPage implements OnInit {
     return param ? Number(param) : 0;
   });
 
+  readonly isRegistrationClosed = computed(() => {
+    const form = this.publicForm();
+    if (!form) return false;
+
+    // Archived, completed, cancelled, or explicitly closed tournaments
+    if (
+      form.status === EventStatus.COMPLETED ||
+      form.status === EventStatus.CANCELLED ||
+      form.status === EventStatus.REGISTRATION_CLOSED
+    ) {
+      return true;
+    }
+
+    // Past registration close date
+    if (form.registrationCloseDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const close = new Date(form.registrationCloseDate);
+      close.setHours(23, 59, 59, 999);
+      if (today > close) return true;
+    }
+
+    return false;
+  });
+
+  readonly isTournamentNotOpened = computed(() => {
+    const form = this.publicForm();
+    if (!form) return false;
+
+    // If already closed, closed takes precedence
+    if (this.isRegistrationClosed()) return false;
+
+    // Draft tournament is not opened
+    if (form.status === EventStatus.DRAFT) {
+      return true;
+    }
+
+    // Before registration open date
+    if (form.registrationOpenDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const open = new Date(form.registrationOpenDate);
+      open.setHours(0, 0, 0, 0);
+      if (today < open) return true;
+    }
+
+    // Unopened if status is neither REGISTRATION_OPEN nor PUBLISHED
+    if (
+      form.status !== undefined &&
+      form.status !== EventStatus.REGISTRATION_OPEN &&
+      form.status !== EventStatus.PUBLISHED
+    ) {
+      return true;
+    }
+
+    return false;
+  });
+
   readonly isRegistrationOpen = computed(() => {
     const form = this.publicForm();
     if (!form) return false;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (form.registrationOpenDate) {
-      const open = new Date(form.registrationOpenDate);
-      open.setHours(0, 0, 0, 0);
-      if (today < open) return false;
-    }
-
-    if (form.registrationCloseDate) {
-      const close = new Date(form.registrationCloseDate);
-      close.setHours(23, 59, 59, 999);
-      if (today > close) return false;
-    }
-
-    return true;
+    return !this.isRegistrationClosed() && !this.isTournamentNotOpened();
   });
 
   readonly dynamicFormDefinition = computed<FormDefinition | null>(() => {
     const form = this.publicForm();
     if (!form) return null;
 
-    if (form.formSchema && form.formSchema.fields && form.formSchema.fields.length > 0 && form.formSchema.fields[0]?.key) {
+    if (
+      form.formSchema &&
+      form.formSchema.fields &&
+      form.formSchema.fields.length > 0 &&
+      form.formSchema.fields[0]?.key
+    ) {
       return form.formSchema;
     }
 
     // Build fields from templateFields
     const customFields = (form.templateFields || [])
       .filter(
-        (tf) =>
-          !['fullName', 'email', 'phone', 'dob', 'date_of_birth'].includes(
-            tf.fieldName,
-          ),
+        (tf) => !['fullName', 'email', 'phone', 'dob', 'date_of_birth'].includes(tf.fieldName),
       )
       .map((tf) => ({
-      id: String(tf.templateFieldId),
-      key: tf.fieldName,
-      label: tf.fieldLabel,
-      type: (tf.fieldType || 'text') as any,
-      required: tf.isRequired,
-      options: tf.fieldOptions?.options
-        ? tf.fieldOptions.options.map((opt: any) =>
-            typeof opt === 'string'
-              ? { label: opt, value: opt }
-              : { label: opt.label || opt.value, value: opt.value || opt.label },
-          )
-        : undefined,
-      helpText: tf.helpText || undefined,
-      defaultValue: tf.defaultValue || undefined,
-    }));
+        id: String(tf.templateFieldId),
+        key: tf.fieldName,
+        label: tf.fieldLabel,
+        type: (tf.fieldType || 'text') as any,
+        required: tf.isRequired,
+        options: tf.fieldOptions?.options
+          ? tf.fieldOptions.options.map((opt: any) =>
+              typeof opt === 'string'
+                ? { label: opt, value: opt }
+                : { label: opt.label || opt.value, value: opt.value || opt.label },
+            )
+          : undefined,
+        helpText: tf.helpText || undefined,
+        defaultValue: tf.defaultValue || undefined,
+      }));
 
     return {
       templateName: form.formTitle || form.eventName,
@@ -250,6 +296,8 @@ export class PublicRegistrationPage implements OnInit {
 
   getLevelLabel(): string {
     const form = this.publicForm();
-    return form ? TOURNAMENT_TYPE_LABELS[form.tournamentType] || `Level #${form.tournamentType}` : '';
+    return form
+      ? TOURNAMENT_TYPE_LABELS[form.tournamentType] || `Level #${form.tournamentType}`
+      : '';
   }
 }

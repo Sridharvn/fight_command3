@@ -124,6 +124,11 @@
         background: rgba(239, 68, 68, 0.15);
         color: #f87171;
       }
+
+      .not-opened-badge {
+        background: rgba(245, 158, 11, 0.15);
+        color: #fbbf24;
+      }
     }
 
     .tournament-title {
@@ -330,6 +335,10 @@
     color: #94a3b8;
     max-width: 480px;
     margin: 0 auto 1.5rem;
+  }
+
+  &.not-opened-card {
+    border-top: 4px solid #f59e0b;
   }
 }
 

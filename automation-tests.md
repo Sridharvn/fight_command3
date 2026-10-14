@@ -1043,3 +1043,43 @@ The application provides:
   - Visual output reads cleanly as `+ Child Role`.
   - `white-space: nowrap` prevents text wrapping in narrow card viewports.
 - **Final state:** Role delegation button renders cleanly without duplicate markers.
+
+**HF-PUB-001: Public Form for Archived/Completed Tournament Shows "Registration Closed"**
+
+- **Preconditions:** Tournament exists and has status `COMPLETED`, `CANCELLED`, or `REGISTRATION_CLOSED`, or current date has exceeded `registrationCloseDate`.
+- **User/System actions:** User navigates to the public registration form URL `/events/:eventId/register`.
+- **Expected results:**
+  - Hero badge displays "Registration Closed" (or "Registrations Closed").
+  - Closed card displays heading `Registration Closed`.
+  - Description clarifies that tournament registrations have concluded or are closed.
+  - Athlete entry form is hidden; registration submission is blocked.
+- **Final state:** Archived status clearly communicated as Registration Closed.
+
+**HF-PUB-002: Public Form for Unopened Tournament Shows "Tournament Not Opened"**
+
+- **Preconditions:** Tournament exists and has status `DRAFT`, or current date is before `registrationOpenDate`.
+- **User/System actions:** User navigates to the public registration form URL `/events/:eventId/register`.
+- **Expected results:**
+  - Hero badge displays "Tournament Not Opened".
+  - Dedicated unopened card displays heading `Tournament Not Opened`.
+  - Description clarifies that tournament registrations have not yet opened (with opening date displayed if available).
+  - Athlete entry form is hidden; registration submission is blocked.
+- **Final state:** Unopened tournament state clearly distinguished from closed state.
+
+**HF-PUB-003: Public Form for Open Tournament Shows "Registrations Open" and Form**
+
+- **Preconditions:** Tournament has status `REGISTRATION_OPEN` (or `PUBLISHED`), and current date is within the open registration window.
+- **User/System actions:** User navigates to the public registration form URL `/events/:eventId/register`.
+- **Expected results:**
+  - Hero badge displays "Registrations Open".
+  - Athlete entry form is rendered with all dynamic inputs and submission controls.
+- **Final state:** Athletes can enter and submit their registrations.
+
+**NF-REG-004: Backend Rejects Registration Submissions for Closed or Unopened Tournaments**
+
+- **Preconditions:** Event status is `COMPLETED`, `CANCELLED`, `REGISTRATION_CLOSED`, or `DRAFT`.
+- **User/System actions:** Client issues `POST /events/:eventId/register`.
+- **Expected results:**
+  - For `COMPLETED`, `CANCELLED`, or `REGISTRATION_CLOSED`: returns HTTP 400 with "Registration for this tournament is closed".
+  - For `DRAFT` or prior to `registrationOpenDate`: returns HTTP 400 with "Registration for this tournament has not opened yet".
+- **Final state:** Submissions against closed or draft tournaments rejected with accurate descriptive errors.

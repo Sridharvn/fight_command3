@@ -5,7 +5,7 @@ import { EventService } from '../../services/event.service';
 import { RegistrationService } from '../../services/registration.service';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
-import { PublicEventForm, SportType, TournamentType } from '../../models/event.models';
+import { EventStatus, PublicEventForm, SportType, TournamentType } from '../../models/event.models';
 
 describe('PublicRegistrationPage', () => {
   let component: PublicRegistrationPage;
@@ -43,9 +43,11 @@ describe('PublicRegistrationPage', () => {
     };
 
     registrationServiceMock = {
-      submitRegistration: vi.fn().mockReturnValue(
-        of({ message: 'Registration submitted successfully', registrationId: 501 }),
-      ),
+      submitRegistration: vi
+        .fn()
+        .mockReturnValue(
+          of({ message: 'Registration submitted successfully', registrationId: 501 }),
+        ),
     };
 
     await TestBed.configureTestingModule({
@@ -93,9 +95,7 @@ describe('PublicRegistrationPage', () => {
       expect.objectContaining({
         fullName: 'Vikram Singh',
         email: 'vikram@example.com',
-        responses: expect.arrayContaining([
-          { templateFieldId: 1, value: '-71 kg' },
-        ]),
+        responses: expect.arrayContaining([{ templateFieldId: 1, value: '-71 kg' }]),
       }),
     );
 
@@ -121,5 +121,42 @@ describe('PublicRegistrationPage', () => {
     component.resetForm();
     expect(component.isSubmitted()).toBe(false);
     expect(component.submittedRegistrationId()).toBeNull();
+  });
+
+  it('should display "Registration Closed" when tournament is archived or completed', () => {
+    component.publicForm.set({
+      ...mockPublicForm,
+      status: EventStatus.COMPLETED,
+    });
+    fixture.detectChanges();
+
+    expect(component.isRegistrationOpen()).toBe(false);
+    expect(component.isRegistrationClosed()).toBe(true);
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.closed-badge')?.textContent).toContain('Registration Closed');
+    expect(compiled.querySelector('.closed-card h2')?.textContent).toContain('Registration Closed');
+    expect(compiled.querySelector('.registration-form-card')).toBeNull();
+  });
+
+  it('should display "Tournament Not Opened" when tournament is in draft or registration has not opened', () => {
+    component.publicForm.set({
+      ...mockPublicForm,
+      status: EventStatus.DRAFT,
+      registrationOpenDate: '2099-01-01',
+    });
+    fixture.detectChanges();
+
+    expect(component.isRegistrationOpen()).toBe(false);
+    expect(component.isTournamentNotOpened()).toBe(true);
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.not-opened-badge')?.textContent).toContain(
+      'Tournament Not Opened',
+    );
+    expect(compiled.querySelector('.not-opened-card h2')?.textContent).toContain(
+      'Tournament Not Opened',
+    );
+    expect(compiled.querySelector('.registration-form-card')).toBeNull();
   });
 });

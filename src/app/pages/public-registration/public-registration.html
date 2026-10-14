@@ -4,7 +4,14 @@
     <div class="header-container">
       <div class="brand">
         <div class="brand-icon">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5">
+          <svg
+            viewBox="0 0 24 24"
+            width="22"
+            height="22"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
             <path d="M12 2L2 7l10 5 10-5-10-5Z" />
             <path d="M2 17l10 5 10-5" />
             <path d="M2 12l10 5 10-5" />
@@ -45,8 +52,10 @@
               <span class="badge level-badge">{{ getLevelLabel() }}</span>
               @if (isRegistrationOpen()) {
                 <span class="badge open-badge">Registrations Open</span>
-              } @else {
-                <span class="badge closed-badge">Registrations Closed</span>
+              } @else if (isRegistrationClosed()) {
+                <span class="badge closed-badge">Registration Closed</span>
+              } @else if (isTournamentNotOpened()) {
+                <span class="badge not-opened-badge">Tournament Not Opened</span>
               }
             </div>
 
@@ -55,11 +64,17 @@
               <h2 class="tournament-form-title">{{ form.formTitle }}</h2>
             }
 
-
             <div class="meta-row">
               @if (form.location) {
                 <div class="meta-item">
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                     <circle cx="12" cy="10" r="3" />
                   </svg>
@@ -69,16 +84,23 @@
 
               @if (form.eventStartDate) {
                 <div class="meta-item">
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                     <line x1="16" y1="2" x2="16" y2="6" />
                     <line x1="8" y1="2" x2="8" y2="6" />
                     <line x1="3" y1="10" x2="21" y2="10" />
                   </svg>
                   <span>
-                    {{ form.eventStartDate | date:'mediumDate' }}
+                    {{ form.eventStartDate | date: 'mediumDate' }}
                     @if (form.eventEndDate && form.eventEndDate !== form.eventStartDate) {
-                      - {{ form.eventEndDate | date:'mediumDate' }}
+                      - {{ form.eventEndDate | date: 'mediumDate' }}
                     }
                   </span>
                 </div>
@@ -95,13 +117,21 @@
         @if (isSubmitted()) {
           <div class="confirmation-card">
             <div class="check-icon">
-              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="3">
+              <svg
+                viewBox="0 0 24 24"
+                width="32"
+                height="32"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+              >
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
             <h2>Registration Successful!</h2>
             <p class="confirmation-subtitle">
-              Your tournament entry has been submitted and is currently pending official administrative approval.
+              Your tournament entry has been submitted and is currently pending official
+              administrative approval.
             </p>
 
             <div class="confirmation-badge">
@@ -116,20 +146,37 @@
             }
 
             <p class="next-steps-info">
-              Please keep your Registration ID for check-in during weigh-ins and medical clearance on tournament day.
+              Please keep your Registration ID for check-in during weigh-ins and medical clearance
+              on tournament day.
             </p>
 
             <button type="button" class="btn btn-primary" (click)="resetForm()">
               Register Another Athlete
             </button>
           </div>
-        } @else if (!isRegistrationOpen()) {
+        } @else if (isRegistrationClosed()) {
           <div class="closed-card">
             <div class="closed-icon">🔒</div>
             <h2>Registration Closed</h2>
             <p>
-              Registration for this tournament is currently closed or has not yet opened.
-              Please check back or contact the tournament organizer.
+              Registration for this tournament is closed as the event has concluded or registrations
+              have ended. Please check back for upcoming tournaments or contact the tournament
+              organizer.
+            </p>
+          </div>
+        } @else if (isTournamentNotOpened()) {
+          <div class="closed-card not-opened-card">
+            <div class="closed-icon not-opened-icon">⏳</div>
+            <h2>Tournament Not Opened</h2>
+            <p>
+              Registration for this tournament has not opened yet.
+              @if (form.registrationOpenDate) {
+                Registrations will officially open on
+                <strong>{{ form.registrationOpenDate | date: 'mediumDate' }}</strong
+                >.
+              } @else {
+                Please check back later or contact the tournament organizer for schedule details.
+              }
             </p>
           </div>
         } @else {
@@ -142,7 +189,14 @@
 
             @if (errorMessage()) {
               <div class="error-banner" role="alert">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
                   <circle cx="12" cy="12" r="10" />
                   <line x1="12" y1="8" x2="12" y2="12" />
                   <line x1="12" y1="16" x2="12.01" y2="16" />

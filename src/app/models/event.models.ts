@@ -136,6 +136,7 @@ export interface PublicEventForm {
   eventName: string;
   sportType: SportType;
   tournamentType: TournamentType;
+  status?: EventStatus;
   eventStartDate?: string | Date | null;
   eventEndDate?: string | Date | null;
   location?: string | null;
