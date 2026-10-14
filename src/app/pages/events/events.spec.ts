@@ -5,12 +5,7 @@ import { EventsStore } from '../../stores/events.store';
 import { FormDefinitionService } from '../../services/form-definition.service';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
-import {
-  EventListItem,
-  EventStatus,
-  SportType,
-  TournamentType,
-} from '../../models/event.models';
+import { EventListItem, EventStatus, SportType, TournamentType } from '../../models/event.models';
 
 describe('EventsPage', () => {
   let component: EventsPage;
@@ -41,6 +36,17 @@ describe('EventsPage', () => {
       location: 'Mumbai Complex',
       createdAt: '2026-10-02',
     },
+    {
+      eventId: 103,
+      eventName: 'Old Archived Tournament',
+      sportType: SportType.BOXING,
+      tournamentType: TournamentType.DISTRICT,
+      status: EventStatus.COMPLETED,
+      eventStartDate: '2026-09-01',
+      eventEndDate: '2026-09-02',
+      location: 'Delhi Arena',
+      createdAt: '2026-09-01',
+    },
   ];
 
   beforeEach(async () => {
@@ -52,10 +58,10 @@ describe('EventsPage', () => {
       selectedLevel: vi.fn().mockReturnValue('all'),
       searchQuery: vi.fn().mockReturnValue(''),
       status: vi.fn().mockReturnValue('success'),
-      totalEventsCount: vi.fn().mockReturnValue(2),
+      totalEventsCount: vi.fn().mockReturnValue(3),
       draftEventsCount: vi.fn().mockReturnValue(1),
       activeEventsCount: vi.fn().mockReturnValue(1),
-      archivedEventsCount: vi.fn().mockReturnValue(0),
+      archivedEventsCount: vi.fn().mockReturnValue(1),
       actionLoading: vi.fn().mockReturnValue(false),
       loadEvents: vi.fn(),
       setStatusTab: vi.fn(),
@@ -63,8 +69,10 @@ describe('EventsPage', () => {
       setSelectedLevel: vi.fn(),
       setSearchQuery: vi.fn(),
       createEvent: vi.fn(),
+      updateEvent: vi.fn(),
       publishEvent: vi.fn(),
       archiveEvent: vi.fn(),
+      unarchiveEvent: vi.fn(),
       deleteEvent: vi.fn(),
     };
 
@@ -90,7 +98,7 @@ describe('EventsPage', () => {
     expect(component).toBeTruthy();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.page-title')?.textContent).toContain('Tournaments');
-    expect(compiled.querySelectorAll('.event-card').length).toBe(2);
+    expect(compiled.querySelectorAll('.event-card').length).toBe(3);
   });
 
   it('should filter events when clicking status tabs', () => {
@@ -115,5 +123,41 @@ describe('EventsPage', () => {
     expect(writeTextSpy).toHaveBeenCalledWith(expect.stringContaining('/events/101/register'));
     expect(component.toastMessage()).toContain('copied');
   });
-});
 
+  it('should render unarchive button on archived event and unarchive tournament', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const unarchiveBtn = compiled.querySelector('.btn-unarchive') as HTMLButtonElement;
+    expect(unarchiveBtn).toBeTruthy();
+    expect(unarchiveBtn.textContent?.trim()).toContain('Unarchive');
+
+    component.unarchiveEvent(103);
+    expect(eventsStoreMock.unarchiveEvent).toHaveBeenCalledWith(103, expect.any(Function));
+  });
+
+  it('should open edit event modal pre-populated and submit changes', () => {
+    const eventToEdit = mockEvents[0];
+    component.openEditModal(eventToEdit);
+    expect(component.isEditModalOpen()).toBe(true);
+    expect(component.editingEventId()).toBe(101);
+    expect(component.editForm.get('eventName')?.value).toBe('Grand National Sambo Cup');
+
+    component.editForm.patchValue({ eventName: 'Updated Sambo Cup' });
+    component.submitEditEvent();
+
+    expect(eventsStoreMock.updateEvent).toHaveBeenCalledWith(
+      101,
+      expect.objectContaining({ eventName: 'Updated Sambo Cup' }),
+      expect.any(Function),
+    );
+  });
+
+  it('should open delete confirmation dialog and delete event', () => {
+    const eventToDelete = mockEvents[0];
+    component.confirmDeleteEvent(eventToDelete);
+    expect(component.isDeleteModalOpen()).toBe(true);
+    expect(component.deletingEvent()?.eventId).toBe(101);
+
+    component.submitDeleteEvent();
+    expect(eventsStoreMock.deleteEvent).toHaveBeenCalledWith(101, expect.any(Function));
+  });
+});

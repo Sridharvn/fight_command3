@@ -308,10 +308,53 @@
       }
     }
 
-    .event-id {
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: #64748b;
+    .card-actions-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+
+      .event-id {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #64748b;
+        margin-right: 0.25rem;
+      }
+    }
+
+    .btn-icon-action {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      width: 1.75rem;
+      height: 1.75rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.15s ease-in-out;
+
+      svg {
+        width: 0.875rem;
+        height: 0.875rem;
+      }
+
+      &:hover {
+        background: #334155;
+        color: #ffffff;
+      }
+
+      &.btn-edit:hover {
+        background: var(--accent-primary-bg, rgba(225, 29, 72, 0.12));
+        color: var(--accent-primary-light, #fb7185);
+        border-color: var(--accent-primary-border, rgba(225, 29, 72, 0.4));
+      }
+
+      &.btn-delete:hover {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+        border-color: rgba(239, 68, 68, 0.3);
+      }
     }
   }
 
@@ -404,6 +447,23 @@
         &:hover {
           background: #334155;
           color: #ffffff;
+        }
+      }
+
+      .btn-unarchive {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        padding: 0.35rem 0.65rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s ease;
+
+        &:hover {
+          background: rgba(59, 130, 246, 0.25);
+          color: #93c5fd;
         }
       }
 
@@ -510,6 +570,19 @@
       border-color: #475569;
     }
   }
+  &.btn-danger {
+    background: #dc2626;
+    color: #ffffff;
+
+    &:hover {
+      background: #b91c1c;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
 }
 
 /* Modal */
@@ -535,6 +608,47 @@
   overflow-y: auto;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
   animation: modalScale 0.2s ease-out;
+
+  &.modal-dialog-sm {
+    max-width: 440px;
+  }
+
+  .delete-modal-body {
+    padding: 2rem 1.5rem 1rem;
+    text-align: center;
+
+    .delete-warning-icon {
+      color: #ef4444;
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .delete-message {
+      font-size: 1rem;
+      color: #f1f5f9;
+      margin: 0 0 0.5rem;
+      line-height: 1.5;
+
+      strong {
+        color: #ffffff;
+      }
+    }
+
+    .delete-hint {
+      font-size: 0.8125rem;
+      color: #94a3b8;
+      margin: 0;
+    }
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    border-top: 1px solid #1f2937;
+    padding: 1.25rem 1.5rem;
+  }
 
   .modal-header {
     display: flex;

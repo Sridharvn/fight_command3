@@ -76,7 +76,7 @@
                         clip-rule="evenodd"
                       />
                     </svg>
-                    <span>+ Child Role</span>
+                    <span>Child Role</span>
                   </button>
                 }
                 <button
@@ -146,7 +146,13 @@
         >
           <header class="modal-header">
             <h2 id="role-modal-title" class="modal-title">
-              {{ editingRoleId() ? 'Edit Role' : (parentRoleId() ? 'Create Child Role' : 'Create New Role') }}
+              {{
+                editingRoleId()
+                  ? 'Edit Role'
+                  : parentRoleId()
+                    ? 'Create Child Role'
+                    : 'Create New Role'
+              }}
             </h2>
             <button
               type="button"
@@ -167,7 +173,11 @@
                   clip-rule="evenodd"
                 />
               </svg>
-              <span>Subordinate to <strong>{{ parentRoleName() }} (ROLE #{{ parentRoleId() }})</strong>. Permissions are strictly constrained to parent's permissions.</span>
+              <span
+                >Subordinate to
+                <strong>{{ parentRoleName() }} (ROLE #{{ parentRoleId() }})</strong>. Permissions
+                are strictly constrained to parent's permissions.</span
+              >
             </div>
           }
 

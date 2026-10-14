@@ -5,13 +5,18 @@
       <div class="header-titles">
         <h1 class="page-title">Form Definitions</h1>
         <p class="page-subtitle">
-          Manage modular field schemas in the master Field Library and construct tournament registration form templates
+          Manage modular field schemas in the master Field Library and construct tournament
+          registration form templates
         </p>
       </div>
 
       <div class="header-actions">
         @if (formStore.activeTab() === 'templates') {
-          <button type="button" class="btn btn-primary create-template-btn" (click)="openCreateTemplateModal()">
+          <button
+            type="button"
+            class="btn btn-primary create-template-btn"
+            (click)="openCreateTemplateModal()"
+          >
             <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
               <path
                 d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
@@ -42,13 +47,21 @@
         <input
           type="search"
           [formControl]="searchControl"
-          [placeholder]="formStore.activeTab() === 'templates' ? 'Search templates...' : 'Search field definitions...'"
+          [placeholder]="
+            formStore.activeTab() === 'templates'
+              ? 'Search templates...'
+              : 'Search field definitions...'
+          "
           class="search-input"
           aria-label="Search"
         />
       </div>
 
-      <div class="status-filters" role="tablist" aria-label="Toggle between templates and field library">
+      <div
+        class="status-filters"
+        role="tablist"
+        aria-label="Toggle between templates and field library"
+      >
         <button
           type="button"
           role="tab"
@@ -102,7 +115,10 @@
             />
           </svg>
           <p class="empty-title">No form templates found</p>
-          <p class="empty-desc">Create tournament registration templates to assemble fields and enforce validation rules.</p>
+          <p class="empty-desc">
+            Create tournament registration templates to assemble fields and enforce validation
+            rules.
+          </p>
           <a routerLink="/form-builder/new" class="btn btn-primary">Create First Template</a>
         </div>
       } @else {
@@ -196,7 +212,7 @@
                       clip-rule="evenodd"
                     />
                   </svg>
-                  VIEW FORM
+                  View Form
                 </button>
 
                 @if (tmpl.templateType === 'PRESET') {
@@ -254,8 +270,13 @@
               />
             </svg>
             <p class="empty-title">No field definitions found</p>
-            <p class="empty-desc">Register reusable field types (e.g. Weight, DOB, Medical Certificate) in the master library.</p>
-            <button type="button" class="btn btn-primary" (click)="openFieldModal()">Create New Field</button>
+            <p class="empty-desc">
+              Register reusable field types (e.g. Weight, DOB, Medical Certificate) in the master
+              library.
+            </p>
+            <button type="button" class="btn btn-primary" (click)="openFieldModal()">
+              Create New Field
+            </button>
           </div>
         } @else {
           <div class="table-responsive">
@@ -270,7 +291,10 @@
                 </tr>
               </thead>
               <tbody>
-                @for (field of formStore.filteredFieldDefinitions(); track field.fieldDefinitionId) {
+                @for (
+                  field of formStore.filteredFieldDefinitions();
+                  track field.fieldDefinitionId
+                ) {
                   <tr>
                     <td>
                       <strong class="field-label-text">{{ field.fieldLabel }}</strong>
@@ -283,9 +307,15 @@
                     </td>
                     <td>
                       <div class="flags-group">
-                        @if (field.isFilterable) { <span class="flag-badge">Filterable</span> }
-                        @if (field.isSortable) { <span class="flag-badge">Sortable</span> }
-                        @if (field.isSearchable) { <span class="flag-badge">Searchable</span> }
+                        @if (field.isFilterable) {
+                          <span class="flag-badge">Filterable</span>
+                        }
+                        @if (field.isSortable) {
+                          <span class="flag-badge">Sortable</span>
+                        }
+                        @if (field.isSearchable) {
+                          <span class="flag-badge">Searchable</span>
+                        }
                       </div>
                     </td>
                     <td class="text-right">
@@ -357,8 +387,13 @@
                 class="form-input"
                 placeholder="e.g., medical_insurance_policy"
               />
-              @if (fieldForm.get('fieldName')?.touched && fieldForm.get('fieldName')?.hasError('pattern')) {
-                <span class="field-error">Key must be lowercase alphanumeric and underscores only</span>
+              @if (
+                fieldForm.get('fieldName')?.touched &&
+                fieldForm.get('fieldName')?.hasError('pattern')
+              ) {
+                <span class="field-error"
+                  >Key must be lowercase alphanumeric and underscores only</span
+                >
               }
             </div>
 
@@ -377,9 +412,13 @@
               </select>
             </div>
 
-            @if (['select', 'radio', 'checkbox'].includes(fieldForm.get('fieldType')?.value || '')) {
+            @if (
+              ['select', 'radio', 'checkbox'].includes(fieldForm.get('fieldType')?.value || '')
+            ) {
               <div class="form-group">
-                <label for="optionsInput" class="form-label">Choice Options (comma-separated)</label>
+                <label for="optionsInput" class="form-label"
+                  >Choice Options (comma-separated)</label
+                >
                 <input
                   id="optionsInput"
                   type="text"
@@ -406,8 +445,14 @@
             </div>
 
             <footer class="modal-footer">
-              <button type="button" class="btn btn-secondary" (click)="closeFieldModal()">Cancel</button>
-              <button type="submit" class="btn btn-primary" [disabled]="fieldForm.invalid || isSubmitting()">
+              <button type="button" class="btn btn-secondary" (click)="closeFieldModal()">
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="fieldForm.invalid || isSubmitting()"
+              >
                 @if (isSubmitting()) {
                   <span class="spinner-small"></span> Saving...
                 } @else {
@@ -444,7 +489,8 @@
 
           <div class="modal-body setup-options-container">
             <p class="setup-instruction">
-              Choose whether to build a clean registration template from scratch or inherit baseline sport fields from a standard preset.
+              Choose whether to build a clean registration template from scratch or inherit baseline
+              sport fields from a standard preset.
             </p>
 
             <div class="setup-card-options">
@@ -461,7 +507,10 @@
                 </div>
                 <div class="option-info">
                   <h3 class="option-title">Blank Template</h3>
-                  <p class="option-desc">Starts with mandatory identity fields (Full Name, Email). Assemble custom fields freely.</p>
+                  <p class="option-desc">
+                    Starts with mandatory identity fields (Full Name, Email). Assemble custom fields
+                    freely.
+                  </p>
                 </div>
               </div>
 
@@ -480,7 +529,9 @@
                   >
                     <div class="option-icon-box preset-icon-box">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        <path
+                          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                        />
                       </svg>
                     </div>
                     <div class="option-info">
@@ -489,7 +540,8 @@
                         <span class="badge badge-scope">{{ preset.templateType }}</span>
                       </div>
                       <p class="option-desc">
-                        Inherits {{ preset.fields?.length || 0 }} standard fields (e.g. Belt Rank, Weight Class) as protected baseline fields.
+                        Inherits {{ preset.fields?.length || 0 }} standard fields (e.g. Belt Rank,
+                        Weight Class) as protected baseline fields.
                       </p>
                     </div>
                   </div>
@@ -499,7 +551,9 @@
           </div>
 
           <footer class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="closeCreateTemplateModal()">Cancel</button>
+            <button type="button" class="btn btn-secondary" (click)="closeCreateTemplateModal()">
+              Cancel
+            </button>
             @if (selectedBasePresetId()) {
               <a
                 [routerLink]="['/form-builder/new']"
@@ -563,7 +617,9 @@
           </div>
 
           <footer class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="closePreviewModal()">Close Preview</button>
+            <button type="button" class="btn btn-secondary" (click)="closePreviewModal()">
+              Close Preview
+            </button>
             <a
               [routerLink]="['/form-builder', previewingTemplate()?.templateId]"
               (click)="closePreviewModal()"
@@ -575,6 +631,5 @@
         </div>
       </div>
     }
-
   </div>
 </app-base-layout>

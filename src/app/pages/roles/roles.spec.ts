@@ -105,7 +105,11 @@ describe('RolesPage', () => {
     // Group permissions should be filtered to parent permissions only
     const filteredGroups = component.filteredPermissionGroups();
     expect(filteredGroups.length).toBeGreaterThan(0);
-    expect(filteredGroups[0].permissions.every((p: { key: string }) => parentRole.permissions.includes(p.key))).toBe(true);
+    expect(
+      filteredGroups[0].permissions.every((p: { key: string }) =>
+        parentRole.permissions.includes(p.key),
+      ),
+    ).toBe(true);
   });
 
   it('should render System ID, Hierarchy Level, and explicit delegation indicators', () => {
@@ -116,5 +120,11 @@ describe('RolesPage', () => {
     expect(compiled.textContent).toContain('Level 0');
     expect(compiled.querySelector('.delegation-badge')).toBeTruthy();
     expect(compiled.textContent).toContain('Can Delegate: YES');
+  });
+
+  it('should render child role button with single clean label and without duplicate plus sign', () => {
+    const childRoleBtn = fixture.nativeElement.querySelector('.btn-child-role');
+    expect(childRoleBtn).toBeTruthy();
+    expect(childRoleBtn.textContent?.trim()).toBe('Child Role');
   });
 });

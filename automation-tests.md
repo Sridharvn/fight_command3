@@ -1,6 +1,7 @@
 # Automation Tests Specification
 
 ## Feature / Change: User Authentication, Login Screen & JWT Interceptor Session Handling
+
 **Priority:** High
 **Desired Behavior:**
 The application provides an accessible login screen (`/login`) allowing users to authenticate via email and password against the backend API (`POST /auth/login`). Upon login, JWT tokens (`accessToken`, `refreshToken`) and user profile are loaded and managed in `AuthStore` and persisted in `localStorage`. All outgoing API requests to backend endpoints automatically include `Authorization: Bearer <accessToken>`. If an API request fails with `401 Unauthorized`, an HTTP interceptor catches the response, triggers a token refresh using `POST /auth/refresh`, queues any concurrent requests, and replays failed calls once the token is refreshed. If token refresh fails (e.g., refresh token expired or invalid), the session is cleared and the user is redirected to `/login`. Functional guards (`authGuard`, `guestGuard`) ensure proper access control.
@@ -8,6 +9,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 ---
 
 ## Preconditions
+
 1. Frontend is configured with `provideHttpClient(withFetch(), withInterceptors([authInterceptor]))`.
 2. Backend API is reachable (default base URL `http://localhost:3000`).
 3. Application routes include `/login`, `/`, `/users`, and `/roles`.
@@ -15,6 +17,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 ---
 
 ## Test Data
+
 - Valid user credentials: `{ email: "test@test.com", password: "test" }`
 - Invalid user credentials: `{ email: "test@test.com", password: "WrongPassword" }`
 - Initial token mock:
@@ -31,6 +34,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 ### Happy Flows
 
 **HF-001: Successful Login Flow**
+
 - **Preconditions:** User is on `/login` and not authenticated.
 - **User/System actions:** User enters valid email and password, then clicks "Sign In".
 - **Expected results:**
@@ -41,12 +45,14 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** `authStore.isAuthenticated()` is `true`, user is on destination page.
 
 **HF-002: Automatic Bearer Token Attachment**
+
 - **Preconditions:** User is authenticated with an active `accessToken`.
 - **User/System actions:** Any feature triggers an API request to a backend endpoint (e.g. `GET /users/current`).
 - **Expected results:** `authInterceptor` inspects request; appends header `Authorization: Bearer <accessToken>`.
 - **Final state:** Backend receives authenticated request with valid Bearer header.
 
 **HF-003: Token Refresh on 401 & Replay**
+
 - **Preconditions:** User is authenticated; access token has expired.
 - **User/System actions:** App makes a protected request `GET /api/resource`; backend returns `401 Unauthorized`.
 - **Expected results:**
@@ -59,6 +65,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** Request succeeds; active tokens updated in state and storage.
 
 **HF-004: Concurrent 401 Deduplication & Queueing**
+
 - **Preconditions:** User is authenticated; access token has expired.
 - **User/System actions:** Multiple requests (e.g. `GET /api/req1` and `GET /api/req2`) fire concurrently and both receive 401.
 - **Expected results:**
@@ -68,6 +75,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** Both requests succeed; only one token refresh occurs.
 
 **HF-005: User Sign Out**
+
 - **Preconditions:** User is authenticated.
 - **User/System actions:** User triggers `logout()`.
 - **Expected results:**
@@ -77,30 +85,35 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** `authStore.isAuthenticated()` is `false`.
 
 **HF-006: Authenticated Sidemenu Visibility**
+
 - **Preconditions:** User is authenticated.
 - **User/System actions:** Navigate to `/` or any internal page.
 - **Expected results:** Sidemenu is visible in layout with navigation buttons for Home (`/`), User Management (`/users`), and Role Management (`/roles`).
 - **Final state:** Sidemenu rendered.
 
 **HF-007: Sidemenu Collapse & Expand Toggle**
+
 - **Preconditions:** User is authenticated, sidemenu is expanded (250px).
 - **User/System actions:** User clicks collapse toggle button in header/sidebar.
 - **Expected results:** Sidemenu transitions to compact icon-only mode (68px); preference is saved to `localStorage`.
 - **Final state:** Sidemenu is collapsed.
 
 **HF-008: Sidemenu Active Route Highlighting**
+
 - **Preconditions:** User is authenticated.
 - **User/System actions:** User clicks "User Management" (`/users`).
 - **Expected results:** Route transitions to `/users`; "User Management" link receives `active` class and `aria-current="page"`.
 - **Final state:** `/users` active in sidemenu.
 
 **HF-009: User Management - List Users with Pagination & Filters**
+
 - **Preconditions:** User is authenticated on `/users`.
 - **User/System actions:** Page loads; user types in search box or switches status tab (`Active`/`Deleted`/`All`).
 - **Expected results:** `GET /users` is triggered with `{ page, limit, search, status }`; table updates with user list, role badge, location tags, and pagination indicators.
 - **Final state:** Filtered users rendered.
 
 **HF-010: User Management - Create User with Cascading Location Scope**
+
 - **Preconditions:** User is on `/users`.
 - **User/System actions:**
   - Clicks "Add User" button; modal opens.
@@ -113,30 +126,35 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** New user appears in list.
 
 **HF-011: User Management - Update User Details**
+
 - **Preconditions:** User exists in `/users` list.
 - **User/System actions:** Admin clicks "Edit" on a user row, modifies designation/phone/role, and submits (`PUT /users/:id`).
 - **Expected results:** User is updated successfully; table reflects changes.
 - **Final state:** User details updated.
 
 **HF-012: User Management - Soft Delete User**
+
 - **Preconditions:** User exists in `/users` list.
 - **User/System actions:** Admin clicks "Delete", confirms dialog (`DELETE /users/:id`).
 - **Expected results:** User is soft-deleted; disappears from "Active" tab; appears under "Deleted" tab.
 - **Final state:** User soft-deleted.
 
 **HF-013: User Management - Reactivate Deleted User**
+
 - **Preconditions:** Admin is on "Deleted" tab in `/users`.
 - **User/System actions:** Admin clicks "Reactivate" on a deleted user (`PATCH /users/:id/reactivate`).
 - **Expected results:** User is restored to active status; appears back on "Active" tab.
 - **Final state:** User active.
 
 **HF-014: Role Management - List Roles & Hierarchy**
+
 - **Preconditions:** User is authenticated on `/roles`.
 - **User/System actions:** Page loads.
 - **Expected results:** `GET /roles` and `GET /roles/permissions/available` are called; roles are rendered with name, scope badge, hierarchy level, and assigned permissions count.
 - **Final state:** Roles displayed.
 
 **HF-015: Role Management - Create Role with Categorized Permission Matrix**
+
 - **Preconditions:** User is on `/roles`.
 - **User/System actions:**
   - Clicks "Create Role" button; modal opens.
@@ -147,18 +165,21 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** New role listed.
 
 **HF-016: Role Management - Update Role Permissions**
+
 - **Preconditions:** Custom role exists on `/roles`.
 - **User/System actions:** User clicks "Edit", toggles permissions in matrix, and submits (`PUT /roles/:id`).
 - **Expected results:** Role is updated with new permissions.
 - **Final state:** Role updated.
 
 **HF-017: Role Management - Delete Custom Role**
+
 - **Preconditions:** Non-system custom role exists.
 - **User/System actions:** User clicks "Delete" and confirms (`DELETE /roles/:id`).
 - **Expected results:** Role is deleted; disappears from list.
 - **Final state:** Role removed.
 
 **HF-018: Sidemenu Footer User Details Display**
+
 - **Preconditions:** User is authenticated.
 - **User/System actions:** User views the sidemenu in expanded or collapsed mode.
 - **Expected results:**
@@ -167,6 +188,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** User details and logout button clearly visible in sidemenu bottom.
 
 **HF-019: Sidemenu Logout Action**
+
 - **Preconditions:** User is authenticated and sidemenu is visible.
 - **User/System actions:** User clicks the "Logout" button in the sidemenu footer.
 - **Expected results:**
@@ -177,6 +199,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** Session terminated; unauthenticated view displayed.
 
 **HF-020: Header User Details Display**
+
 - **Preconditions:** User is authenticated.
 - **User/System actions:** User views the application header.
 - **Expected results:**
@@ -185,6 +208,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** User details and logout button clearly visible in header.
 
 **HF-021: Header Logout Action**
+
 - **Preconditions:** User is authenticated and header is visible.
 - **User/System actions:** User clicks the "Logout" button in the header.
 - **Expected results:**
@@ -193,42 +217,49 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** Session terminated; unauthenticated view displayed.
 
 **HF-022: Rule Management - List Global Compound Rules**
+
 - **Preconditions:** User is authenticated on `/rule-management`.
 - **User/System actions:** Page loads.
 - **Expected results:** `GET /templates/global-compound-rules` is called; rules are rendered in a clean grid showing rule name, description, condition logic summary, error message, and active status.
 - **Final state:** Rules displayed.
 
 **HF-023: Rule Management - Create Global Compound Rule**
+
 - **Preconditions:** User is authenticated on `/rule-management`.
 - **User/System actions:** User clicks "Create Rule", fills name, description, adds WHEN condition (`fieldId`, `operator`, `value`), adds THEN action assertion, enters error message, and clicks "Create Rule".
 - **Expected results:** `POST /templates/global-compound-rules` is sent with payload; modal closes; rules list refreshes with the new rule.
 - **Final state:** Rule saved and visible in grid.
 
 **HF-024: Rule Management - Update and Delete Compound Rule**
+
 - **Preconditions:** Rule exists in list.
 - **User/System actions:** User edits rule fields (`PUT /templates/global-compound-rules/:id`) or clicks delete and confirms dialog (`DELETE /templates/global-compound-rules/:id`).
 - **Expected results:** API call succeeds; UI state updates accordingly.
 - **Final state:** Rule updated or removed from state.
 
 **HF-025: Form Definitions - List Field Definitions Library**
+
 - **Preconditions:** User is authenticated on `/form-definitions`.
 - **User/System actions:** User selects "Field Library" tab.
 - **Expected results:** `GET /templates/field-definitions` is called; table displays registered field definitions (machine key, human label, input type, filterable/sortable badges).
 - **Final state:** Field definitions listed.
 
 **HF-026: Form Definitions - Create Reusable Field Definition**
+
 - **Preconditions:** User on "Field Library" tab.
 - **User/System actions:** User clicks "Create Field", enters `fieldName` (snake_case), `fieldLabel`, selects `fieldType` (e.g. `select`), enters options if applicable, toggles filterable/sortable flags, and submits.
 - **Expected results:** `POST /templates/field-definitions` is sent; modal closes; new field definition appears in list.
 - **Final state:** Field definition created.
 
 **HF-027: Form Definitions - List Form Templates**
+
 - **Preconditions:** User on `/form-definitions` under "Form Templates" tab.
 - **User/System actions:** Page loads.
 - **Expected results:** `GET /templates` is called; templates are displayed with name, sport type, tournament type, preset/custom badges, active status toggle, and fields count.
 - **Final state:** Form templates listed.
 
 **HF-028: Form Definitions - Create Form Template Navigates to Form Builder**
+
 - **Preconditions:** User is authenticated on `/form-definitions` under "Form Templates" tab.
 - **User/System actions:** User clicks "Add Template" (or "Create First Template" if list is empty).
 - **Expected results:**
@@ -237,8 +268,8 @@ The application provides an accessible login screen (`/login`) allowing users to
   - `FormBuilderPage` initializes a clean new template state with default protected system fields (`Full Name`, `Email Address`).
 - **Final state:** User is in the Form Builder workspace authoring the new template schema.
 
-
 **HF-029: Rule Management - BaseLayout, Header & Sidemenu Integration**
+
 - **Preconditions:** User is authenticated on `/rule-management`.
 - **User/System actions:** User accesses or refreshes `/rule-management`.
 - **Expected results:**
@@ -249,6 +280,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** Consistent shell and theme displayed.
 
 **HF-030: Form Definitions - BaseLayout, Header & Sidemenu Integration**
+
 - **Preconditions:** User is authenticated on `/form-definitions`.
 - **User/System actions:** User accesses or refreshes `/form-definitions`.
 - **Expected results:**
@@ -259,6 +291,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** Consistent shell and theme displayed.
 
 **HF-031: RuleEngineService - Conjunction Evaluation (AND / OR)**
+
 - **Preconditions:** `RuleEngineService` is instantiated.
 - **User/System actions:** Evaluates rule trees with `conjunction: 'AND'` and `conjunction: 'OR'`.
 - **Expected results:**
@@ -267,12 +300,14 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** Deterministic boolean result returned.
 
 **HF-032: RuleEngineService - Atomic Operators Evaluation**
+
 - **Preconditions:** `RuleEngineService` is instantiated.
 - **User/System actions:** Evaluates atomic rules with operators: `equals`, `notEquals`, `greaterThan`, `lessThan`, `in`, `notIn`, and `$field` pointers.
 - **Expected results:** Correct boolean evaluation for strings, numbers, arrays, and field-to-field references.
 - **Final state:** Accurate evaluation matching backend `RuleEngine.util.ts`.
 
 **HF-033: RuleEngineService - Cross-Field Validation & Error Message Generation**
+
 - **Preconditions:** Cross-field validation rule defined (e.g., WHEN `age < 18` THEN `guardian_consent == true`).
 - **User/System actions:** Runs `validateForm()` on compliant and non-compliant payloads.
 - **Expected results:**
@@ -281,6 +316,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** Compliance errors returned.
 
 **HF-034: DynamicFormRenderer - Reactive FormGroup Generation from JSON Schema**
+
 - **Preconditions:** `DynamicFormRendererComponent` receives a `FormDefinition` schema with text, number, select, radio, checkbox, and date fields.
 - **User/System actions:** Component renders.
 - **Expected results:**
@@ -290,6 +326,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** Interactive form displayed to user.
 
 **HF-035: DynamicFormRenderer - Real-Time AST Rule Violation & Compliance Banner**
+
 - **Preconditions:** Schema contains cross-field AST validations.
 - **User/System actions:** User inputs data that triggers the WHEN condition but fails the THEN requirement.
 - **Expected results:**
@@ -299,6 +336,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** User alerted in real-time.
 
 **HF-036: DynamicFormRenderer - Read-Only / Disabled Simulation Mode**
+
 - **Preconditions:** `disabled` input signal set to `true`.
 - **User/System actions:** User views rendered form.
 - **Expected results:**
@@ -308,6 +346,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** Read-only view rendered.
 
 **HF-037: FormBuilderStore - System Field Protection Invariant**
+
 - **Preconditions:** `FormBuilderStore` is initialized with new or existing template.
 - **User/System actions:** Admin inspects default fields or attempts to delete `Full Name` or `Email`.
 - **Expected results:**
@@ -317,6 +356,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** Identity resolution fields preserved.
 
 **HF-038: FormBuilderStore - Field Insertion, Duplication, and Reordering**
+
 - **Preconditions:** `FormBuilderStore` has active template.
 - **User/System actions:** Adds new field (`addField('select')`), duplicates a field (`duplicateField(id)`), and reorders (`moveField(prev, curr)`).
 - **Expected results:**
@@ -326,12 +366,14 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** Schema updated in store.
 
 **HF-039: FormBuilderPage - Interactive Canvas & CdkDragDrop Reordering**
+
 - **Preconditions:** Admin is on `/form-builder` or `/form-builder/:id`.
 - **User/System actions:** Reorders field cards via CDK drag handle (`cdkDropListDropped`).
 - **Expected results:** Field cards smoothly transition and reorder in canvas and store state.
 - **Final state:** Reordered list persisted.
 
 **HF-040: FormBuilderPage - Live Preview Modal with DynamicFormRenderer**
+
 - **Preconditions:** Admin authors form in canvas and clicks "Live Preview".
 - **User/System actions:** Clicks "Live Preview" button in header.
 - **Expected results:**
@@ -340,6 +382,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** Live interactive simulation works without page reload.
 
 **HF-041: Form Definitions - Edit Form Template Navigates to Form Builder**
+
 - **Preconditions:** User is authenticated on `/form-definitions` with existing templates loaded.
 - **User/System actions:** User clicks "Edit" button (`.btn-edit`) or "Open Form Builder" on a template card.
 - **Expected results:**
@@ -349,6 +392,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** User is in the Form Builder workspace with existing template pre-populated.
 
 **HF-042: Form Template Delete from Template Card in FormDefinitionsPage**
+
 - **Preconditions:** User is authenticated on `/form-definitions`.
 - **User/System actions:** User clicks delete button on a template card; confirms the confirmation prompt.
 - **Expected results:**
@@ -357,6 +401,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** Template removed from view.
 
 **HF-043: Form Template Delete from FormBuilderPage Top Bar**
+
 - **Preconditions:** User is on `/form-builder/:id` editing an existing template.
 - **User/System actions:** User clicks "Delete Template" in the top bar; confirms the prompt.
 - **Expected results:**
@@ -365,6 +410,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** Navigated to `/form-definitions`, deleted template removed.
 
 **HF-044: Form Builder - Template Settings Tab & Metadata Authoring**
+
 - **Preconditions:** User is in `FormBuilderPage` on any template.
 - **User/System actions:** User switches to the "Template Settings" sub-tab; updates template name, sport discipline (e.g. Sambo, MMA, BJJ), tournament level (National, State, District, Invitational), and template description.
 - **Expected results:**
@@ -373,6 +419,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** Template metadata saved in backend and state.
 
 **HF-045: Form Definitions - Template Modal Popup Elimination**
+
 - **Preconditions:** User is on `/form-definitions`.
 - **User/System actions:** Inspect DOM and trigger actions on templates.
 - **Expected results:**
@@ -381,6 +428,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** Simplified, unified workflow with 0 popup dialogs for templates.
 
 **HF-046: Form Builder - Custom Field Definitions Palette & Inclusion in Form Template**
+
 - **Preconditions:** User is authenticated and navigates to `FormBuilderPage` (`/form-builder/new` or `/form-builder/:id`). Master library has registered `FieldDefinition` records (e.g. `belt_rank`, `weight`, `date_of_birth`).
 - **User/System actions:**
   - Page loads; `FormDefinitionStore.loadFieldDefinitions()` fetches registered custom field definitions.
@@ -394,6 +442,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** Custom field definition from the library is embedded directly into the template canvas and saved with its master definition association.
 
 **HF-047: User Accounts - Jurisdiction Column, Sort Dropdown, Export to CSV, and Manual Refresh**
+
 - **Preconditions:** User is authenticated and on `/users`. User directory table contains loaded users.
 - **User/System actions:**
   - View directory table: inspect column headers and rows.
@@ -408,6 +457,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** User directory table provides full geographic visibility, sorting, instant refresh, and data export.
 
 **HF-048: Role Management - System ID, Hierarchy Level, Delegation Indicator, and Parent-Subset Child Role Creation**
+
 - **Preconditions:** User is authenticated and on `/roles`.
 - **User/System actions:**
   - Inspect role cards.
@@ -422,6 +472,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** Hierarchical role delegation and permissions boundaries are visually explicit and strictly enforced.
 
 **HF-049: Form Templates - Preset Immutability Safeguards & Direct "VIEW FORM" Preview on Template Cards**
+
 - **Preconditions:** User is authenticated and on `/form-definitions` (Templates tab). Directory contains both canonical PRESET templates and CUSTOM templates.
 - **User/System actions:**
   - Inspect PRESET template cards vs CUSTOM template cards.
@@ -434,6 +485,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** Official presets are protected from deletion/mutation, and admins can quickly inspect form layouts directly from the directory.
 
 **HF-050: Form Templates - Base Preset Inheritance Creation Workflow & Read-Only Inherited Fields in Form Builder**
+
 - **Preconditions:** User is on `/form-definitions`.
 - **User/System actions:**
   - Click "+ Add Template".
@@ -452,6 +504,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 ### Negative Flows
 
 **NF-001: Invalid Credentials at Login**
+
 - **Preconditions:** User is on `/login`.
 - **User/System actions:** User enters invalid email or incorrect password and submits.
 - **Expected results:**
@@ -461,6 +514,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** User remains on `/login`, not authenticated.
 
 **NF-002: Token Refresh Failure (Expired Refresh Token)**
+
 - **Preconditions:** Access token expires, and refresh token is also invalid/expired.
 - **User/System actions:** Protected API call receives 401; interceptor calls `POST /auth/refresh` which also returns `401/403`.
 - **Expected results:**
@@ -470,6 +524,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** User is on `/login`, unauthenticated.
 
 **NF-003: Network Error during Login**
+
 - **Preconditions:** Backend server is offline or unreachable.
 - **User/System actions:** User submits login form.
 - **Expected results:**
@@ -479,12 +534,14 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** User remains on `/login`.
 
 **NF-004: Create User with Duplicate Email**
+
 - **Preconditions:** A user with email `test@test.com` already exists.
 - **User/System actions:** Admin attempts to create another user with email `test@test.com`.
 - **Expected results:** Backend returns `409 Conflict` ("Email already in use"); form displays error alert; modal remains open.
 - **Final state:** User not created.
 
 **NF-005: Delete System Role Prevented**
+
 - **Preconditions:** System role (e.g. `SUPERADMIN`).
 - **User/System actions:** Admin views system role.
 - **Expected results:** Delete button is disabled or hidden for system roles.
@@ -495,6 +552,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 ### Edge Cases
 
 **EC-001: Public Endpoints Bypass Bearer Attachment & 401 Loop**
+
 - **Preconditions:** Requests are directed to `/auth/login` or `/auth/refresh`.
 - **User/System actions:** Outgoing request made to `/auth/login`.
 - **Expected results:**
@@ -503,14 +561,16 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Final state:** Error is propagated directly to the caller.
 
 **EC-002: Page Reload with Existing Session in LocalStorage**
+
 - **Preconditions:** Valid tokens and user profile exist in `localStorage`.
 - **User/System actions:** User refreshes browser window (`F5`).
 - **Expected results:**
   - `AuthStore` initializes and loads tokens/user profile from `localStorage`.
   - User remains authenticated without redirecting to `/login`.
 - **Final state:** `authStore.isAuthenticated()` is `true`.
- 
+
 **EC-003: Duplicate Key Suffixing for Library Fields Added to Canvas**
+
 - **Preconditions:** A field with `fieldName: 'belt_rank'` is already present on the canvas.
 - **User/System actions:** User clicks the `Belt Rank` custom field definition chip in the palette again.
 - **Expected results:**
@@ -523,30 +583,35 @@ The application provides an accessible login screen (`/login`) allowing users to
 ### Validation Rules
 
 **VR-001: Email Validation (Login)**
+
 - **Preconditions:** User on `/login`.
 - **User/System actions:** User leaves email empty or enters an invalid email format (e.g. `invalid-email`).
 - **Expected results:** Field indicates error; submit button disabled or prevented.
 - **Final state:** Form invalid.
 
 **VR-002: Password Validation (Login)**
+
 - **Preconditions:** User on `/login`.
 - **User/System actions:** User leaves password empty.
 - **Expected results:** Field indicates error; submit button disabled or prevented.
 - **Final state:** Form invalid.
 
 **VR-003: User Creation Validation**
+
 - **Preconditions:** Admin on "Add User" form.
 - **User/System actions:** Submits with empty required fields (firstName, lastName, email, password, roleId).
 - **Expected results:** Field-level validation messages appear; submission blocked.
 - **Final state:** Form invalid.
 
 **VR-004: User Password Minimum Length**
+
 - **Preconditions:** Admin on "Add User" form.
 - **User/System actions:** Enters password shorter than required (e.g. 3 chars).
 - **Expected results:** Validation error displayed; submission blocked.
 - **Final state:** Form invalid.
 
 **VR-005: Role Creation Validation**
+
 - **Preconditions:** Admin on "Create Role" form.
 - **User/System actions:** Submits without role name or without any selected permissions.
 - **Expected results:** Field-level validation flags empty name; submission blocked.
@@ -557,18 +622,21 @@ The application provides an accessible login screen (`/login`) allowing users to
 ### Loading & State Transitions
 
 **ST-001: Login Submission Loading State**
+
 - **Preconditions:** User submits valid login form.
 - **User/System actions:** Request is in flight.
 - **Expected results:** Submit button shows loading spinner / "Signing in...".
 - **Final state:** Loading state resolves to success or error.
 
 **ST-002: Users Table Loading Skeleton**
+
 - **Preconditions:** User navigates to `/users`.
 - **User/System actions:** API request is in flight.
 - **Expected results:** Table renders loading state / spinner.
 - **Final state:** Table populated with data.
 
 **ST-003: Roles Grid Loading Skeleton**
+
 - **Preconditions:** User navigates to `/roles`.
 - **User/System actions:** API request is in flight.
 - **Expected results:** Roles grid renders loading state / spinner.
@@ -579,18 +647,21 @@ The application provides an accessible login screen (`/login`) allowing users to
 ### Authentication & Authorization
 
 **AUTH-001: Unauthenticated Navigation to Protected Route**
+
 - **Preconditions:** User is not authenticated.
 - **User/System actions:** User attempts to navigate directly to `/users` or `/roles`.
 - **Expected results:** `authGuard` intercepts navigation; redirects to `/login?returnUrl=%2Fusers`.
 - **Final state:** User lands on `/login`.
 
 **AUTH-002: Authenticated Navigation to Login Page**
+
 - **Preconditions:** User is already authenticated.
 - **User/System actions:** User navigates to `/login`.
 - **Expected results:** `guestGuard` intercepts navigation; redirects to `/`.
 - **Final state:** User remains on `/`.
 
 **AUTH-003: Sidemenu Hidden for Unauthenticated Users**
+
 - **Preconditions:** User is not authenticated (or on `/login`).
 - **User/System actions:** Renders base layout.
 - **Expected results:** Sidemenu is NOT rendered; only public header/footer shown.
@@ -601,18 +672,21 @@ The application provides an accessible login screen (`/login`) allowing users to
 ### Regression Requirements
 
 **RR-001: Public Layout and Existing Home Page Unbroken**
+
 - **Preconditions:** Home page and Base layout exist.
 - **User/System actions:** Navigate to `/`.
 - **Expected results:** Home page renders correctly with Base layout and dashboard overview modules.
 - **Final state:** All pre-existing functionality passes tests.
 
 **RR-002: Route Full-Path Match & NG04002 Prevention**
+
 - **Preconditions:** Application defines root (`/`), `/login`, `/users`, and `/roles`.
 - **User/System actions:** Navigate to `/login`, `/users`, `/roles`, or deep refresh without route prefix conflicts.
 - **Expected results:** Root route specifies `pathMatch: 'full'` to prevent empty-prefix premature match and subsequent `NG04002: Cannot match any routes` errors. Wildcard `path: '**'` safely redirects unmatched routes to root.
 - **Final state:** Route transitions complete cleanly without runtime errors.
 
 **RR-003: Unified Reddish Accent Styling Across Application**
+
 - **Preconditions:** Application is loaded in the browser.
 - **User/System actions:** User navigates across `/`, `/login`, `/users`, `/roles`, `/rule-management`, `/form-definitions`, and `/form-builder`.
 - **Expected results:**
@@ -624,9 +698,11 @@ The application provides an accessible login screen (`/login`) allowing users to
 ---
 
 ## Feature / Change: Event Management (Events Board & Directory), Athlete Roster Lister & Public Registration Form
+
 **Priority:** High
 **Desired Behavior:**
 The application provides:
+
 1. **Events Board & Directory (`/events`)**:
    - Central tournament hub displaying KPI counters (Total, Active, Draft, Archived).
    - Global search, sport filter, tournament level filter, and status filter tabs (All, Active, Draft, Archived).
@@ -655,6 +731,7 @@ The application provides:
 ### Happy Flows
 
 **HF-EV-001: Events Listing and Status Filtering**
+
 - **Preconditions:** Admin is authenticated and navigates to `/events`.
 - **User/System actions:**
   - Page loads event directory and KPI summary cards.
@@ -667,6 +744,7 @@ The application provides:
 - **Final state:** Filtered events render with accurate status badges.
 
 **HF-EV-002: Create Event with Template Binding**
+
 - **Preconditions:** User is on `/events` and clicks "+ Create Event".
 - **User/System actions:**
   - User fills in Event Name, Sport Type, Tournament Type, Start/End dates, Location.
@@ -678,6 +756,7 @@ The application provides:
 - **Final state:** Event persisted with linked registration form.
 
 **HF-EV-003: Publish Draft Event to Open Registrations**
+
 - **Preconditions:** An event exists in "Draft" status (`status === 1`).
 - **User/System actions:** User clicks "Publish / Activate" on the event card.
 - **Expected results:**
@@ -687,6 +766,7 @@ The application provides:
 - **Final state:** Event status is updated in backend and store.
 
 **HF-EV-004: Copy Public Registration Link**
+
 - **Preconditions:** An event exists with ID `123`.
 - **User/System actions:** User clicks "Copy Registration Link" on event card or roster banner.
 - **Expected results:**
@@ -695,6 +775,7 @@ The application provides:
 - **Final state:** Link in clipboard ready for distribution.
 
 **HF-REG-001: Roster Directory & Status Segregation**
+
 - **Preconditions:** Admin navigates to `/events/:eventId/roster`.
 - **User/System actions:** Page loads registrations and KPI metrics; user clicks through tabs ("Pending", "Approved", "Rejected").
 - **Expected results:**
@@ -703,6 +784,7 @@ The application provides:
 - **Final state:** Segregated roster views displayed.
 
 **HF-REG-002: Individual Athlete Approval & Rejection**
+
 - **Preconditions:** Athlete registration exists with status "Pending".
 - **User/System actions:** User clicks "Approve" (or "Reject") row action button.
 - **Expected results:**
@@ -712,6 +794,7 @@ The application provides:
 - **Final state:** Athlete status persisted as Approved/Rejected.
 
 **HF-REG-003: Batch Approval and Batch Rejection**
+
 - **Preconditions:** Multiple athletes in "Pending" status.
 - **User/System actions:** User checks checkboxes for 3 athletes, clicks "Batch Approve" in floating actions bar.
 - **Expected results:**
@@ -720,6 +803,7 @@ The application provides:
 - **Final state:** Batch statuses updated and reflected in UI.
 
 **HF-REG-004: Admin Manual Fighter Registration**
+
 - **Preconditions:** Admin clicks "+ Register Fighter" in roster view.
 - **User/System actions:**
   - Modal opens rendering the event's dynamic form schema.
@@ -730,6 +814,7 @@ The application provides:
 - **Final state:** Athlete registered via admin flow.
 
 **HF-REG-005: Export Roster to Excel**
+
 - **Preconditions:** User is on `/events/:eventId/roster` and clicks "Export Roster".
 - **User/System actions:** Browser requests `GET /events/:eventId/registrations/export`.
 - **Expected results:**
@@ -738,6 +823,7 @@ The application provides:
 - **Final state:** File saved locally.
 
 **HF-REG-006: Duplicate Detection & Resolution**
+
 - **Preconditions:** Two or more participants have matching name/DOB/contact.
 - **User/System actions:**
   - User navigates to "Duplicates & Flagged" tab.
@@ -749,6 +835,7 @@ The application provides:
 - **Final state:** Duplicates resolved cleanly.
 
 **HF-PUB-001: Public Athlete Self-Registration**
+
 - **Preconditions:** Public unauthenticated user visits `/events/:eventId/register`.
 - **User/System actions:**
   - User views tournament details and instructions.
@@ -761,6 +848,7 @@ The application provides:
 - **Final state:** Participant registered in database in Pending status.
 
 **HF-REG-007: Dynamic Form Definition Columns in Roster Table**
+
 - **Preconditions:** Event has a linked form definition containing custom fields (e.g. weight category, gender, state, district, academy). Roster contains registered athletes with submitted responses.
 - **User/System actions:** Admin navigates to `/events/:eventId/roster`.
 - **Expected results:**
@@ -770,6 +858,7 @@ The application provides:
 - **Final state:** All form definition fields and submitted responses are visible across the roster table.
 
 **HF-REG-008: Read-Only Dynamic Form Renderer in Athlete Details Popup**
+
 - **Preconditions:** Admin clicks the "View Details" (eye icon) action button on an athlete row.
 - **User/System actions:** Details popup opens.
 - **Expected results:**
@@ -779,6 +868,7 @@ The application provides:
 - **Final state:** All form definition data is rendered inside the details popup in read-only form mode.
 
 **HF-TH-001: Global Dark Mode Rendering for All Pages, Modals, Tables & Portals**
+
 - **Preconditions:** Application is loaded on any route (`/login`, `/`, `/users`, `/roles`, `/rules`, `/form-definitions`, `/form-builder`, `/events`, `/events/:eventId/roster`, `/events/:eventId/register`).
 - **User/System actions:** User views and navigates through events management, event roster, athlete details modal, create event modal, and the public registration portal.
 - **Expected results:**
@@ -790,6 +880,7 @@ The application provides:
 - **Final state:** 100% of application pages and components display in unified dark mode.
 
 **HF-DOB-001: Date of Birth Persistence & Visibility in Registered Users List and Athlete Details Modal**
+
 - **Preconditions:** Athlete registers for an event via public self-registration or manual registration with a Date of Birth (DOB).
 - **User/System actions:**
   - Registration is submitted with `dob`.
@@ -803,6 +894,7 @@ The application provides:
 - **Final state:** Date of Birth is fully persistent and visible across the roster table, details popup, and export.
 
 **HF-FB-002: Dynamic Form Creation & Full-Fidelity Rebuilding**
+
 - **Preconditions:** Admin navigates to `/form-builder` or edits an existing template.
 - **User/System actions:**
   - Admin initializes or customizes a form template with standard fields (Full Name, Email, Phone, Date of Birth) and custom fields.
@@ -818,12 +910,14 @@ The application provides:
 ### Negative Flows & Edge Cases
 
 **NF-EV-001: Create Event Validation Failure**
+
 - **Preconditions:** User attempts to submit "+ Create Event" modal with missing event name or dates.
 - **User/System actions:** User leaves Event Name blank and clicks submit.
 - **Expected results:** Form prevents submission, highlights required fields with error messages.
 - **Final state:** Modal remains open, no API call sent.
 
 **NF-PUB-001: Public Registration on Closed or Draft Tournament**
+
 - **Preconditions:** Event is in "Draft" status (`status === 1`) or registration close date has passed.
 - **User/System actions:** Public user visits `/events/:eventId/register`.
 - **Expected results:**
@@ -833,6 +927,7 @@ The application provides:
 - **Final state:** No registrations accepted.
 
 **NF-PUB-002: Duplicate Registration on Public Form**
+
 - **Preconditions:** Athlete has already submitted a registration for this event with same email/phone.
 - **User/System actions:** User attempts to register again with same details.
 - **Expected results:**
@@ -841,6 +936,7 @@ The application provides:
 - **Final state:** User alerted, no duplicate registration created.
 
 **HF-REG-009: Multi-Item Dynamic Form Creation, Event Attachment, Public Registration, & Roster Details Verification**
+
 - **Preconditions:** Admin creates a form template containing diverse form elements (Text, Textarea, Number, Select, Radio, Checkbox, Boolean toggle, Date) and custom fields. Event/tournament is created or updated using this form template.
 - **User/System actions:**
   1. Multiple users/athletes register through the public registration form (`/events/:eventId/register`) filling out all diverse form fields.
@@ -855,34 +951,95 @@ The application provides:
 - **Final state:** All diverse form fields and entered values are completely persistent, visible, and verified across both public registration and admin roster surfaces.
 
 **EC-REG-001: Boolean and Checkbox Serialization in Read-Only Details View**
+
 - **Preconditions:** Form includes boolean toggles and checkboxes. Athlete submits with some checked and some unchecked.
 - **User/System actions:** Admin opens Athlete Details modal.
 - **Expected results:** Checked inputs appear checked (`true`), unchecked inputs remain unchecked (`false`). Unchecked inputs do not evaluate to true due to string truthiness.
 - **Final state:** Boolean states faithfully represented.
 
 **EC-REG-002: Distinct Date Handling Between Participant DOB and Custom Form Date Fields**
+
 - **Preconditions:** Form contains both athlete Date of Birth and a custom date field (e.g., "Medical Clearance Date").
 - **User/System actions:** Athlete submits different dates for DOB and custom date. Admin views roster table and details modal.
 - **Expected results:** The custom date column displays the custom date value, not the athlete's date of birth.
 - **Final state:** No cross-contamination between date fields.
 
 **EC-REG-003: Custom Option Label Resolution in Roster Table and Details Modal**
+
 - **Preconditions:** Form contains a select dropdown or radio choice with distinct values and labels (e.g., value "purple" -> label "Purple Belt", value "southpaw" -> label "Southpaw").
 - **User/System actions:** Athlete registers choosing these options. Admin views roster table and opens athlete details modal.
 - **Expected results:** The roster table, modal responses summary table, and Excel export resolve and display the human-readable labels ("Purple Belt", "Southpaw") instead of the raw option values ("purple", "southpaw").
 - **Final state:** Human-readable option labels rendered consistently across all viewing surfaces.
 
 **EC-REG-004: Non-DOB Fields Containing 'birth' in Label Render Submitted Values**
+
 - **Preconditions:** Form contains custom text or select fields containing the word "birth" in the label (e.g., "Place of Birth", "Birth City", "Birth Certificate Number").
 - **User/System actions:** Athlete enters text (e.g. "Bengaluru") in the "Place of Birth" field. Admin views roster table.
 - **Expected results:** The table renders the submitted text ("Bengaluru") under the "Place of Birth" column, rather than mistakenly intercepting the label and displaying the athlete's date of birth (`reg.dob`).
 - **Final state:** Custom birth-related text fields display submitted text accurately.
 
 **EC-REG-005: Form Schema Field Key Alignment with Template Field Slugs**
+
 - **Preconditions:** Admin creates a custom template with multiple palette items.
 - **User/System actions:** Form template is saved. Form schema is inspected and used in public registration.
 - **Expected results:** `formSchema.fields[].key` matches the slugified `customFieldName` of each template field, ensuring 1:1 control mapping between reactive form inputs and response submission.
 - **Final state:** Form schema keys and template field names are fully synchronized.
 
+**HF-EV-005: Unarchive Archived Tournament**
 
+- **Preconditions:** Tournament is in `COMPLETED` or `CANCELLED` status (listed in the "Archived" tab).
+- **User/System actions:** User clicks the "Unarchive" action button on the event card.
+- **Expected results:**
+  - `PUT /events/:eventId` is invoked with `{ status: 3 }` (`REGISTRATION_OPEN`).
+  - Event status updates to "Registration Open".
+  - Event is removed from the "Archived" tab and appears in the "Active" tab.
+  - Toast notification confirms "Tournament unarchived and registrations reopened!".
+- **Final state:** Tournament unarchived and reactively updated in the store.
 
+**HF-EV-006: Edit Tournament Details and Form Association**
+
+- **Preconditions:** Tournament exists on `/events`.
+- **User/System actions:**
+  - User clicks the "Edit" action button (pencil icon) on the tournament card.
+  - Modal opens pre-populated with current event data (name, sport, level, start/end dates, location, poster image URL, status, form template, registration open/close dates, form title, form description).
+  - User modifies tournament properties and submits the form.
+- **Expected results:**
+  - `PUT /events/:eventId` updates the event specifications.
+  - `PUT /events/:eventId/registration-form` updates the linked registration form and template.
+  - Modal closes, store reloads events, and the tournament card renders the updated details immediately.
+  - Toast notification confirms "Tournament updated successfully!".
+- **Final state:** Updated tournament details persisted and rendered with OnPush reactivity.
+
+**HF-EV-007: Delete Tournament with Confirmation Dialog**
+
+- **Preconditions:** Tournament exists on `/events`.
+- **User/System actions:**
+  - User clicks the "Delete" action button (trash icon) on the tournament card.
+  - A confirmation dialog appears with tournament name and warning.
+  - User confirms by clicking "Delete Tournament".
+- **Expected results:**
+  - `DELETE /events/:eventId` is invoked.
+  - Event is removed from the active event store and disappears from the UI without a full page refresh.
+  - Toast notification confirms "Tournament deleted successfully".
+- **Final state:** Tournament soft-deleted and removed from active listings.
+
+**HF-UI-001: Form Template Card Action Buttons Styling & Proportions**
+
+- **Preconditions:** User is on `/form-definitions` under "Form Templates" tab.
+- **User/System actions:** User inspects the action buttons in the footer of any template card ("View Form", "Open Form Builder", "Activate" / "Deactivate").
+- **Expected results:**
+  - "Open Form Builder" has `text-decoration: none` (no underline).
+  - "Open Form Builder" applies `btn-sm` sizing matching adjacent buttons in height, padding, and font-size.
+  - Text does not wrap across lines (`white-space: nowrap`).
+  - Action buttons are aligned horizontally with consistent spacing.
+- **Final state:** Form template card footer buttons are harmoniously styled.
+
+**HF-UI-002: Role Management Child Role Button Without Duplicate Plus Icon**
+
+- **Preconditions:** User is on `/roles` viewing a role with `canCreateRoles: true`.
+- **User/System actions:** User inspects the child role button on the role card.
+- **Expected results:**
+  - Button contains an SVG plus icon followed by text "Child Role" without a duplicate literal `+`.
+  - Visual output reads cleanly as `+ Child Role`.
+  - `white-space: nowrap` prevents text wrapping in narrow card viewports.
+- **Final state:** Role delegation button renders cleanly without duplicate markers.

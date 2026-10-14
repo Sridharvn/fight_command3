@@ -41,7 +41,8 @@ export class EventService {
       if (params.limit !== undefined) cleanParams['limit'] = params.limit;
       if (params.sportType !== undefined) cleanParams['sportType'] = params.sportType;
       if (params.status !== undefined) cleanParams['status'] = params.status;
-      if (params.tournamentType !== undefined) cleanParams['tournamentType'] = params.tournamentType;
+      if (params.tournamentType !== undefined)
+        cleanParams['tournamentType'] = params.tournamentType;
       if (params.isActive !== undefined) cleanParams['isActive'] = params.isActive;
     }
     return this.api.get<PaginatedResult<EventListItem>>('/events', { params: cleanParams });
@@ -63,6 +64,14 @@ export class EventService {
     return this.api.delete<{ message: string }>(`/events/${eventId}`);
   }
 
+  restoreEvent(eventId: number): Observable<{ message: string }> {
+    return this.api.patch<{ message: string }>(`/events/${eventId}/restore`, {});
+  }
+
+  updateRegistrationForm(eventId: number, dto: any): Observable<any> {
+    return this.api.put(`/events/${eventId}/registration-form`, dto);
+  }
+
   getPublicEventForm(eventId: number): Observable<PublicEventForm> {
     return this.api.get<PublicEventForm>(`/events/${eventId}/public-form`);
   }
@@ -75,10 +84,7 @@ export class EventService {
     return this.api.post<{ message: string }>(`/events/${eventId}/duplicates/scan`);
   }
 
-  resolveDuplicates(
-    eventId: number,
-    dto: ResolveDuplicateDto,
-  ): Observable<{ message: string }> {
+  resolveDuplicates(eventId: number, dto: ResolveDuplicateDto): Observable<{ message: string }> {
     return this.api.post<{ message: string }>(`/events/${eventId}/duplicates/resolve`, dto);
   }
 }

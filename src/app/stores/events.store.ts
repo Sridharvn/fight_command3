@@ -4,12 +4,7 @@ import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { pipe, of } from 'rxjs';
 import { switchMap, tap, catchError } from 'rxjs/operators';
 import { EventService } from '../services/event.service';
-import {
-  CreateEventDto,
-  EventListItem,
-  EventStatus,
-  UpdateEventDto,
-} from '../models/event.models';
+import { CreateEventDto, EventListItem, EventStatus, UpdateEventDto } from '../models/event.models';
 
 export type EventStatusTab = 'all' | 'active' | 'draft' | 'archived';
 
@@ -48,23 +43,17 @@ export const EventsStore = signalStore(
   withState<EventsState>(initialState),
   withComputed(({ events, statusTab, selectedSport, selectedLevel, searchQuery }) => ({
     totalEventsCount: computed(() => events().length),
-    draftEventsCount: computed(
-      () => events().filter((e) => e.status === EventStatus.DRAFT).length,
-    ),
+    draftEventsCount: computed(() => events().filter((e) => e.status === EventStatus.DRAFT).length),
     activeEventsCount: computed(
       () =>
         events().filter(
-          (e) =>
-            e.status === EventStatus.PUBLISHED ||
-            e.status === EventStatus.REGISTRATION_OPEN,
+          (e) => e.status === EventStatus.PUBLISHED || e.status === EventStatus.REGISTRATION_OPEN,
         ).length,
     ),
     archivedEventsCount: computed(
       () =>
         events().filter(
-          (e) =>
-            e.status === EventStatus.COMPLETED ||
-            e.status === EventStatus.CANCELLED,
+          (e) => e.status === EventStatus.COMPLETED || e.status === EventStatus.CANCELLED,
         ).length,
     ),
     filteredEvents: computed(() => {
@@ -79,15 +68,11 @@ export const EventsStore = signalStore(
         list = list.filter((e) => e.status === EventStatus.DRAFT);
       } else if (tab === 'active') {
         list = list.filter(
-          (e) =>
-            e.status === EventStatus.PUBLISHED ||
-            e.status === EventStatus.REGISTRATION_OPEN,
+          (e) => e.status === EventStatus.PUBLISHED || e.status === EventStatus.REGISTRATION_OPEN,
         );
       } else if (tab === 'archived') {
         list = list.filter(
-          (e) =>
-            e.status === EventStatus.COMPLETED ||
-            e.status === EventStatus.CANCELLED,
+          (e) => e.status === EventStatus.COMPLETED || e.status === EventStatus.CANCELLED,
         );
       }
 
@@ -184,11 +169,7 @@ export const EventsStore = signalStore(
           .subscribe();
       },
 
-      updateEvent(
-        eventId: number,
-        dto: UpdateEventDto,
-        onSuccess?: () => void,
-      ): void {
+      updateEvent(eventId: number, dto: UpdateEventDto, onSuccess?: () => void): void {
         patchState(store, { actionLoading: true, error: null });
         eventService
           .updateEvent(eventId, dto)
@@ -207,82 +188,101 @@ export const EventsStore = signalStore(
           .subscribe();
       },
 
+      publishEvent(eventId: number, onSuccess?: () => void): void {
+        patchState(store, { actionLoading: true, error: null });
+        eventService
+          .updateEvent(eventId, { status: EventStatus.REGISTRATION_OPEN })
+          .pipe(
+            tap(() => {
+              patchState(store, {
+                actionLoading: false,
+                events: store
+                  .events()
+                  .map((e) =>
+                    e.eventId === eventId ? { ...e, status: EventStatus.REGISTRATION_OPEN } : e,
+                  ),
+              });
+              if (onSuccess) onSuccess();
+            }),
+            catchError((err) => {
+              const msg = err.error?.message || 'Failed to publish event';
+              patchState(store, { actionLoading: false, error: msg });
+              return of(null);
+            }),
+          )
+          .subscribe();
+      },
 
-    publishEvent(eventId: number, onSuccess?: () => void): void {
-      patchState(store, { actionLoading: true, error: null });
-      eventService
-        .updateEvent(eventId, { status: EventStatus.REGISTRATION_OPEN })
-        .pipe(
-          tap(() => {
-            patchState(store, {
-              actionLoading: false,
-              events: store
-                .events()
-                .map((e) =>
-                  e.eventId === eventId
-                    ? { ...e, status: EventStatus.REGISTRATION_OPEN }
-                    : e,
-                ),
-            });
-            if (onSuccess) onSuccess();
-          }),
-          catchError((err) => {
-            const msg = err.error?.message || 'Failed to publish event';
-            patchState(store, { actionLoading: false, error: msg });
-            return of(null);
-          }),
-        )
-        .subscribe();
-    },
+      archiveEvent(eventId: number, onSuccess?: () => void): void {
+        patchState(store, { actionLoading: true, error: null });
+        eventService
+          .updateEvent(eventId, { status: EventStatus.COMPLETED })
+          .pipe(
+            tap(() => {
+              patchState(store, {
+                actionLoading: false,
+                events: store
+                  .events()
+                  .map((e) =>
+                    e.eventId === eventId ? { ...e, status: EventStatus.COMPLETED } : e,
+                  ),
+              });
+              if (onSuccess) onSuccess();
+            }),
+            catchError((err) => {
+              const msg = err.error?.message || 'Failed to archive event';
+              patchState(store, { actionLoading: false, error: msg });
+              return of(null);
+            }),
+          )
+          .subscribe();
+      },
 
-    archiveEvent(eventId: number, onSuccess?: () => void): void {
-      patchState(store, { actionLoading: true, error: null });
-      eventService
-        .updateEvent(eventId, { status: EventStatus.COMPLETED })
-        .pipe(
-          tap(() => {
-            patchState(store, {
-              actionLoading: false,
-              events: store
-                .events()
-                .map((e) =>
-                  e.eventId === eventId
-                    ? { ...e, status: EventStatus.COMPLETED }
-                    : e,
-                ),
-            });
-            if (onSuccess) onSuccess();
-          }),
-          catchError((err) => {
-            const msg = err.error?.message || 'Failed to archive event';
-            patchState(store, { actionLoading: false, error: msg });
-            return of(null);
-          }),
-        )
-        .subscribe();
-    },
+      unarchiveEvent(eventId: number, onSuccess?: () => void): void {
+        patchState(store, { actionLoading: true, error: null });
+        eventService
+          .updateEvent(eventId, { status: EventStatus.REGISTRATION_OPEN })
+          .pipe(
+            tap(() => {
+              patchState(store, {
+                actionLoading: false,
+                events: store
+                  .events()
+                  .map((e) =>
+                    e.eventId === eventId ? { ...e, status: EventStatus.REGISTRATION_OPEN } : e,
+                  ),
+              });
+              if (onSuccess) onSuccess();
+            }),
+            catchError((err) => {
+              const msg = err.error?.message || 'Failed to unarchive event';
+              patchState(store, { actionLoading: false, error: msg });
+              return of(null);
+            }),
+          )
+          .subscribe();
+      },
 
-    deleteEvent(eventId: number, onSuccess?: () => void): void {
-      patchState(store, { actionLoading: true, error: null });
-      eventService
-        .deleteEvent(eventId)
-        .pipe(
-          tap(() => {
-            patchState(store, {
-              actionLoading: false,
-              events: store.events().filter((e) => e.eventId !== eventId),
-            });
-            if (onSuccess) onSuccess();
-          }),
-          catchError((err) => {
-            const msg = err.error?.message || 'Failed to delete event';
-            patchState(store, { actionLoading: false, error: msg });
-            return of(null);
-          }),
-        )
-        .subscribe();
-    },
-  };
-}),
+      deleteEvent(eventId: number, onSuccess?: () => void): void {
+        patchState(store, { actionLoading: true, error: null });
+        eventService
+          .deleteEvent(eventId)
+          .pipe(
+            tap(() => {
+              patchState(store, {
+                actionLoading: false,
+                events: store.events().filter((e) => e.eventId !== eventId),
+              });
+              if (onSuccess) onSuccess();
+            }),
+            catchError((err) => {
+              const msg = err.error?.message || 'Failed to delete event';
+              patchState(store, { actionLoading: false, error: msg });
+              return of(null);
+            }),
+          )
+          .subscribe();
+      },
+    };
+  }),
 );
-
