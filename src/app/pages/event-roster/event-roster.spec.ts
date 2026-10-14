@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { signal } from '@angular/core';
 import { EventRosterPage } from './event-roster';
 import { RegistrationStore } from '../../stores/registration.store';
 import { EventService } from '../../services/event.service';
@@ -69,7 +70,7 @@ describe('EventRosterPage', () => {
       searchQuery: vi.fn().mockReturnValue(''),
       selectedIds: vi.fn().mockReturnValue([]),
       selectedRegistration: vi.fn().mockReturnValue(null),
-      publicEventForm: vi.fn().mockReturnValue(null),
+      publicEventForm: signal<any>(null),
       totalRegistrationsCount: vi.fn().mockReturnValue(2),
       pendingCount: vi.fn().mockReturnValue(1),
       approvedCount: vi.fn().mockReturnValue(1),
@@ -159,4 +160,70 @@ describe('EventRosterPage', () => {
     component.openDetailsModal(mockRegistrations[0]);
     expect(component.viewingRegistration()).toEqual(mockRegistrations[0]);
   });
+
+  it('should dynamically render columns from event form definition in the roster table', () => {
+    registrationStoreMock.publicEventForm.set({
+      eventId: 42,
+      eventName: 'Championship 2026',
+      formTitle: 'Registration Form',
+      templateFields: [
+        {
+          templateFieldId: 5,
+          fieldName: 'weight_category',
+          fieldLabel: 'Weight Category',
+          fieldType: 'select',
+          isRequired: true,
+        },
+        {
+          templateFieldId: 6,
+          fieldName: 'academy',
+          fieldLabel: 'Club / Academy',
+          fieldType: 'text',
+          isRequired: false,
+        },
+      ],
+    });
+
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const ths = Array.from(compiled.querySelectorAll('th')).map((th) => th.textContent?.trim());
+    expect(ths).toContain('Weight Category');
+    expect(ths).toContain('Club / Academy');
+
+    const firstRowTds = Array.from(compiled.querySelectorAll('.athlete-row')[0].querySelectorAll('td')).map(
+      (td) => td.textContent?.trim(),
+    );
+    expect(firstRowTds).toContain('-71 kg');
+  });
+
+  it('should render read-only dynamic form renderer inside details popup', () => {
+    registrationStoreMock.publicEventForm.set({
+      eventId: 42,
+      eventName: 'Championship 2026',
+      formTitle: 'Registration Form',
+      templateFields: [
+        {
+          templateFieldId: 5,
+          fieldName: 'weight_category',
+          fieldLabel: 'Weight Category',
+          fieldType: 'select',
+          isRequired: true,
+        },
+      ],
+    });
+
+    component.openDetailsModal(mockRegistrations[0]);
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const dynamicRenderer = compiled.querySelector('app-dynamic-form-renderer');
+    expect(dynamicRenderer).toBeTruthy();
+
+    const initialData = component.getRegistrationFormData(mockRegistrations[0]);
+    expect(initialData['fullName']).toBe('John Fighter');
+    expect(initialData['email']).toBe('john@example.com');
+    expect(initialData['weight_category']).toBe('-71 kg');
+  });
 });
+

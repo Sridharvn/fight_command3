@@ -326,12 +326,14 @@
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  overflow: hidden;
+  overflow-x: auto;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  max-width: 100%;
 }
 
 .roster-table {
   width: 100%;
+  min-width: 950px;
   border-collapse: collapse;
   text-align: left;
   font-size: 0.875rem;
@@ -347,15 +349,29 @@
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      white-space: nowrap;
 
       &.th-checkbox {
         width: 44px;
         text-align: center;
       }
 
+      &.th-name {
+        min-width: 180px;
+      }
+
+      &.th-contact {
+        min-width: 180px;
+      }
+
+      &.th-custom {
+        min-width: 130px;
+      }
+
       &.th-actions {
         text-align: right;
         padding-right: 1.5rem;
+        min-width: 120px;
       }
     }
   }
@@ -395,16 +411,17 @@
           }
         }
 
-        &.td-category {
-          .category-pill {
+        &.td-custom {
+          white-space: nowrap;
+          .custom-val {
             display: inline-block;
-            background: #f1f5f9;
-            color: #334155;
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
             font-weight: 600;
-            margin-right: 0.25rem;
+            color: #1e293b;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 0.2rem 0.55rem;
+            font-size: 0.8rem;
           }
         }
 
@@ -643,59 +660,51 @@
     }
   }
 
-  .details-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+  .details-meta-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    padding: 0.85rem 1.15rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
     margin-bottom: 1.5rem;
+    font-size: 0.875rem;
+    color: #334155;
 
-    .detail-field {
-      .label {
-        display: block;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
+    .meta-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+
+      .meta-label {
+        font-weight: 700;
         color: #64748b;
-        margin-bottom: 0.25rem;
-      }
-
-      .value {
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: #0f172a;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.04em;
       }
     }
   }
 
-  .sub-heading {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: #0f172a;
-    margin: 0 0 0.75rem;
-  }
+  .readonly-form-wrapper {
+    --surface-secondary: #f8fafc;
+    --border-color: #cbd5e1;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
 
-  .responses-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1.5rem;
 
-    .response-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 0.6rem 0.75rem;
-      background: #f8fafc;
-      border-radius: 6px;
-      font-size: 0.85rem;
-
-      .resp-label {
-        font-weight: 600;
-        color: #475569;
-      }
-
-      .resp-val {
-        font-weight: 700;
-        color: #0f172a;
-      }
+    .sub-heading {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0 0 1.25rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid #f1f5f9;
     }
   }
 }
@@ -721,6 +730,10 @@
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  &.details-dialog {
+    max-width: 760px;
+  }
 
   .modal-header {
     display: flex;

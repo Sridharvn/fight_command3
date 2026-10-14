@@ -292,9 +292,11 @@
                     aria-label="Select all athletes"
                   />
                 </th>
-                <th>Athlete Name</th>
-                <th>Contact</th>
-                <th>Division / Category</th>
+                <th class="th-name">Athlete Name</th>
+                <th class="th-contact">Contact</th>
+                @for (col of customFormColumns(); track col.id || col.key) {
+                  <th class="th-custom">{{ col.label }}</th>
+                }
                 <th>Registration Date</th>
                 <th>Status</th>
                 <th class="th-actions">Actions</th>
@@ -319,16 +321,11 @@
                     <div>{{ reg.email || '—' }}</div>
                     <div class="text-muted">{{ reg.phone || '—' }}</div>
                   </td>
-                  <td class="td-category">
-                    @for (resp of reg.responses; track resp.templateFieldId) {
-                      @if (resp.fieldName.includes('category') || resp.fieldName.includes('weight')) {
-                        <span class="category-pill">{{ resp.displayValue || resp.value }}</span>
-                      }
-                    }
-                    @if (reg.responses.length === 0) {
-                      <span class="text-muted">—</span>
-                    }
-                  </td>
+                  @for (col of customFormColumns(); track col.id || col.key) {
+                    <td class="td-custom">
+                      <span class="custom-val">{{ getFieldValue(reg, col) }}</span>
+                    </td>
+                  }
                   <td class="td-date">
                     {{ reg.registrationDate | date:'mediumDate' }}
                   </td>
@@ -412,10 +409,10 @@
       </div>
     }
 
-    <!-- Athlete Details Modal -->
+    <!-- Athlete Details Modal (Read-Only Dynamic Form View) -->
     @if (viewingRegistration(); as reg) {
       <div class="modal-overlay" (click)="closeDetailsModal()">
-        <div class="modal-dialog" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+        <div class="modal-dialog details-dialog" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
           <div class="modal-header">
             <h2 class="modal-title">Athlete Registration Details</h2>
             <button type="button" class="btn-close" (click)="closeDetailsModal()" aria-label="Close dialog">&times;</button>
@@ -433,36 +430,31 @@
               </div>
             </div>
 
-            <div class="details-grid">
-              <div class="detail-field">
-                <span class="label">Email</span>
-                <span class="value">{{ reg.email || '—' }}</span>
-              </div>
-              <div class="detail-field">
-                <span class="label">Phone</span>
-                <span class="value">{{ reg.phone || '—' }}</span>
-              </div>
-              <div class="detail-field">
-                <span class="label">Registration ID</span>
-                <span class="value">#{{ reg.registrationId }}</span>
-              </div>
-              <div class="detail-field">
-                <span class="label">Participant ID</span>
-                <span class="value">#{{ reg.participantId }}</span>
-              </div>
+            <div class="details-meta-bar">
+              <span class="meta-item"><span class="meta-label">Reg ID:</span> #{{ reg.registrationId }}</span>
+              <span class="meta-item"><span class="meta-label">Participant ID:</span> #{{ reg.participantId }}</span>
+              @if (reg.email) {
+                <span class="meta-item"><span class="meta-label">Email:</span> {{ reg.email }}</span>
+              }
+              @if (reg.phone) {
+                <span class="meta-item"><span class="meta-label">Phone:</span> {{ reg.phone }}</span>
+              }
             </div>
 
-            <h4 class="sub-heading">Submitted Custom Fields & Responses</h4>
-            @if (reg.responses.length === 0) {
-              <p class="text-muted">No additional custom field responses recorded.</p>
+            @if (dynamicFormDefinition(); as schema) {
+              <div class="readonly-form-wrapper">
+                <h4 class="sub-heading">Form Definition & Submitted Responses</h4>
+                <app-dynamic-form-renderer
+                  [schema]="schema"
+                  [initialData]="getRegistrationFormData(reg)"
+                  [disabled]="true"
+                  [showSubmitButton]="false"
+                ></app-dynamic-form-renderer>
+              </div>
             } @else {
-              <div class="responses-list">
-                @for (resp of reg.responses; track resp.templateFieldId) {
-                  <div class="response-row">
-                    <span class="resp-label">{{ resp.fieldLabel || resp.fieldName }}</span>
-                    <span class="resp-val">{{ resp.displayValue || resp.value || '—' }}</span>
-                  </div>
-                }
+              <div class="loading-state">
+                <div class="spinner"></div>
+                <span>Loading registration form schema...</span>
               </div>
             }
           </div>

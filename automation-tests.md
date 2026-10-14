@@ -760,6 +760,24 @@ The application provides:
   - Page transitions to confirmation view displaying "Registration Successful!" and assigned Registration ID.
 - **Final state:** Participant registered in database in Pending status.
 
+**HF-REG-007: Dynamic Form Definition Columns in Roster Table**
+- **Preconditions:** Event has a linked form definition containing custom fields (e.g. weight category, gender, state, district, academy). Roster contains registered athletes with submitted responses.
+- **User/System actions:** Admin navigates to `/events/:eventId/roster`.
+- **Expected results:**
+  - Roster table dynamically renders a header column (`<th>`) for each custom/dynamic field defined in the event's form definition.
+  - Table rows dynamically render cells (`<td>`) displaying the athlete's corresponding response value (using `displayValue` for master data/options, or `—` if not provided).
+  - Table supports horizontal scrolling for wide schemas, preserving sticky athlete name and action columns.
+- **Final state:** All form definition fields and submitted responses are visible across the roster table.
+
+**HF-REG-008: Read-Only Dynamic Form Renderer in Athlete Details Popup**
+- **Preconditions:** Admin clicks the "View Details" (eye icon) action button on an athlete row.
+- **User/System actions:** Details popup opens.
+- **Expected results:**
+  - Modal embeds `<app-dynamic-form-renderer>` with `[schema]="dynamicFormDefinition()"`, `[initialData]="athleteAnswers"`, `[disabled]="true"`, and `[showSubmitButton]="false"`.
+  - Displays the complete form definition for the event with all fields populated with the athlete's submitted answers in disabled/read-only mode.
+  - Status action buttons (Approve / Reject) remain available in the modal footer.
+- **Final state:** All form definition data is rendered inside the details popup in read-only form mode.
+
 ---
 
 ### Negative Flows & Edge Cases

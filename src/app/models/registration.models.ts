@@ -29,6 +29,7 @@ export interface RegistrationListItem {
   fullName: string;
   email?: string | null;
   phone?: string | null;
+  dob?: string | Date | null;
   status: RegistrationStatus;
   registrationDate: string | Date;
 }

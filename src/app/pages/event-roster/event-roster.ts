@@ -29,7 +29,7 @@ import {
   SPORT_TYPE_LABELS,
   TOURNAMENT_TYPE_LABELS,
 } from '../../models/event.models';
-import { FormDefinition } from '../../models/dynamic-form.models';
+import { FormDefinition, FormField } from '../../models/dynamic-form.models';
 import { publicRegistrationRoute } from '../../constants/app-routes';
 
 @Component({
@@ -64,6 +64,15 @@ export class EventRosterPage implements OnInit {
   readonly eventId = computed(() => {
     const param = this.route.snapshot.paramMap.get('eventId');
     return param ? Number(param) : 0;
+  });
+
+  // Dynamic columns from the event's form definition (excluding fixed name and contact columns)
+  readonly customFormColumns = computed<FormField[]>(() => {
+    const schema = this.dynamicFormDefinition();
+    if (!schema || !schema.fields) return [];
+    return schema.fields.filter(
+      (f) => f.key !== 'fullName' && f.key !== 'email' && f.key !== 'phone',
+    );
   });
 
   // Convert publicEventForm template to FormDefinition for DynamicFormRendererComponent
@@ -351,6 +360,42 @@ export class EventRosterPage implements OnInit {
 
   isRowSelected(id: number): boolean {
     return this.store.selectedIds().includes(id);
+  }
+
+  getFieldValue(reg: RegistrationDetail, field: FormField): string {
+    const key = field.key || field.id;
+    if (key === 'dob') {
+      if (reg.dob) {
+        return String(reg.dob).slice(0, 10);
+      }
+    }
+    const resp = (reg.responses || []).find(
+      (r) => r.fieldName === key || String(r.templateFieldId) === String(field.id),
+    );
+    if (resp) {
+      return resp.displayValue || resp.value || '—';
+    }
+    return '—';
+  }
+
+  getRegistrationFormData(reg: RegistrationDetail | null): Record<string, any> {
+    if (!reg) return {};
+    const data: Record<string, any> = {
+      fullName: reg.fullName || '',
+      email: reg.email || '',
+      phone: reg.phone || '',
+      dob: reg.dob ? String(reg.dob).slice(0, 10) : '',
+    };
+    for (const resp of reg.responses || []) {
+      const val = resp.displayValue || resp.value || '';
+      if (resp.fieldName) {
+        data[resp.fieldName] = val;
+      }
+      if (resp.templateFieldId) {
+        data[String(resp.templateFieldId)] = val;
+      }
+    }
+    return data;
   }
 
   private showToast(message: string): void {
