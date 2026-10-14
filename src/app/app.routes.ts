@@ -49,7 +49,26 @@ export const routes: Routes = [
       import('./pages/form-builder/form-builder').then((m) => m.FormBuilderPage),
   },
   {
+    path: toSegment(APP_ROUTES.events),
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/events/events').then((m) => m.EventsPage),
+  },
+  {
+    path: 'events/:eventId/roster',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/event-roster/event-roster').then((m) => m.EventRosterPage),
+  },
+  {
+    path: 'events/:eventId/register',
+    loadComponent: () =>
+      import('./pages/public-registration/public-registration').then(
+        (m) => m.PublicRegistrationPage,
+      ),
+  },
+  {
     path: '**',
     redirectTo: '',
   },
+
 ];

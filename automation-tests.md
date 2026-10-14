@@ -621,3 +621,170 @@ The application provides an accessible login screen (`/login`) allowing users to
   - No orphaned blues or conflicting accent schemes remain in primary interactive controls.
 - **Final state:** Harmonious, accessible (WCAG AA compliant) reddish accent theme across the entire application.
 
+---
+
+## Feature / Change: Event Management (Events Board & Directory), Athlete Roster Lister & Public Registration Form
+**Priority:** High
+**Desired Behavior:**
+The application provides:
+1. **Events Board & Directory (`/events`)**:
+   - Central tournament hub displaying KPI counters (Total, Active, Draft, Archived).
+   - Global search, sport filter, tournament level filter, and status filter tabs (All, Active, Draft, Archived).
+   - "+ Create Event" modal to configure event details, location, dates, and bind a form template with registration open/close dates.
+   - Lifecycle actions: Publish Draft event to open registrations; Archive event; Copy shareable public registration link to clipboard.
+   - Direct link to manage event roster (`/events/:eventId/roster`).
+2. **Athlete Roster Management (`/events/:eventId/roster`)**:
+   - Event summary header with tournament metadata, status, and public link copy action.
+   - KPI counters: Total Registered, Approved, Pending Approval, Rejected, Duplicates & Flagged.
+   - Filter tabs: All, Pending Approval, Approved, Rejected, Duplicates & Flagged.
+   - Athlete directory table with participant contact, category, registration date, and status.
+   - Row-level actions: Approve, Reject, View Submission Details modal.
+   - Bulk actions: Multi-select athletes for Batch Approve and Batch Reject.
+   - Admin "+ Register Fighter" modal rendering dynamic form schema.
+   - Duplicates review and resolution (Merge & Approve / False Positive).
+   - Export Roster to Excel/CSV.
+3. **Public Registration Form (`/events/:eventId/register`)**:
+   - Unauthenticated public registration portal with branded hero banner.
+   - Live registration window check (displays closed notice if event is Draft or outside dates).
+   - Dynamic form rendering core participant fields + custom template fields + compliance rules.
+   - Submission to backend `POST /events/:eventId/registrations`.
+   - Clear confirmation view with Registration ID.
+
+---
+
+### Happy Flows
+
+**HF-EV-001: Events Listing and Status Filtering**
+- **Preconditions:** Admin is authenticated and navigates to `/events`.
+- **User/System actions:**
+  - Page loads event directory and KPI summary cards.
+  - User switches tabs between "All", "Active", "Draft", and "Archived".
+  - User enters a search query in the search box.
+- **Expected results:**
+  - KPI counts reflect backend data.
+  - Switching tabs filters list by corresponding `EventStatus` codes.
+  - Search filters events by title, ID, or venue.
+- **Final state:** Filtered events render with accurate status badges.
+
+**HF-EV-002: Create Event with Template Binding**
+- **Preconditions:** User is on `/events` and clicks "+ Create Event".
+- **User/System actions:**
+  - User fills in Event Name, Sport Type, Tournament Type, Start/End dates, Location.
+  - User selects a Form Template from the dropdown, sets registration open & close dates, form title and description.
+  - User clicks "Create Tournament".
+- **Expected results:**
+  - `POST /events` is invoked with valid `CreateEventDto`.
+  - On success, modal closes, events list refreshes, and newly created event appears in "Draft" state.
+- **Final state:** Event persisted with linked registration form.
+
+**HF-EV-003: Publish Draft Event to Open Registrations**
+- **Preconditions:** An event exists in "Draft" status (`status === 1`).
+- **User/System actions:** User clicks "Publish / Activate" on the event card.
+- **Expected results:**
+  - `PUT /events/:eventId` is invoked with `{ status: 3 }` (Registration Open).
+  - Event status badge updates to "Registration Open".
+  - Event now appears in "Active" tab.
+- **Final state:** Event status is updated in backend and store.
+
+**HF-EV-004: Copy Public Registration Link**
+- **Preconditions:** An event exists with ID `123`.
+- **User/System actions:** User clicks "Copy Registration Link" on event card or roster banner.
+- **Expected results:**
+  - System writes `<origin>/events/123/register` to clipboard.
+  - Toast notification confirms "Public registration link copied to clipboard!".
+- **Final state:** Link in clipboard ready for distribution.
+
+**HF-REG-001: Roster Directory & Status Segregation**
+- **Preconditions:** Admin navigates to `/events/:eventId/roster`.
+- **User/System actions:** Page loads registrations and KPI metrics; user clicks through tabs ("Pending", "Approved", "Rejected").
+- **Expected results:**
+  - Table displays participant full name, contact, age/category, submission date, status badge.
+  - Each tab filters rows to only athletes with matching status.
+- **Final state:** Segregated roster views displayed.
+
+**HF-REG-002: Individual Athlete Approval & Rejection**
+- **Preconditions:** Athlete registration exists with status "Pending".
+- **User/System actions:** User clicks "Approve" (or "Reject") row action button.
+- **Expected results:**
+  - `PUT /events/:eventId/registrations/:registrationId/status` called with `{ status: 2 }` (Approved) or `{ status: 3 }` (Rejected).
+  - Athlete row updates immediately without full page reload.
+  - KPI counts update reactively.
+- **Final state:** Athlete status persisted as Approved/Rejected.
+
+**HF-REG-003: Batch Approval and Batch Rejection**
+- **Preconditions:** Multiple athletes in "Pending" status.
+- **User/System actions:** User checks checkboxes for 3 athletes, clicks "Batch Approve" in floating actions bar.
+- **Expected results:**
+  - `PUT /events/:eventId/registrations/status/batch` called with `{ registrationIds: [...], status: 2 }`.
+  - All selected athletes update to Approved; checkboxes clear.
+- **Final state:** Batch statuses updated and reflected in UI.
+
+**HF-REG-004: Admin Manual Fighter Registration**
+- **Preconditions:** Admin clicks "+ Register Fighter" in roster view.
+- **User/System actions:**
+  - Modal opens rendering the event's dynamic form schema.
+  - Admin enters athlete data and submits.
+- **Expected results:**
+  - Form validates and sends `POST /events/:eventId/registrations`.
+  - Modal closes, roster refreshes, newly registered fighter appears in Pending list.
+- **Final state:** Athlete registered via admin flow.
+
+**HF-REG-005: Export Roster to Excel**
+- **Preconditions:** User is on `/events/:eventId/roster` and clicks "Export Roster".
+- **User/System actions:** Browser requests `GET /events/:eventId/registrations/export`.
+- **Expected results:**
+  - Backend streams `.xlsx` binary workbook.
+  - Browser downloads `<event_name>_registrations.xlsx`.
+- **Final state:** File saved locally.
+
+**HF-REG-006: Duplicate Detection & Resolution**
+- **Preconditions:** Two or more participants have matching name/DOB/contact.
+- **User/System actions:**
+  - User navigates to "Duplicates & Flagged" tab.
+  - System displays grouped duplicate cluster.
+  - Admin selects which participant to keep and clicks "Merge & Approve".
+- **Expected results:**
+  - `POST /events/:eventId/duplicates/resolve` called with `{ action: 'MERGE', participantIds: [...], keepParticipantId: ... }`.
+  - Kept participant approved; duplicates rejected; group cleared from duplicate view.
+- **Final state:** Duplicates resolved cleanly.
+
+**HF-PUB-001: Public Athlete Self-Registration**
+- **Preconditions:** Public unauthenticated user visits `/events/:eventId/register`.
+- **User/System actions:**
+  - User views tournament details and instructions.
+  - User fills out Full Name, Email, Phone, DOB, plus required dynamic category/weight/club fields.
+  - User clicks "Submit Registration".
+- **Expected results:**
+  - Form evaluates client-side validations and rule compliance.
+  - `POST /events/:eventId/registrations` is submitted.
+  - Page transitions to confirmation view displaying "Registration Successful!" and assigned Registration ID.
+- **Final state:** Participant registered in database in Pending status.
+
+---
+
+### Negative Flows & Edge Cases
+
+**NF-EV-001: Create Event Validation Failure**
+- **Preconditions:** User attempts to submit "+ Create Event" modal with missing event name or dates.
+- **User/System actions:** User leaves Event Name blank and clicks submit.
+- **Expected results:** Form prevents submission, highlights required fields with error messages.
+- **Final state:** Modal remains open, no API call sent.
+
+**NF-PUB-001: Public Registration on Closed or Draft Tournament**
+- **Preconditions:** Event is in "Draft" status (`status === 1`) or registration close date has passed.
+- **User/System actions:** Public user visits `/events/:eventId/register`.
+- **Expected results:**
+  - System checks event status and dates.
+  - Displays informational banner: "Registration for this tournament is currently closed."
+  - Form inputs are hidden or disabled.
+- **Final state:** No registrations accepted.
+
+**NF-PUB-002: Duplicate Registration on Public Form**
+- **Preconditions:** Athlete has already submitted a registration for this event with same email/phone.
+- **User/System actions:** User attempts to register again with same details.
+- **Expected results:**
+  - Backend returns `409 Conflict: This participant has already registered for this event`.
+  - Frontend displays clear alert banner with the error message without crashing.
+- **Final state:** User alerted, no duplicate registration created.
+
+

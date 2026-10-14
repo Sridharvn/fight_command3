@@ -1,0 +1,495 @@
+<app-base-layout>
+  <div class="roster-page">
+    @if (toastMessage()) {
+      <div class="toast-banner" role="status" aria-live="polite">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+        <span>{{ toastMessage() }}</span>
+      </div>
+    }
+
+    <!-- Breadcrumb / Back Link -->
+    <nav class="back-nav" aria-label="Breadcrumb">
+      <a routerLink="/events" class="back-link">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+        Back to Tournaments
+      </a>
+    </nav>
+
+    <!-- Tournament Overview Hero Card -->
+    <section class="tournament-hero">
+      <div class="hero-main">
+        <div class="hero-badges">
+          <span class="badge sport-badge">{{ getEventSportLabel() }}</span>
+          <span class="badge level-badge">{{ getEventLevelLabel() }}</span>
+          <span class="badge status-badge">{{ getEventStatusLabel() }}</span>
+        </div>
+        <h1 class="tournament-title">{{ event()?.eventName || 'Tournament Roster' }}</h1>
+        <div class="hero-meta">
+          @if (event()?.location) {
+            <span class="meta-item">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              {{ event()?.location }}
+            </span>
+          }
+          @if (event()?.eventStartDate) {
+            <span class="meta-item">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              {{ event()?.eventStartDate | date:'mediumDate' }}
+            </span>
+          }
+        </div>
+      </div>
+
+      <!-- Public Registration Link Card -->
+      <div class="public-link-card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+          </svg>
+        </div>
+        <div class="card-info">
+          <span class="link-label">Public Athlete Registration</span>
+          <span class="link-url">{{ getPublicRegistrationUrl() }}</span>
+        </div>
+        <div class="link-actions">
+          <button type="button" class="btn btn-sm btn-secondary" (click)="copyPublicLink()" title="Copy shareable link">
+            Copy Link
+          </button>
+          <a [routerLink]="getPublicRegistrationUrl()" target="_blank" class="btn btn-sm btn-outline" title="Open public registration form">
+            Open Form
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- KPI Metric Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card" (click)="onSelectTab('all')" [class.active]="store.activeTab() === 'all'">
+        <span class="kpi-label">Total Entries</span>
+        <span class="kpi-value">{{ store.totalRegistrationsCount() }}</span>
+      </div>
+      <div class="kpi-card" (click)="onSelectTab('pending')" [class.active]="store.activeTab() === 'pending'">
+        <span class="kpi-label">Pending Approval</span>
+        <span class="kpi-value text-amber">{{ store.pendingCount() }}</span>
+      </div>
+      <div class="kpi-card" (click)="onSelectTab('approved')" [class.active]="store.activeTab() === 'approved'">
+        <span class="kpi-label">Approved Athletes</span>
+        <span class="kpi-value text-emerald">{{ store.approvedCount() }}</span>
+      </div>
+      <div class="kpi-card" (click)="onSelectTab('rejected')" [class.active]="store.activeTab() === 'rejected'">
+        <span class="kpi-label">Rejected / Waitlist</span>
+        <span class="kpi-value">{{ store.rejectedCount() }}</span>
+      </div>
+      <div class="kpi-card" (click)="onSelectTab('duplicates')" [class.active]="store.activeTab() === 'duplicates'">
+        <span class="kpi-label">Duplicates & Flagged</span>
+        <span class="kpi-value text-accent">{{ store.duplicatesCount() }}</span>
+      </div>
+    </div>
+
+    <!-- Toolbar & Tabs -->
+    <div class="roster-toolbar">
+      <div class="tabs-group">
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="store.activeTab() === 'all'"
+          (click)="onSelectTab('all')"
+        >
+          All Roster ({{ store.totalRegistrationsCount() }})
+        </button>
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="store.activeTab() === 'pending'"
+          (click)="onSelectTab('pending')"
+        >
+          Pending ({{ store.pendingCount() }})
+        </button>
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="store.activeTab() === 'approved'"
+          (click)="onSelectTab('approved')"
+        >
+          Approved ({{ store.approvedCount() }})
+        </button>
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="store.activeTab() === 'rejected'"
+          (click)="onSelectTab('rejected')"
+        >
+          Rejected ({{ store.rejectedCount() }})
+        </button>
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="store.activeTab() === 'duplicates'"
+          (click)="onSelectTab('duplicates')"
+        >
+          Duplicates ({{ store.duplicatesCount() }})
+        </button>
+      </div>
+
+      <div class="actions-group">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search fighter, phone, email..."
+            [value]="store.searchQuery()"
+            (input)="onSearch($event)"
+            aria-label="Search roster"
+          />
+        </div>
+
+        <button type="button" class="btn btn-secondary" (click)="onScanDuplicates()" title="Run duplicate detection algorithm">
+          Scan Duplicates
+        </button>
+
+        <button type="button" class="btn btn-secondary" (click)="exportRoster()" title="Export all entries to Excel">
+          Export (.xlsx)
+        </button>
+
+        <button type="button" class="btn btn-primary" (click)="openRegisterModal()">
+          + Register Fighter
+        </button>
+      </div>
+    </div>
+
+    <!-- Floating Batch Actions Bar -->
+    @if (store.selectedIds().length > 0 && store.activeTab() !== 'duplicates') {
+      <div class="batch-bar" role="toolbar" aria-label="Batch Actions">
+        <span class="batch-count">{{ store.selectedIds().length }} fighters selected</span>
+        <div class="batch-btns">
+          <button type="button" class="btn btn-sm btn-approve" (click)="onBatchApprove()">
+            Batch Approve
+          </button>
+          <button type="button" class="btn btn-sm btn-reject" (click)="onBatchReject()">
+            Batch Reject
+          </button>
+          <button type="button" class="btn btn-sm btn-secondary" (click)="store.clearSelection()">
+            Cancel
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Duplicates Panel Tab -->
+    @if (store.activeTab() === 'duplicates') {
+      <section class="duplicates-section">
+        @if (store.duplicates().length === 0) {
+          <div class="empty-state">
+            <div class="empty-icon">✓</div>
+            <h3>No Duplicate Conflicts Found</h3>
+            <p>All athlete registrations are verified unique or duplicate flags have been resolved.</p>
+            <button type="button" class="btn btn-secondary" (click)="onScanDuplicates()">
+              Re-Scan Duplicates
+            </button>
+          </div>
+        } @else {
+          <div class="duplicates-list">
+            @for (group of store.duplicates(); track $index) {
+              <div class="duplicate-card">
+                <div class="dup-header">
+                  <div class="dup-title">
+                    <span class="warning-badge">Duplicate Conflict Detected</span>
+                    @if (group.isCrossState) {
+                      <span class="scope-flag flag-state">Cross-State</span>
+                    }
+                    @if (group.isCrossDistrict) {
+                      <span class="scope-flag flag-district">Cross-District</span>
+                    }
+                  </div>
+                  <span class="dup-count">{{ group.participants.length }} Matching Profiles</span>
+                </div>
+
+                <div class="dup-candidates">
+                  @for (p of group.participants; track p.participantId) {
+                    <label class="candidate-row" [class.selected]="selectedKeepParticipant()[$index] === p.participantId">
+                      <input
+                        type="radio"
+                        [name]="'dup-group-' + $index"
+                        [value]="p.participantId"
+                        (change)="selectKeepParticipant($index, p.participantId)"
+                      />
+                      <div class="candidate-info">
+                        <span class="candidate-name">{{ p.fullName }}</span>
+                        <span class="candidate-meta">
+                          ID #{{ p.participantId }}
+                          @if (p.email) { | {{ p.email }} }
+                          @if (p.phone) { | {{ p.phone }} }
+                          @if (p.weightCategory) { | Weight: {{ p.weightCategory }} }
+                          @if (p.ageCategory) { | Age: {{ p.ageCategory }} }
+                        </span>
+                      </div>
+                    </label>
+                  }
+                </div>
+
+                <div class="dup-actions">
+                  <span class="dup-instruction">Select the primary athlete profile to keep and approve:</span>
+                  <div class="dup-buttons">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-approve"
+                      (click)="onResolveMerge(group, $index)"
+                      [disabled]="!selectedKeepParticipant()[$index]"
+                    >
+                      Merge & Approve
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-secondary"
+                      (click)="onResolveFalsePositive(group)"
+                    >
+                      Mark False Positive
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </section>
+    } @else {
+      <!-- Main Athlete Roster Table -->
+      @if (store.filteredRegistrations().length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          <h3>No Athletes Registered</h3>
+          <p>No athlete entries match this filter. Share the registration link or manually register fighters.</p>
+          <button type="button" class="btn btn-primary" (click)="openRegisterModal()">
+            + Register Fighter
+          </button>
+        </div>
+      } @else {
+        <div class="table-container">
+          <table class="roster-table">
+            <thead>
+              <tr>
+                <th class="th-checkbox">
+                  <input
+                    type="checkbox"
+                    [checked]="store.isAllSelected()"
+                    (change)="onToggleSelectAll()"
+                    aria-label="Select all athletes"
+                  />
+                </th>
+                <th>Athlete Name</th>
+                <th>Contact</th>
+                <th>Division / Category</th>
+                <th>Registration Date</th>
+                <th>Status</th>
+                <th class="th-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (reg of store.filteredRegistrations(); track reg.registrationId) {
+                <tr class="athlete-row" [class.selected]="isRowSelected(reg.registrationId)">
+                  <td class="td-checkbox">
+                    <input
+                      type="checkbox"
+                      [checked]="isRowSelected(reg.registrationId)"
+                      (change)="onToggleSelect(reg.registrationId)"
+                      aria-label="Select athlete"
+                    />
+                  </td>
+                  <td class="td-name">
+                    <span class="athlete-name">{{ reg.fullName }}</span>
+                    <span class="athlete-sub">ID #{{ reg.registrationId }}</span>
+                  </td>
+                  <td class="td-contact">
+                    <div>{{ reg.email || '—' }}</div>
+                    <div class="text-muted">{{ reg.phone || '—' }}</div>
+                  </td>
+                  <td class="td-category">
+                    @for (resp of reg.responses; track resp.templateFieldId) {
+                      @if (resp.fieldName.includes('category') || resp.fieldName.includes('weight')) {
+                        <span class="category-pill">{{ resp.displayValue || resp.value }}</span>
+                      }
+                    }
+                    @if (reg.responses.length === 0) {
+                      <span class="text-muted">—</span>
+                    }
+                  </td>
+                  <td class="td-date">
+                    {{ reg.registrationDate | date:'mediumDate' }}
+                  </td>
+                  <td class="td-status">
+                    <span class="status-badge" [class]="getStatusClass(reg.status)">
+                      {{ getStatusLabel(reg.status) }}
+                    </span>
+                  </td>
+                  <td class="td-actions">
+                    <div class="action-buttons">
+                      @if (reg.status !== 2) {
+                        <button
+                          type="button"
+                          class="btn-action-icon approve"
+                          (click)="onApprove(reg.registrationId)"
+                          title="Approve registration"
+                        >
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        </button>
+                      }
+                      @if (reg.status !== 3) {
+                        <button
+                          type="button"
+                          class="btn-action-icon reject"
+                          (click)="onReject(reg.registrationId)"
+                          title="Reject registration"
+                        >
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                          </svg>
+                        </button>
+                      }
+                      <button
+                        type="button"
+                        class="btn-action-icon view"
+                        (click)="openDetailsModal(reg)"
+                        title="View submitted form details"
+                      >
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+
+    <!-- Manual Register Fighter Modal (using DynamicFormRendererComponent) -->
+    @if (isRegisterModalOpen()) {
+      <div class="modal-overlay" (click)="closeRegisterModal()">
+        <div class="modal-dialog" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="modal-reg-title">
+          <div class="modal-header">
+            <h2 id="modal-reg-title" class="modal-title">Register Fighter — Admin Entry</h2>
+            <button type="button" class="btn-close" (click)="closeRegisterModal()" aria-label="Close dialog">&times;</button>
+          </div>
+
+          <div class="modal-body">
+            @if (dynamicFormDefinition(); as schema) {
+              <app-dynamic-form-renderer
+                [schema]="schema"
+                submitButtonText="Register Athlete"
+                (formSubmit)="onDynamicFormSubmit($event)"
+              ></app-dynamic-form-renderer>
+            } @else {
+              <div class="loading-state">
+                <div class="spinner"></div>
+                <span>Loading registration form schema...</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Athlete Details Modal -->
+    @if (viewingRegistration(); as reg) {
+      <div class="modal-overlay" (click)="closeDetailsModal()">
+        <div class="modal-dialog" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+          <div class="modal-header">
+            <h2 class="modal-title">Athlete Registration Details</h2>
+            <button type="button" class="btn-close" (click)="closeDetailsModal()" aria-label="Close dialog">&times;</button>
+          </div>
+
+          <div class="modal-body details-body">
+            <div class="details-top">
+              <div class="athlete-avatar">{{ reg.fullName.charAt(0) }}</div>
+              <div class="athlete-summary">
+                <h3>{{ reg.fullName }}</h3>
+                <span class="status-badge" [class]="getStatusClass(reg.status)">
+                  {{ getStatusLabel(reg.status) }}
+                </span>
+                <span class="reg-date">Registered on {{ reg.registrationDate | date:'medium' }}</span>
+              </div>
+            </div>
+
+            <div class="details-grid">
+              <div class="detail-field">
+                <span class="label">Email</span>
+                <span class="value">{{ reg.email || '—' }}</span>
+              </div>
+              <div class="detail-field">
+                <span class="label">Phone</span>
+                <span class="value">{{ reg.phone || '—' }}</span>
+              </div>
+              <div class="detail-field">
+                <span class="label">Registration ID</span>
+                <span class="value">#{{ reg.registrationId }}</span>
+              </div>
+              <div class="detail-field">
+                <span class="label">Participant ID</span>
+                <span class="value">#{{ reg.participantId }}</span>
+              </div>
+            </div>
+
+            <h4 class="sub-heading">Submitted Custom Fields & Responses</h4>
+            @if (reg.responses.length === 0) {
+              <p class="text-muted">No additional custom field responses recorded.</p>
+            } @else {
+              <div class="responses-list">
+                @for (resp of reg.responses; track resp.templateFieldId) {
+                  <div class="response-row">
+                    <span class="resp-label">{{ resp.fieldLabel || resp.fieldName }}</span>
+                    <span class="resp-val">{{ resp.displayValue || resp.value || '—' }}</span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeDetailsModal()">Close</button>
+            @if (reg.status !== 2) {
+              <button
+                type="button"
+                class="btn btn-approve"
+                (click)="onApprove(reg.registrationId); closeDetailsModal()"
+              >
+                Approve Athlete
+              </button>
+            }
+            @if (reg.status !== 3) {
+              <button
+                type="button"
+                class="btn btn-reject"
+                (click)="onReject(reg.registrationId); closeDetailsModal()"
+              >
+                Reject Athlete
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</app-base-layout>

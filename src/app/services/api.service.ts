@@ -45,4 +45,12 @@ export class ApiService {
   delete<T>(path: string, options?: HttpOptions): Observable<T> {
     return this.http.delete<T>(this.buildUrl(path), options);
   }
+
+  getBlob(path: string, options?: HttpOptions): Observable<Blob> {
+    return this.http.get(this.buildUrl(path), {
+      ...options,
+      responseType: 'blob',
+    });
+  }
 }
+

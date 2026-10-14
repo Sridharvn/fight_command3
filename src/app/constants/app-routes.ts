@@ -7,6 +7,8 @@ export const APP_ROUTES = {
   formDefinitions: '/form-definitions',
   formBuilder: '/form-builder',
   events: '/events',
+  eventRoster: '/events/:eventId/roster',
+  publicRegistration: '/events/:eventId/register',
 } as const;
 
 export function toSegment(path: string): string {
@@ -16,3 +18,12 @@ export function toSegment(path: string): string {
 export function withIdParam(path: string): string {
   return `${toSegment(path)}/:id`;
 }
+
+export function eventRosterRoute(eventId: number | string): string {
+  return `/events/${eventId}/roster`;
+}
+
+export function publicRegistrationRoute(eventId: number | string): string {
+  return `/events/${eventId}/register`;
+}
+
