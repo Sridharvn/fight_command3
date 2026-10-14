@@ -13,14 +13,16 @@ describe('FormBuilderPage', () => {
   let builderStore: InstanceType<typeof FormBuilderStore>;
 
   const mockFormDefinitionService = {
-    getTemplateById: vi.fn().mockReturnValue(of({
-      templateId: 10,
-      templateName: 'Regional Championship Form',
-      sportType: 1,
-      tournamentType: 1,
-      isActive: true,
-      fields: [],
-    })),
+    getTemplateById: vi.fn().mockReturnValue(
+      of({
+        templateId: 10,
+        templateName: 'Regional Championship Form',
+        sportType: 1,
+        tournamentType: 1,
+        isActive: true,
+        fields: [],
+      }),
+    ),
     createTemplate: vi.fn().mockReturnValue(of({ templateId: 11 })),
     updateTemplate: vi.fn().mockReturnValue(of({ templateId: 10 })),
     deleteTemplate: vi.fn().mockReturnValue(of({ message: 'Template deleted' })),
@@ -196,7 +198,7 @@ describe('FormBuilderPage', () => {
     expect(added?.type).toBe('select');
   });
 
-  it('should render Preset Inherited badge and lock delete button for inherited preset fields', () => {
+  it('should render Preset Inherited badge but allow deleting non-system inherited fields', () => {
     builderStore.setTemplate({
       templateName: 'Extended Template',
       sportType: 1,
@@ -219,9 +221,62 @@ describe('FormBuilderPage', () => {
     expect(compiled.querySelector('.inherited-badge')).toBeTruthy();
     expect(compiled.textContent).toContain('Preset Inherited');
 
-    // Inherited field cannot be removed by builderStore.removeField
+    // Inherited non-system field CAN be deleted
     const countBefore = builderStore.template()!.fields.length;
     builderStore.removeField('field_inherited_5');
-    expect(builderStore.template()!.fields.length).toBe(countBefore);
+    expect(builderStore.template()!.fields.length).toBe(countBefore - 1);
+  });
+
+  it('should add, update, and remove options on choice fields via component methods', () => {
+    builderStore.setTemplate({
+      templateName: 'Choice Template',
+      sportType: 1,
+      tournamentType: 1,
+      fields: [
+        {
+          id: 'field_choice_1',
+          key: 'rank',
+          label: 'Rank',
+          type: 'select',
+          options: [
+            { label: 'White', value: 'white' },
+            { label: 'Blue', value: 'blue' },
+          ],
+        },
+      ],
+      validations: [],
+    });
+    fixture.detectChanges();
+
+    // 1. Add option
+    component.onAddOption('field_choice_1');
+    const fieldAfterAdd = builderStore.template()!.fields.find((f) => f.id === 'field_choice_1');
+    expect(fieldAfterAdd?.options?.length).toBe(3);
+    expect(fieldAfterAdd?.options?.[2].label).toBe('Option 3');
+
+    // 2. Update option label
+    component.onUpdateOptionLabel('field_choice_1', 2, {
+      target: { value: 'Purple Belt' },
+    } as any);
+    const fieldAfterUpdate = builderStore.template()!.fields.find((f) => f.id === 'field_choice_1');
+    expect(fieldAfterUpdate?.options?.[2].label).toBe('Purple Belt');
+    expect(fieldAfterUpdate?.options?.[2].value).toBe('purple_belt');
+
+    // 3. Remove option
+    component.onRemoveOption('field_choice_1', 0);
+    const fieldAfterRemove = builderStore.template()!.fields.find((f) => f.id === 'field_choice_1');
+    expect(fieldAfterRemove?.options?.length).toBe(2);
+    expect(fieldAfterRemove?.options?.[0].label).toBe('Blue');
+  });
+
+  it('should prevent deletion of mandatory default system fields in canvas', () => {
+    const systemFields = builderStore.template()!.fields.filter((f) => f.isSystemField);
+    expect(systemFields.length).toBe(3); // fullName, email, phone
+
+    for (const sysField of systemFields) {
+      const countBefore = builderStore.template()!.fields.length;
+      builderStore.removeField(sysField.id);
+      expect(builderStore.template()!.fields.length).toBe(countBefore);
+    }
   });
 });

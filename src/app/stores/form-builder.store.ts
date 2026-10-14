@@ -4,6 +4,7 @@ import {
   CrossFieldValidation,
   FormDefinition,
   FormField,
+  FormFieldOption,
   FormFieldType,
 } from '../models/dynamic-form.models';
 import { FieldDefinition } from '../models/form-definition.models';
@@ -37,20 +38,10 @@ export const DEFAULT_SYSTEM_FIELDS: FormField[] = [
     label: 'Phone Number',
     description: 'Athlete contact phone number',
     type: 'text',
-    required: false,
+    required: true,
     isSystemField: true,
     columnSpan: 1,
     placeholder: '+1 555-0123',
-  },
-  {
-    id: 'dob',
-    key: 'dob',
-    label: 'Date of Birth',
-    description: 'Athlete date of birth',
-    type: 'date',
-    required: false,
-    isSystemField: true,
-    columnSpan: 1,
   },
 ];
 
@@ -73,15 +64,26 @@ const initialState: FormBuilderState = {
 function ensureSystemFields(fields: FormField[]): FormField[] {
   const result = [...fields];
   for (const sysField of DEFAULT_SYSTEM_FIELDS) {
-    const existingIndex = result.findIndex(
-      (f) =>
-        f.key === sysField.key ||
-        (sysField.key === 'dob' && f.key === 'date_of_birth'),
-    );
+    const existingIndex = result.findIndex((f) => {
+      const k = (f.key || '').toLowerCase().replace(/[^a-z]/g, '');
+      const id = (f.id || '').toLowerCase().replace(/[^a-z]/g, '');
+      if (sysField.key === 'fullName') {
+        return k === 'fullname' || k === 'name' || id === 'fullname';
+      }
+      if (sysField.key === 'email') {
+        return k === 'email' || k === 'emailaddress' || id === 'email';
+      }
+      if (sysField.key === 'phone') {
+        return k === 'phone' || k === 'phonenumber' || k === 'mobile' || id === 'phone';
+      }
+      return f.key === sysField.key;
+    });
+
     if (existingIndex >= 0) {
       result[existingIndex] = {
         ...result[existingIndex],
         isSystemField: true,
+        required: true,
       };
     } else {
       result.push({ ...sysField });
@@ -145,10 +147,7 @@ export const FormBuilderStore = signalStore(
 
     updateTemplateMetadata(
       metadata: Partial<
-        Pick<
-          FormDefinition,
-          'id' | 'templateName' | 'description' | 'sportType' | 'tournamentType'
-        >
+        Pick<FormDefinition, 'id' | 'templateName' | 'description' | 'sportType' | 'tournamentType'>
       >,
     ) {
       const current = store.template();
@@ -271,8 +270,8 @@ export const FormBuilderStore = signalStore(
       if (!current) return;
 
       const target = current.fields.find((f) => f.id === fieldId);
-      if (target?.isSystemField || target?.isInherited) {
-        // Protected invariant: cannot delete Full Name, Email, or Inherited Preset fields
+      if (target?.isSystemField) {
+        // Protected invariant: cannot delete Full Name, Email, or Phone Number
         return;
       }
 
@@ -281,8 +280,77 @@ export const FormBuilderStore = signalStore(
           ...current,
           fields: current.fields.filter((f) => f.id !== fieldId),
         },
-        activeFieldId:
-          store.activeFieldId() === fieldId ? null : store.activeFieldId(),
+        activeFieldId: store.activeFieldId() === fieldId ? null : store.activeFieldId(),
+      });
+    },
+
+    addFieldOption(fieldId: string, option: FormFieldOption) {
+      const current = store.template();
+      if (!current) return;
+
+      const updatedFields = current.fields.map((field) => {
+        if (field.id !== fieldId) return field;
+        const existingOptions = field.options || [];
+        return {
+          ...field,
+          options: [...existingOptions, option],
+        };
+      });
+
+      patchState(store, {
+        template: {
+          ...current,
+          fields: updatedFields,
+        },
+      });
+    },
+
+    updateFieldOption(
+      fieldId: string,
+      optionIndex: number,
+      optionUpdates: Partial<FormFieldOption>,
+    ) {
+      const current = store.template();
+      if (!current) return;
+
+      const updatedFields = current.fields.map((field) => {
+        if (field.id !== fieldId) return field;
+        const existingOptions = field.options || [];
+        const updatedOptions = existingOptions.map((opt, idx) =>
+          idx === optionIndex ? { ...opt, ...optionUpdates } : opt,
+        );
+        return {
+          ...field,
+          options: updatedOptions,
+        };
+      });
+
+      patchState(store, {
+        template: {
+          ...current,
+          fields: updatedFields,
+        },
+      });
+    },
+
+    removeFieldOption(fieldId: string, optionIndex: number) {
+      const current = store.template();
+      if (!current) return;
+
+      const updatedFields = current.fields.map((field) => {
+        if (field.id !== fieldId) return field;
+        const existingOptions = field.options || [];
+        return {
+          ...field,
+          options: existingOptions.filter((_, idx) => idx !== optionIndex),
+        };
+      });
+
+      patchState(store, {
+        template: {
+          ...current,
+          fields: updatedFields,
+        },
       });
     },
 

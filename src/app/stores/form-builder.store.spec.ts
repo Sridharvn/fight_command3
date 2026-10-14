@@ -12,15 +12,16 @@ describe('FormBuilderStore', () => {
     store = TestBed.inject(FormBuilderStore);
   });
 
-  it('should initialize with default template containing mandatory system fields (Full Name, Email)', () => {
+  it('should initialize with default template containing mandatory system fields (Full Name, Email, Phone Number) (HF-052)', () => {
     store.initNewTemplate(1, 1);
     const template = store.template();
 
     expect(template).toBeTruthy();
-    expect(template?.fields.length).toBeGreaterThanOrEqual(2);
+    expect(template?.fields.length).toBeGreaterThanOrEqual(3);
 
     const fullNameField = template?.fields.find((f) => f.key === 'fullName');
     const emailField = template?.fields.find((f) => f.key === 'email');
+    const phoneField = template?.fields.find((f) => f.key === 'phone');
 
     expect(fullNameField).toBeTruthy();
     expect(fullNameField?.isSystemField).toBe(true);
@@ -29,6 +30,10 @@ describe('FormBuilderStore', () => {
     expect(emailField).toBeTruthy();
     expect(emailField?.isSystemField).toBe(true);
     expect(emailField?.required).toBe(true);
+
+    expect(phoneField).toBeTruthy();
+    expect(phoneField?.isSystemField).toBe(true);
+    expect(phoneField?.required).toBe(true);
   });
 
   it('should add a new field to the template and set it active', () => {
@@ -178,5 +183,64 @@ describe('FormBuilderStore', () => {
     expect(addedFields[1].key).not.toBe('belt_rank');
     expect(addedFields[1].key.startsWith('belt_rank_')).toBe(true);
   });
-});
 
+  it('should allow deleting non-system fields including date of birth and preset inherited fields (HF-053)', () => {
+    store.setTemplate({
+      templateName: 'Test Template',
+      sportType: 1,
+      tournamentType: 1,
+      fields: [
+        { id: 'dob_1', key: 'dob', label: 'Date of Birth', type: 'date', required: false },
+        {
+          id: 'preset_weight',
+          key: 'weight_class',
+          label: 'Weight Class',
+          type: 'text',
+          isInherited: true,
+        },
+      ],
+      validations: [],
+    });
+
+    const fields = store.template()!.fields;
+    const dobField = fields.find((f) => f.key === 'dob')!;
+    const presetField = fields.find((f) => f.id === 'preset_weight')!;
+
+    // Date of birth and preset fields can be deleted
+    store.removeField(dobField.id);
+    expect(store.template()!.fields.find((f) => f.id === dobField.id)).toBeUndefined();
+
+    store.removeField(presetField.id);
+    expect(store.template()!.fields.find((f) => f.id === presetField.id)).toBeUndefined();
+
+    // But phone and email and full name remain non-deletable
+    const phoneField = store.template()!.fields.find((f) => f.key === 'phone')!;
+    store.removeField(phoneField.id);
+    expect(store.template()!.fields.find((f) => f.key === 'phone')).toBeTruthy();
+  });
+
+  it('should support adding, updating, and removing options on choice fields (HF-054)', () => {
+    store.initNewTemplate(1, 1);
+    store.addField('select', 'Category');
+    const field = store.template()!.fields.find((f) => f.label === 'Category')!;
+
+    expect(field.options?.length).toBe(2);
+
+    // Add option
+    store.addFieldOption(field.id, { label: 'Option 3', value: 'opt_3' });
+    let updatedField = store.template()!.fields.find((f) => f.id === field.id)!;
+    expect(updatedField.options?.length).toBe(3);
+    expect(updatedField.options?.[2].label).toBe('Option 3');
+
+    // Update option
+    store.updateFieldOption(field.id, 2, { label: 'Heavyweight', value: 'heavyweight' });
+    updatedField = store.template()!.fields.find((f) => f.id === field.id)!;
+    expect(updatedField.options?.[2].label).toBe('Heavyweight');
+
+    // Remove option
+    store.removeFieldOption(field.id, 0);
+    updatedField = store.template()!.fields.find((f) => f.id === field.id)!;
+    expect(updatedField.options?.length).toBe(2);
+    expect(updatedField.options?.[0].label).toBe('Option 2');
+  });
+});

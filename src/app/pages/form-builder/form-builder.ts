@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  OnInit,
-  inject,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
@@ -95,10 +89,7 @@ export class FormBuilderPage implements OnInit {
 
   onUpdateTemplateSettings(
     settings: Partial<
-      Pick<
-        FormDefinition,
-        'sportType' | 'tournamentType' | 'description' | 'templateName'
-      >
+      Pick<FormDefinition, 'sportType' | 'tournamentType' | 'description' | 'templateName'>
     >,
   ): void {
     this.builderStore.updateTemplateMetadata(settings);
@@ -173,8 +164,15 @@ export class FormBuilderPage implements OnInit {
           fields = tmpl.fields.map((tf: any) => ({
             id: `field_${tf.fieldDefinitionId || tf.templateFieldId}`,
             fieldDefinitionId: tf.fieldDefinitionId,
-            key: tf.customFieldName || tf.fieldDefinition?.fieldName || `field_${tf.fieldDefinitionId}`,
-            label: tf.fieldLabelOverride || tf.customFieldLabel || tf.fieldDefinition?.fieldLabel || 'Field',
+            key:
+              tf.customFieldName ||
+              tf.fieldDefinition?.fieldName ||
+              `field_${tf.fieldDefinitionId}`,
+            label:
+              tf.fieldLabelOverride ||
+              tf.customFieldLabel ||
+              tf.fieldDefinition?.fieldLabel ||
+              'Field',
             type: (tf.fieldDefinition?.fieldType || 'text') as FormFieldType,
             required: tf.isRequired,
             columnSpan: 1,
@@ -256,6 +254,25 @@ export class FormBuilderPage implements OnInit {
 
   onRemoveField(fieldId: string): void {
     this.builderStore.removeField(fieldId);
+  }
+
+  onAddOption(fieldId: string): void {
+    const field = this.builderStore.template()?.fields.find((f) => f.id === fieldId);
+    const count = (field?.options?.length || 0) + 1;
+    this.builderStore.addFieldOption(fieldId, {
+      label: `Option ${count}`,
+      value: `option_${count}`,
+    });
+  }
+
+  onUpdateOptionLabel(fieldId: string, index: number, event: Event): void {
+    const label = (event.target as HTMLInputElement).value;
+    const value = label.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    this.builderStore.updateFieldOption(fieldId, index, { label, value });
+  }
+
+  onRemoveOption(fieldId: string, index: number): void {
+    this.builderStore.removeFieldOption(fieldId, index);
   }
 
   openLivePreview(): void {
@@ -440,7 +457,9 @@ export class FormBuilderPage implements OnInit {
         },
         error: (err) => {
           this.builderStore.setSaving(false);
-          this.builderStore.setError('Failed to update template: ' + (err.error?.message || err.message));
+          this.builderStore.setError(
+            'Failed to update template: ' + (err.error?.message || err.message),
+          );
         },
       });
     } else {
@@ -455,7 +474,9 @@ export class FormBuilderPage implements OnInit {
         },
         error: (err) => {
           this.builderStore.setSaving(false);
-          this.builderStore.setError('Failed to create template: ' + (err.error?.message || err.message));
+          this.builderStore.setError(
+            'Failed to create template: ' + (err.error?.message || err.message),
+          );
         },
       });
     }

@@ -512,6 +512,44 @@ The application provides an accessible login screen (`/login`) allowing users to
   - Template cards accurately display attached field count using `fieldCount`.
 - **Final state:** Admin can review the full, exhaustive form definition directly from the template management card.
 
+**HF-052: Mandatory Default Non-Deletable System Fields (Full Name, Email, Phone Number)**
+
+- **Preconditions:** User is authoring any form template in Form Builder (`/form-builder/new` or `/form-builder/:id`).
+- **User/System actions:** Form Builder initializes a new template or loads an existing template.
+- **Expected results:**
+  - `Full Name` (`fullName`), `Email Address` (`email`), and `Phone Number` (`phone`) are present by default.
+  - All three fields are configured with `isSystemField: true` and `required: true`.
+  - On the canvas, their field cards display a "System Field" badge, do NOT render a delete button, and cannot be deleted via `removeField()`.
+  - `Date of Birth` (`dob`) and other fields are NOT system-locked: they render a delete button and can be removed.
+- **Final state:** Contact and identity invariants (Name, Email, Phone Number) are preserved on all templates while permitting full customizability for all other fields.
+
+**HF-053: Form Items Reordering and Deletion Across All Non-System Fields**
+
+- **Preconditions:** Form Builder canvas contains multiple fields (system fields, preset inherited fields, library fields, and custom elements).
+- **User/System actions:**
+  - User drags any field card (system or non-system) via CDK drag handle to a new position.
+  - User clicks the delete button on any non-system field (including Date of Birth and fields from presets).
+- **Expected results:**
+  - Field cards smoothly reorder on the canvas, and `FormBuilderStore.moveField()` updates the schema order.
+  - Index indicators (`#1`, `#2`, ...) update reactively.
+  - Clicking delete on a non-system field removes it immediately from canvas and store state.
+- **Final state:** Full reordering flexibility across all fields and unrestricted deletion of non-mandatory fields.
+
+**HF-054: Inline Options Management for Choice Fields (Select, Radio, Checkbox)**
+
+- **Preconditions:** Form Builder canvas contains a choice-based field (`type: 'select'`, `'radio'`, or `'checkbox'`).
+- **User/System actions:**
+  - Inspect the field card on the canvas: an "Options & Choices" section is rendered.
+  - User edits an option label inline.
+  - User clicks the remove button (`✕`) on an option.
+  - User clicks "+ Add Option" or inputs a choice and adds it.
+- **Expected results:**
+  - Field card immediately reflects added, edited, or removed options.
+  - `FormBuilderStore` updates `field.options` immutably.
+  - Live Preview and `DynamicFormRendererComponent` render the updated choices dynamically in dropdowns and radio/checkbox groups.
+  - Saving the template persists the updated options in `formSchema.fields[].options` and backend `fieldOptions`.
+- **Final state:** Organizers can author custom choice lists directly on form template items.
+
 ---
 
 ### Negative Flows
