@@ -4,9 +4,12 @@ import { RuleStore } from '../../stores/rule.store';
 import { AuthStore } from '../../stores/auth.store';
 import { LayoutStore } from '../../stores/layout.store';
 import { FormDefinitionStore } from '../../stores/form-definition.store';
+import { FormDefinitionService } from '../../services/form-definition.service';
 import { signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
 import { GlobalCompoundRule } from '../../models/rule-engine.models';
+import { FormTemplate } from '../../models/form-definition.models';
 
 describe('RuleManagementPage', () => {
   let component: RuleManagementPage;
@@ -28,11 +31,68 @@ describe('RuleManagementPage', () => {
     isActive: true,
   };
 
+  const mockTemplate: FormTemplate = {
+    templateId: 101,
+    templateName: 'MMA Championship Registration',
+    templateType: 'CUSTOM',
+    sportType: 2,
+    tournamentType: 1,
+    isActive: true,
+    formSchema: {
+      templateName: 'MMA Championship Registration',
+      sportType: 2,
+      tournamentType: 1,
+      fields: [
+        {
+          id: 'categories',
+          key: 'categories',
+          label: 'Weight Categories',
+          type: 'checkbox',
+          options: ['Bantamweight', 'Featherweight', 'Lightweight', 'Welterweight'],
+          validationRules: {},
+        },
+        {
+          id: 'age',
+          key: 'age',
+          label: 'Age',
+          type: 'number',
+          validationRules: { required: true },
+        },
+        {
+          id: 'guardian_consent',
+          key: 'guardian_consent',
+          label: 'Parent / Guardian Consent',
+          type: 'checkbox',
+          validationRules: {},
+        },
+      ],
+      compoundRules: [
+        {
+          ruleId: 999,
+          ruleName: 'Max 2 Categories',
+          description: 'Cannot select more than 2 categories',
+          errorMessage: 'You can select at most 2 options.',
+          conditions: {
+            conjunction: 'AND',
+            conditions: [{ fieldId: 'categories', operator: 'countGreaterThan', value: 2 }],
+          },
+          actions: {
+            conjunction: 'AND',
+            conditions: [{ fieldId: 'categories', operator: 'countMax', value: 2 }],
+          },
+          isActive: true,
+        },
+      ],
+    },
+  };
+
   const rulesSignal = signal<GlobalCompoundRule[]>([mockRule]);
   const statusSignal = signal<'idle' | 'loading' | 'success' | 'error'>('success');
   const errorSignal = signal<string | null>(null);
 
   let ruleStoreMock: any;
+  let formDefinitionStoreMock: any;
+  let formDefinitionServiceMock: any;
 
   beforeEach(async () => {
     ruleStoreMock = {
@@ -49,18 +109,27 @@ describe('RuleManagementPage', () => {
       clearError: vi.fn(),
     };
 
+    formDefinitionStoreMock = {
+      templates: signal<FormTemplate[]>([mockTemplate]),
+      loadTemplates: vi.fn(),
+      fieldDefinitions: signal([]),
+      loadFieldDefinitions: vi.fn(),
+    };
+
+    formDefinitionServiceMock = {
+      getTemplateById: vi.fn().mockReturnValue(of(mockTemplate)),
+      updateTemplate: vi
+        .fn()
+        .mockImplementation((id: number, dto: any) => of({ ...mockTemplate, ...dto })),
+    };
+
     await TestBed.configureTestingModule({
       imports: [RuleManagementPage],
       providers: [
         provideRouter([]),
         { provide: RuleStore, useValue: ruleStoreMock },
-        {
-          provide: FormDefinitionStore,
-          useValue: {
-            fieldDefinitions: signal([]),
-            loadFieldDefinitions: vi.fn(),
-          },
-        },
+        { provide: FormDefinitionStore, useValue: formDefinitionStoreMock },
+        { provide: FormDefinitionService, useValue: formDefinitionServiceMock },
         {
           provide: AuthStore,
           useValue: {
@@ -194,6 +263,105 @@ describe('RuleManagementPage', () => {
       }),
       expect.any(Function),
       expect.any(Function),
+    );
+  });
+
+  it('should switch to template scope, display template rules, and populate available fields (HF-RUL-003)', () => {
+    // Select template 101
+    const event = { target: { value: '101' } } as unknown as Event;
+    component.onSelectTemplate(event);
+    fixture.detectChanges();
+
+    expect(component.selectedTemplateId()).toBe(101);
+    expect(formDefinitionServiceMock.getTemplateById).toHaveBeenCalledWith(101);
+
+    // Available fields should be populated from template schema
+    const fields = component.availableFields();
+    expect(fields.length).toBe(3);
+    expect(fields.map((f) => f.key)).toEqual(['categories', 'age', 'guardian_consent']);
+
+    // Choice fields should identify checkbox group with options
+    const choices = component.choiceFields();
+    expect(choices.length).toBe(1);
+    expect(choices[0].key).toBe('categories');
+
+    // Current rules should display the template rule
+    const rules = component.currentRules();
+    expect(rules.length).toBe(1);
+    expect(rules[0].ruleName).toBe('Max 2 Categories');
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('MMA Championship Registration');
+    expect(compiled.textContent).toContain('Max 2 Categories');
+  });
+
+  it('should submit selection limit rule to template schema (VR-RULE-001)', () => {
+    // Select template 101
+    const event = { target: { value: '101' } } as unknown as Event;
+    component.onSelectTemplate(event);
+    fixture.detectChanges();
+
+    component.openCreateModal();
+    expect(component.selectedRuleType()).toBe('selectionLimit');
+
+    component.ruleForm.patchValue({
+      ruleType: 'selectionLimit',
+      ruleName: 'Limit 3 Categories',
+      description: 'Maximum 3 categories per athlete',
+      targetFieldId: 'categories',
+      limitType: 'maxSelections',
+      limitCount: 3,
+      errorMessage: 'Field "Weight Categories" allows maximum 3 selections.',
+    });
+
+    component.onSubmit();
+
+    expect(formDefinitionServiceMock.updateTemplate).toHaveBeenCalledWith(
+      101,
+      expect.objectContaining({
+        formSchema: expect.objectContaining({
+          fields: expect.arrayContaining([
+            expect.objectContaining({
+              key: 'categories',
+              validationRules: expect.objectContaining({
+                maxSelections: 3,
+              }),
+            }),
+          ]),
+          compoundRules: expect.arrayContaining([
+            expect.objectContaining({
+              ruleName: 'Limit 3 Categories',
+              errorMessage: 'Field "Weight Categories" allows maximum 3 selections.',
+              actions: {
+                conjunction: 'AND',
+                conditions: [{ fieldId: 'categories', operator: 'countMax', value: 3 }],
+              },
+            }),
+          ]),
+        }),
+      }),
+    );
+    expect(component.isModalOpen()).toBe(false);
+  });
+
+  it('should delete a rule from template schema and update template', () => {
+    // Mock window.confirm
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    // Switch to template 101
+    const event = { target: { value: '101' } } as unknown as Event;
+    component.onSelectTemplate(event);
+    fixture.detectChanges();
+
+    component.onDelete(999);
+
+    expect(formDefinitionServiceMock.updateTemplate).toHaveBeenCalledWith(
+      101,
+      expect.objectContaining({
+        formSchema: expect.objectContaining({
+          compoundRules: [],
+        }),
+      }),
     );
   });
 });

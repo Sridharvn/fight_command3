@@ -108,7 +108,9 @@ describe('DynamicFormRendererComponent', () => {
     fixture.detectChanges();
 
     expect(component.complianceErrors().length).toBe(1);
-    expect(component.complianceErrors()[0]).toContain('Athletes under 18 must have guardian consent');
+    expect(component.complianceErrors()[0]).toContain(
+      'Athletes under 18 must have guardian consent',
+    );
 
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.compliance-alert')).toBeTruthy();
@@ -148,6 +150,66 @@ describe('DynamicFormRendererComponent', () => {
         fullName: 'Valid Competitor',
         age: 20,
       }),
+    );
+  });
+
+  it('should render multi-select checkbox group and enforce maxSelections constraint (VR-RULE-001)', () => {
+    const multiCheckboxSchema: FormDefinition = {
+      templateName: 'Tournament Entry Form',
+      sportType: 1,
+      tournamentType: 1,
+      fields: [
+        {
+          id: 'categories',
+          key: 'categories',
+          label: 'Competition Categories',
+          type: 'checkbox',
+          options: [
+            { label: 'Sport Sambo', value: 'sport_sambo' },
+            { label: 'Combat Sambo', value: 'combat_sambo' },
+            { label: 'Beach Sambo', value: 'beach_sambo' },
+            { label: 'Cadet Sambo', value: 'cadet_sambo' },
+          ],
+          validationRules: {
+            maxSelections: 2,
+            minSelections: 1,
+          },
+        },
+      ],
+      validations: [],
+    };
+
+    fixture.componentRef.setInput('schema', multiCheckboxSchema);
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const checkboxGroup = compiled.querySelector('.checkbox-group');
+    expect(checkboxGroup).toBeTruthy();
+
+    const checkboxes = compiled.querySelectorAll(
+      '.checkbox-group input[type="checkbox"]',
+    ) as NodeListOf<HTMLInputElement>;
+    expect(checkboxes.length).toBe(4);
+
+    // Initial value is empty array
+    expect(component.form.get('categories')?.value).toEqual([]);
+
+    // Select 2 checkboxes
+    checkboxes[0].click();
+    checkboxes[1].click();
+    fixture.detectChanges();
+
+    expect(component.form.get('categories')?.value).toEqual(['sport_sambo', 'combat_sambo']);
+    expect(component.form.get('categories')?.valid).toBe(true);
+
+    // Try selecting 3rd checkbox when maxSelections is 2
+    checkboxes[2].click();
+    fixture.detectChanges();
+
+    // Field should be marked invalid with maxSelections error
+    expect(component.form.get('categories')?.valid).toBe(false);
+    expect(component.getFieldError(multiCheckboxSchema.fields[0])).toContain(
+      'allows maximum 2 selections',
     );
   });
 });

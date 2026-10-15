@@ -27,7 +27,11 @@ describe('RuleEngineService', () => {
     const gtRule: AtomicRule = { fieldId: 'weight', operator: 'greaterThan', value: 70 };
     expect(service.evaluate(gtRule, data)).toBe(false);
 
-    const inRule: AtomicRule = { fieldId: 'belt', operator: 'in', value: ['White', 'Blue', 'Purple'] };
+    const inRule: AtomicRule = {
+      fieldId: 'belt',
+      operator: 'in',
+      value: ['White', 'Blue', 'Purple'],
+    };
     expect(service.evaluate(inRule, data)).toBe(true);
 
     const notInRule: AtomicRule = { fieldId: 'belt', operator: 'notIn', value: ['Brown', 'Black'] };
@@ -103,5 +107,79 @@ describe('RuleEngineService', () => {
     const adultData = { age: 25, consent: false };
     const errors3 = service.validateForm([validationRule], adultData);
     expect(errors3).toEqual([]);
+  });
+
+  describe('Field Selection Limits (VR-RULE-001)', () => {
+    const fields = [
+      {
+        id: 'disciplines',
+        key: 'disciplines',
+        label: 'Competition Disciplines',
+        type: 'checkbox' as const,
+        validationRules: {
+          maxSelections: 3,
+          minSelections: 1,
+        },
+      },
+      {
+        id: 'singleCheck',
+        key: 'singleCheck',
+        label: 'Single Agree',
+        type: 'checkbox' as const,
+        required: true,
+      },
+    ];
+
+    it('should validate maxSelections when selected count exceeds allowed limit', () => {
+      const invalidData = { disciplines: ['combat', 'sport', 'beach', 'cadet'], singleCheck: true };
+      const errors = service.validateFields(fields, invalidData);
+      expect(errors.length).toBe(1);
+      expect(errors[0]).toBe('Field "Competition Disciplines" allows maximum 3 selections');
+    });
+
+    it('should pass validation when selected count is within maxSelections limit', () => {
+      const validData = { disciplines: ['combat', 'sport', 'beach'], singleCheck: true };
+      const errors = service.validateFields(fields, validData);
+      expect(errors.length).toBe(0);
+    });
+
+    it('should validate minSelections when selection array is empty or below minimum', () => {
+      const invalidData = { disciplines: [], singleCheck: true };
+      const errors = service.validateFields(fields, invalidData);
+      expect(errors.length).toBe(1);
+      expect(errors[0]).toBe('Field "Competition Disciplines" requires at least 1 selection');
+    });
+
+    it('should evaluate countMax, countMin, and contains operators in atomic rules', () => {
+      const data = { disciplines: ['combat', 'sport'] };
+
+      const containsRule: AtomicRule = {
+        fieldId: 'disciplines',
+        operator: 'contains' as any,
+        value: 'combat',
+      };
+      expect(service.evaluate(containsRule, data)).toBe(true);
+
+      const countMaxRule: AtomicRule = {
+        fieldId: 'disciplines',
+        operator: 'countMax' as any,
+        value: 3,
+      };
+      expect(service.evaluate(countMaxRule, data)).toBe(true);
+
+      const countMaxFailRule: AtomicRule = {
+        fieldId: 'disciplines',
+        operator: 'countMax' as any,
+        value: 1,
+      };
+      expect(service.evaluate(countMaxFailRule, data)).toBe(false);
+
+      const countMinRule: AtomicRule = {
+        fieldId: 'disciplines',
+        operator: 'countMin' as any,
+        value: 1,
+      };
+      expect(service.evaluate(countMinRule, data)).toBe(true);
+    });
   });
 });

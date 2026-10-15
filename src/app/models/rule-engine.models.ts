@@ -4,7 +4,13 @@ export type ComparisonOperator =
   | 'greaterThan'
   | 'lessThan'
   | 'in'
-  | 'notIn';
+  | 'notIn'
+  | 'contains'
+  | 'countEquals'
+  | 'countLessThan'
+  | 'countGreaterThan'
+  | 'countMax'
+  | 'countMin';
 
 export interface AtomicRule {
   fieldId: string;

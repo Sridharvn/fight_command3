@@ -47,13 +47,23 @@ export class RuleEngineService {
       case 'lessThan':
         return Number(rawVal) < Number(targetVal);
       case 'in':
-        return Array.isArray(targetVal)
-          ? targetVal.map(String).includes(String(rawVal))
-          : false;
+        return Array.isArray(targetVal) ? targetVal.map(String).includes(String(rawVal)) : false;
       case 'notIn':
-        return Array.isArray(targetVal)
-          ? !targetVal.map(String).includes(String(rawVal))
-          : true;
+        return Array.isArray(targetVal) ? !targetVal.map(String).includes(String(rawVal)) : true;
+      case 'contains':
+        return Array.isArray(rawVal)
+          ? rawVal.map(String).includes(String(targetVal))
+          : String(rawVal).includes(String(targetVal));
+      case 'countEquals':
+        return Array.isArray(rawVal) && rawVal.length === Number(targetVal);
+      case 'countLessThan':
+        return Array.isArray(rawVal) && rawVal.length < Number(targetVal);
+      case 'countGreaterThan':
+        return Array.isArray(rawVal) && rawVal.length > Number(targetVal);
+      case 'countMax':
+        return Array.isArray(rawVal) && rawVal.length <= Number(targetVal);
+      case 'countMin':
+        return Array.isArray(rawVal) && rawVal.length >= Number(targetVal);
       default:
         return false;
     }
@@ -64,10 +74,7 @@ export class RuleEngineService {
    * If WHEN evaluates to true, THEN must also evaluate to true.
    * If THEN evaluates to false, errorMessage is collected.
    */
-  validateForm(
-    validations: CrossFieldValidation[],
-    formData: Record<string, any>,
-  ): string[] {
+  validateForm(validations: CrossFieldValidation[], formData: Record<string, any>): string[] {
     const errors: string[] = [];
     if (!validations || validations.length === 0) return errors;
 
@@ -84,7 +91,7 @@ export class RuleEngineService {
   }
 
   /**
-   * Validates individual field rules (required, min/max length, min/max value).
+   * Validates individual field rules (required, min/max length, min/max value, selection limits).
    */
   validateFields(fields: FormField[], formData: Record<string, any>): string[] {
     const errors: string[] = [];
@@ -93,28 +100,46 @@ export class RuleEngineService {
     for (const field of fields) {
       const val = formData[field.key || field.id];
 
-      if (field.required && (val === undefined || val === null || val === '')) {
+      if (
+        field.required &&
+        (val === undefined ||
+          val === null ||
+          val === '' ||
+          (Array.isArray(val) && val.length === 0))
+      ) {
         errors.push(`Field "${field.label}" is required`);
         continue;
       }
 
-      if (val !== undefined && val !== null && val !== '' && field.validationRules) {
+      if (field.validationRules) {
         const rules = field.validationRules;
-        if (rules.minLength && String(val).length < rules.minLength) {
-          errors.push(
-            `Field "${field.label}" must be at least ${rules.minLength} characters`,
-          );
+
+        if (Array.isArray(val)) {
+          if (rules.maxSelections !== undefined && val.length > rules.maxSelections) {
+            errors.push(
+              `Field "${field.label}" allows maximum ${rules.maxSelections} selection${rules.maxSelections > 1 ? 's' : ''}`,
+            );
+          }
+          if (rules.minSelections !== undefined && val.length < rules.minSelections) {
+            errors.push(
+              `Field "${field.label}" requires at least ${rules.minSelections} selection${rules.minSelections > 1 ? 's' : ''}`,
+            );
+          }
         }
-        if (rules.maxLength && String(val).length > rules.maxLength) {
-          errors.push(
-            `Field "${field.label}" must be at most ${rules.maxLength} characters`,
-          );
-        }
-        if (rules.min !== undefined && Number(val) < rules.min) {
-          errors.push(`Field "${field.label}" minimum value is ${rules.min}`);
-        }
-        if (rules.max !== undefined && Number(val) > rules.max) {
-          errors.push(`Field "${field.label}" maximum value is ${rules.max}`);
+
+        if (val !== undefined && val !== null && val !== '') {
+          if (rules.minLength && String(val).length < rules.minLength) {
+            errors.push(`Field "${field.label}" must be at least ${rules.minLength} characters`);
+          }
+          if (rules.maxLength && String(val).length > rules.maxLength) {
+            errors.push(`Field "${field.label}" must be at most ${rules.maxLength} characters`);
+          }
+          if (rules.min !== undefined && Number(val) < rules.min) {
+            errors.push(`Field "${field.label}" minimum value is ${rules.min}`);
+          }
+          if (rules.max !== undefined && Number(val) > rules.max) {
+            errors.push(`Field "${field.label}" maximum value is ${rules.max}`);
+          }
         }
       }
     }

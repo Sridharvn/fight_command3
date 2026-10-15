@@ -16,7 +16,13 @@ export type ComparisonOperator =
   | 'greaterThan'
   | 'lessThan'
   | 'in'
-  | 'notIn';
+  | 'notIn'
+  | 'contains'
+  | 'countEquals'
+  | 'countLessThan'
+  | 'countGreaterThan'
+  | 'countMax'
+  | 'countMin';
 
 export interface AtomicRule {
   fieldId: string;
@@ -35,6 +41,7 @@ export interface CrossFieldValidation {
   errorMessage: string;
   when: RuleGroup;
   then: RuleGroup;
+  actionType?: 'assert' | 'require' | 'show' | 'hide';
 }
 
 export interface FormFieldValidationRules {
@@ -43,6 +50,8 @@ export interface FormFieldValidationRules {
   min?: number;
   max?: number;
   pattern?: string;
+  minSelections?: number;
+  maxSelections?: number;
 }
 
 export interface FormFieldOption {

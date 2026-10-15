@@ -553,3 +553,217 @@
   padding-top: 0.75rem;
   border-top: 1px solid #1f2937;
 }
+
+// Scope Selector Card
+.scope-selector-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  padding: 1.125rem 1.5rem;
+  background: var(--surface-secondary, #131b2e);
+  border: 1px solid var(--border-color, #1e293b);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+
+  .scope-select-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    flex: 1;
+    min-width: 280px;
+
+    .scope-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      white-space: nowrap;
+
+      .scope-icon {
+        width: 1.25rem;
+        height: 1.25rem;
+        color: var(--accent-primary, #e11d48);
+      }
+    }
+
+    .scope-dropdown {
+      flex: 1;
+      max-width: 480px;
+      font-weight: 500;
+    }
+  }
+
+  .template-meta-pills {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+
+    .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.75rem;
+      border-radius: 9999px;
+      background: #1e293b;
+      font-size: 0.8125rem;
+      color: #94a3b8;
+
+      .pill-label {
+        font-weight: 500;
+      }
+
+      .pill-value {
+        color: #f1f5f9;
+        font-weight: 600;
+      }
+
+      &.accent {
+        background: rgba(225, 29, 72, 0.15);
+        border: 1px solid rgba(225, 29, 72, 0.3);
+        color: var(--accent-primary-light, #fb7185);
+
+        .pill-value {
+          color: #ffffff;
+        }
+      }
+    }
+  }
+}
+
+// Success Toast Alert
+.alert-success {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 0.5rem;
+  color: #34d399;
+  font-size: 0.875rem;
+  font-weight: 500;
+
+  .alert-icon {
+    font-size: 1.125rem;
+    font-weight: 700;
+  }
+}
+
+// Rule Type Selector Tabs in Modal
+.rule-type-selector {
+  display: flex;
+  gap: 0.5rem;
+  background: #090d16;
+  padding: 0.375rem;
+  border-radius: 0.5rem;
+  border: 1px solid #1e293b;
+
+  .type-tab-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    background: transparent;
+    border: none;
+    border-radius: 0.375rem;
+    color: #94a3b8;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+
+    .tab-icon {
+      font-size: 0.95rem;
+    }
+
+    &:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    &.active {
+      background: var(--accent-gradient, #e11d48);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(225, 29, 72, 0.3);
+    }
+  }
+}
+
+.modal-dialog-lg {
+  max-width: 680px;
+}
+
+.modal-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: #94a3b8;
+
+  strong {
+    color: var(--accent-primary-light, #fb7185);
+  }
+}
+
+.selection-limit-box {
+  background: rgba(225, 29, 72, 0.05);
+  border-color: rgba(225, 29, 72, 0.2);
+
+  .builder-legend {
+    color: var(--accent-primary-light, #fb7185) !important;
+  }
+}
+
+.builder-hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #94a3b8;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.flex-2 {
+  flex: 2;
+}
+
+// Rule Badges
+.type-pill {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+
+  &.badge-selection {
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    color: #fbbf24;
+  }
+
+  &.badge-require {
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #60a5fa;
+  }
+
+  &.badge-visibility {
+    background: rgba(168, 85, 247, 0.15);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    color: #c084fc;
+  }
+
+  &.badge-validation {
+    background: rgba(225, 29, 72, 0.15);
+    border: 1px solid rgba(225, 29, 72, 0.3);
+    color: #fb7185;
+  }
+}

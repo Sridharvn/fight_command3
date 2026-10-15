@@ -9,15 +9,13 @@ import {
   signal,
 } from '@angular/core';
 import {
+  AbstractControl,
   FormControl,
   FormGroup,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import {
-  FormDefinition,
-  FormField,
-} from '../../models/dynamic-form.models';
+import { FormDefinition, FormField } from '../../models/dynamic-form.models';
 import { RuleEngineService } from '../../services/rule-engine.service';
 
 @Component({
@@ -76,6 +74,49 @@ export class DynamicFormRendererComponent implements OnInit {
 
     for (const field of schema.fields || []) {
       const fieldKey = field.key || field.id;
+
+      // Checkbox group (multi-select option list)
+      if (field.type === 'checkbox' && field.options && field.options.length > 0) {
+        const groupValidators = [];
+        if (field.required) {
+          groupValidators.push((ctrl: AbstractControl) => {
+            const v = ctrl.value;
+            if (!v || (Array.isArray(v) && v.length === 0)) {
+              return { required: true };
+            }
+            return null;
+          });
+        }
+        if (field.validationRules?.maxSelections !== undefined) {
+          const maxSel = field.validationRules.maxSelections;
+          groupValidators.push((ctrl: AbstractControl) => {
+            const v = ctrl.value;
+            if (Array.isArray(v) && v.length > maxSel) {
+              return { maxSelections: { required: maxSel, actual: v.length } };
+            }
+            return null;
+          });
+        }
+        if (field.validationRules?.minSelections !== undefined) {
+          const minSel = field.validationRules.minSelections;
+          groupValidators.push((ctrl: AbstractControl) => {
+            const v = ctrl.value;
+            if (Array.isArray(v) && v.length < minSel) {
+              return { minSelections: { required: minSel, actual: v.length } };
+            }
+            return null;
+          });
+        }
+
+        const defaultArr = Array.isArray(initData[fieldKey])
+          ? initData[fieldKey]
+          : Array.isArray(field.defaultValue)
+            ? field.defaultValue
+            : [];
+        group[fieldKey] = new FormControl(defaultArr, groupValidators);
+        continue;
+      }
+
       const validators = [];
 
       if (field.required) {
@@ -102,9 +143,7 @@ export class DynamicFormRendererComponent implements OnInit {
       }
 
       let defaultValue =
-        initData[fieldKey] !== undefined
-          ? initData[fieldKey]
-          : (field.defaultValue ?? '');
+        initData[fieldKey] !== undefined ? initData[fieldKey] : (field.defaultValue ?? '');
 
       if (field.type === 'boolean' || field.type === 'checkbox') {
         defaultValue =
@@ -131,13 +170,77 @@ export class DynamicFormRendererComponent implements OnInit {
     this.formReady.emit(this.form);
   }
 
+  isOptionChecked(key: string, optValue: any): boolean {
+    const control = this.form?.get(key);
+    return Array.isArray(control?.value) && control.value.includes(optValue);
+  }
+
+  onCheckboxGroupChange(field: FormField, optValue: any, event: Event): void {
+    const key = field.key || field.id;
+    const control = this.form?.get(key);
+    if (!control) return;
+
+    const isChecked = (event.target as HTMLInputElement).checked;
+    const current = Array.isArray(control.value) ? [...control.value] : [];
+
+    if (isChecked) {
+      if (!current.includes(optValue)) {
+        current.push(optValue);
+      }
+    } else {
+      const idx = current.indexOf(optValue);
+      if (idx > -1) {
+        current.splice(idx, 1);
+      }
+    }
+
+    control.setValue(current);
+    control.markAsDirty();
+    control.markAsTouched();
+    control.updateValueAndValidity();
+  }
+
+  isFieldVisible(field: FormField): boolean {
+    const rules = this.schema()?.validations || (this.schema() as any)?.compoundRules || [];
+    const key = field.key || field.id;
+    for (const r of rules) {
+      const actionCond = r.then?.conditions?.[0] as any;
+      const targetFieldId = actionCond?.fieldId;
+      if (targetFieldId === key) {
+        if (r.actionType === 'hide' || actionCond?.operator === 'hide') {
+          const conditionMet = this.ruleEngine.evaluate(r.when, this.form?.getRawValue() || {});
+          if (conditionMet) return false;
+        } else if (r.actionType === 'show' || actionCond?.operator === 'show') {
+          const conditionMet = this.ruleEngine.evaluate(r.when, this.form?.getRawValue() || {});
+          if (!conditionMet) return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  isFieldRequired(field: FormField): boolean {
+    if (field.required) return true;
+    const rules = this.schema()?.validations || (this.schema() as any)?.compoundRules || [];
+    const key = field.key || field.id;
+    for (const r of rules) {
+      const actionCond = r.then?.conditions?.[0] as any;
+      const targetFieldId = actionCond?.fieldId;
+      if (targetFieldId === key) {
+        if (r.actionType === 'require' || actionCond?.operator === 'require') {
+          const conditionMet = this.ruleEngine.evaluate(r.when, this.form?.getRawValue() || {});
+          if (conditionMet) return true;
+        }
+      }
+    }
+    return false;
+  }
+
   private evaluateCompliance(): void {
     if (!this.form || !this.schema()) return;
     const rawValues = this.form.getRawValue();
-    const errors = this.ruleEngine.validateForm(
-      this.schema().validations || [],
-      rawValues,
-    );
+    const rules = this.schema().validations || (this.schema() as any).compoundRules || [];
+    const errors = this.ruleEngine.validateForm(rules, rawValues);
     this.complianceErrors.set(errors);
     this.complianceErrorsChange.emit(errors);
   }
@@ -160,6 +263,10 @@ export class DynamicFormRendererComponent implements OnInit {
       return `${field.label} must be at least ${control.errors['minlength'].requiredLength} characters`;
     if (control.errors['maxlength'])
       return `${field.label} cannot exceed ${control.errors['maxlength'].requiredLength} characters`;
+    if (control.errors['maxSelections'])
+      return `${field.label} allows maximum ${control.errors['maxSelections'].required} selections`;
+    if (control.errors['minSelections'])
+      return `${field.label} requires at least ${control.errors['minSelections'].required} selections`;
     return 'Invalid value';
   }
 

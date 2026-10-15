@@ -5,8 +5,8 @@
       <div class="header-titles">
         <h1 class="page-title">Rule Management</h1>
         <p class="page-subtitle">
-          Configure cross-field validation rules and compound constraints (e.g. Age checks, Weight
-          division limits, Guardian consents)
+          Configure form-scoped rules, selection constraints (e.g., max 3 checkboxes checked),
+          conditional requirements, and validation logic.
         </p>
       </div>
       <div class="header-actions">
@@ -20,6 +20,69 @@
         </button>
       </div>
     </header>
+
+    <!-- Scope / Template Selector Banner -->
+    <div class="scope-selector-card">
+      <div class="scope-select-wrap">
+        <label for="templateSelect" class="scope-label">
+          <svg
+            class="scope-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+            />
+          </svg>
+          Select Rule Scope:
+        </label>
+        <select
+          id="templateSelect"
+          class="form-select scope-dropdown"
+          [value]="selectedTemplateId()"
+          (change)="onSelectTemplate($event)"
+          aria-label="Select form template or global scope"
+        >
+          <option value="global">🌐 Global Compound Rules (Cross-System)</option>
+          <optgroup label="Form Templates / Definitions">
+            @for (tmpl of formDefinitionStore.templates(); track tmpl.templateId) {
+              <option [value]="tmpl.templateId">
+                📋 {{ tmpl.templateName }} ({{ tmpl.templateType }})
+              </option>
+            }
+          </optgroup>
+        </select>
+      </div>
+
+      @if (selectedTemplate()) {
+        <div class="template-meta-pills">
+          <span class="meta-pill">
+            <span class="pill-label">Sport:</span>
+            <span class="pill-value">{{ getSportName(selectedTemplate()!.sportType) }}</span>
+          </span>
+          <span class="meta-pill">
+            <span class="pill-label">Fields:</span>
+            <span class="pill-value">{{ availableFields().length }}</span>
+          </span>
+          <span class="meta-pill accent">
+            <span class="pill-label">Rules:</span>
+            <span class="pill-value">{{ currentRules().length }}</span>
+          </span>
+        </div>
+      }
+    </div>
+
+    <!-- Success Toast Notification -->
+    @if (actionSuccessMessage()) {
+      <div class="alert alert-success" role="alert">
+        <span class="alert-icon">✓</span>
+        <span>{{ actionSuccessMessage() }}</span>
+      </div>
+    }
 
     <!-- Toolbar: Search + Stats -->
     <div class="page-toolbar">
@@ -38,7 +101,7 @@
       </div>
 
       <div class="stats-badge-wrap">
-        <span class="count-badge">{{ ruleStore.totalRules() }} Rules</span>
+        <span class="count-badge">{{ totalRulesCount() }} Rules in Scope</span>
       </div>
     </div>
 
@@ -50,12 +113,16 @@
     }
 
     <!-- Content / Grid -->
-    @if (ruleStore.status() === 'loading' && ruleStore.rules().length === 0) {
+    @if (
+      ruleStore.status() === 'loading' &&
+      selectedTemplateId() === 'global' &&
+      ruleStore.rules().length === 0
+    ) {
       <div class="loading-state" aria-live="polite">
         <div class="spinner"></div>
-        <span>Loading compound rules...</span>
+        <span>Loading rules...</span>
       </div>
-    } @else if (ruleStore.filteredRules().length === 0) {
+    } @else if (currentRules().length === 0) {
       <div class="empty-state">
         <svg
           class="empty-icon"
@@ -70,30 +137,47 @@
             d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0012 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-16.5-.52c-.99.203-1.99.377-3 .52m16.5 0v3.75c0 .621-.504 1.125-1.125 1.125H4.875C4.254 9.365 3.75 8.861 3.75 8.24V4.97"
           />
         </svg>
-        <p class="empty-title">No compound rules found</p>
+        <p class="empty-title">No rules found in this scope</p>
         <p class="empty-desc">
-          Create your first cross-field compound rule to enforce validation logic on tournament
-          registrations.
+          @if (selectedTemplate()) {
+            Configure custom selection limits (e.g. max 3 checkboxes) or conditional validation for
+            <strong>{{ selectedTemplate()!.templateName }}</strong
+            >.
+          } @else {
+            Create your first cross-field compound rule to enforce validation logic.
+          }
         </p>
         <button type="button" class="btn btn-primary" (click)="openCreateModal()">
-          Create New Rule
+          Create Rule in Scope
         </button>
       </div>
     } @else {
       <div class="rules-grid">
-        @for (rule of ruleStore.filteredRules(); track rule.ruleId) {
+        @for (rule of currentRules(); track rule.ruleId || rule.id || $index) {
           <div class="rule-card">
             <div class="card-header">
               <div class="card-title-group">
-                <h2 class="rule-title">{{ rule.ruleName }}</h2>
-                <span class="status-pill" [class.active]="rule.isActive">
-                  {{ rule.isActive ? 'Active' : 'Inactive' }}
+                <h2 class="rule-title">{{ rule.ruleName || rule.name }}</h2>
+                @if (
+                  rule.conditions?.conditions?.[0]?.operator === 'countMax' ||
+                  rule.actions?.conditions?.[0]?.operator === 'countMax'
+                ) {
+                  <span class="type-pill badge-selection">Selection Limit</span>
+                } @else if (rule.actionType === 'require') {
+                  <span class="type-pill badge-require">Requirement</span>
+                } @else if (rule.actionType === 'show' || rule.actionType === 'hide') {
+                  <span class="type-pill badge-visibility">Visibility</span>
+                } @else {
+                  <span class="type-pill badge-validation">Validation</span>
+                }
+                <span class="status-pill" [class.active]="rule.isActive !== false">
+                  {{ rule.isActive !== false ? 'Active' : 'Inactive' }}
                 </span>
               </div>
               <button
                 type="button"
                 class="btn-action btn-delete"
-                (click)="onDelete(rule.ruleId)"
+                (click)="onDelete(rule.ruleId || rule.id)"
                 title="Delete rule"
                 aria-label="Delete rule"
               >
@@ -114,7 +198,7 @@
             <div class="logic-flow">
               <div class="logic-segment condition">
                 <span class="logic-tag when">WHEN</span>
-                @for (cond of rule.conditions.conditions; track $index) {
+                @for (cond of rule.conditions?.conditions || []; track $index) {
                   <span class="chip">
                     <strong>{{ $any(cond).fieldId }}</strong>
                     <span class="op">{{ $any(cond).operator }}</span>
@@ -127,7 +211,7 @@
 
               <div class="logic-segment action">
                 <span class="logic-tag then">THEN</span>
-                @for (act of rule.actions.conditions; track $index) {
+                @for (act of rule.actions?.conditions || []; track $index) {
                   <span class="chip action-chip">
                     <strong>{{ $any(act).fieldId }}</strong>
                     <span class="op">{{ $any(act).operator }}</span>
@@ -151,18 +235,27 @@
       </div>
     }
 
-    <!-- Create Rule Modal -->
+    <!-- Create / Edit Rule Modal -->
     @if (isModalOpen()) {
       <div class="modal-backdrop" (click)="closeModal()">
         <div
-          class="modal-dialog"
+          class="modal-dialog modal-dialog-lg"
           role="dialog"
           aria-modal="true"
           aria-labelledby="rule-modal-title"
           (click)="$event.stopPropagation()"
         >
           <header class="modal-header">
-            <h2 id="rule-modal-title" class="modal-title">Create Compound Rule</h2>
+            <div>
+              <h2 id="rule-modal-title" class="modal-title">Create Rule</h2>
+              <p class="modal-subtitle">
+                @if (selectedTemplate()) {
+                  Adding rule to template: <strong>{{ selectedTemplate()!.templateName }}</strong>
+                } @else {
+                  Adding global cross-field compound rule
+                }
+              </p>
+            </div>
             <button
               type="button"
               class="btn-close"
@@ -179,6 +272,39 @@
                 {{ ruleStore.error() }}
               </div>
             }
+
+            <!-- Rule Type Selector Segmented Controls -->
+            <div class="rule-type-selector">
+              <button
+                type="button"
+                class="type-tab-btn"
+                [class.active]="selectedRuleType() === 'selectionLimit'"
+                (click)="setRuleType('selectionLimit')"
+              >
+                <span class="tab-icon">☑</span>
+                Selection Limit (e.g. Max 3 Checkboxes)
+              </button>
+              <button
+                type="button"
+                class="type-tab-btn"
+                [class.active]="selectedRuleType() === 'condition'"
+                (click)="setRuleType('condition')"
+              >
+                <span class="tab-icon">➔</span>
+                Conditional Validation
+              </button>
+              <button
+                type="button"
+                class="type-tab-btn"
+                [class.active]="selectedRuleType() === 'requirement'"
+                (click)="setRuleType('requirement')"
+              >
+                <span class="tab-icon">!</span>
+                Conditional Requirement
+              </button>
+            </div>
+
+            <!-- Common Rule Name -->
             <div class="form-group">
               <label for="ruleName" class="form-label">Rule Name *</label>
               <input
@@ -186,7 +312,7 @@
                 type="text"
                 class="form-input"
                 formControlName="ruleName"
-                placeholder="e.g., Minor Participant Guardian Consent"
+                placeholder="e.g., Maximum 3 Category Selections or Minor Participant Consent"
               />
               @if (
                 ruleForm.get('ruleName')?.touched && ruleForm.get('ruleName')?.hasError('required')
@@ -202,76 +328,185 @@
                 type="text"
                 class="form-input"
                 formControlName="description"
-                placeholder="Explain why this validation is enforced..."
+                placeholder="Explain why this rule or constraint is enforced..."
               />
             </div>
 
-            <fieldset class="logic-builder-box">
-              <legend class="builder-legend">Condition: WHEN</legend>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label">Field ID</label>
-                  <input
-                    type="text"
-                    formControlName="conditionFieldId"
-                    class="form-input"
-                    placeholder="e.g., age"
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Operator</label>
-                  <select formControlName="conditionOperator" class="form-select">
-                    <option value="equals">equals</option>
-                    <option value="notEquals">not equals</option>
-                    <option value="greaterThan">greater than</option>
-                    <option value="lessThan">less than</option>
-                    <option value="in">in list</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Value</label>
-                  <input
-                    type="text"
-                    formControlName="conditionValue"
-                    class="form-input"
-                    placeholder="e.g., 18"
-                  />
-                </div>
-              </div>
-            </fieldset>
+            <!-- 1. Selection Limit Builder -->
+            @if (selectedRuleType() === 'selectionLimit') {
+              <fieldset class="logic-builder-box selection-limit-box">
+                <legend class="builder-legend">Option Selection Constraint</legend>
+                <div class="form-row">
+                  <div class="form-group flex-2">
+                    <label class="form-label">Target Multi-Option Field *</label>
+                    <select
+                      formControlName="targetFieldId"
+                      class="form-select"
+                      (change)="onLimitChange()"
+                    >
+                      @if (choiceFields().length === 0) {
+                        <option value="" disabled>
+                          No multi-option fields found in this scope
+                        </option>
+                      }
+                      @for (
+                        f of choiceFields().length > 0 ? choiceFields() : availableFields();
+                        track f.key || f.id
+                      ) {
+                        <option [value]="f.key || f.id">{{ f.label }} ({{ f.type }})</option>
+                      }
+                    </select>
+                  </div>
 
-            <fieldset class="logic-builder-box action-box">
-              <legend class="builder-legend">Assertion: THEN</legend>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label">Field ID</label>
-                  <input
-                    type="text"
-                    formControlName="actionFieldId"
-                    class="form-input"
-                    placeholder="e.g., guardian_consent"
-                  />
+                  <div class="form-group flex-1">
+                    <label class="form-label">Constraint Type *</label>
+                    <select
+                      formControlName="limitType"
+                      class="form-select"
+                      (change)="onLimitChange()"
+                    >
+                      <option value="maxSelections">Maximum Selections</option>
+                      <option value="minSelections">Minimum Selections</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group flex-1">
+                    <label class="form-label">Limit Count *</label>
+                    <input
+                      type="number"
+                      formControlName="limitCount"
+                      class="form-input"
+                      min="1"
+                      max="50"
+                      (input)="onLimitChange()"
+                    />
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label class="form-label">Operator</label>
-                  <select formControlName="actionOperator" class="form-select">
-                    <option value="equals">equals</option>
-                    <option value="notEquals">not equals</option>
-                    <option value="greaterThan">greater than</option>
-                    <option value="lessThan">less than</option>
-                  </select>
+                <p class="builder-hint">
+                  Limits the number of checkboxes or items a participant can select for this field.
+                  Enforced both reactively on the form and on backend validation.
+                </p>
+              </fieldset>
+            }
+
+            <!-- 2. Conditional Validation & Requirement Builder -->
+            @if (selectedRuleType() === 'condition' || selectedRuleType() === 'requirement') {
+              <fieldset class="logic-builder-box">
+                <legend class="builder-legend">Condition: WHEN</legend>
+                <div class="form-row">
+                  <div class="form-group flex-2">
+                    <label class="form-label">Condition Field *</label>
+                    @if (availableFields().length > 0) {
+                      <select formControlName="conditionFieldId" class="form-select">
+                        @for (f of availableFields(); track f.key || f.id) {
+                          <option [value]="f.key || f.id">
+                            {{ f.label }} ({{ f.key || f.id }})
+                          </option>
+                        }
+                      </select>
+                    } @else {
+                      <input
+                        type="text"
+                        formControlName="conditionFieldId"
+                        class="form-input"
+                        placeholder="e.g., age"
+                      />
+                    }
+                  </div>
+                  <div class="form-group flex-1">
+                    <label class="form-label">Operator *</label>
+                    <select formControlName="conditionOperator" class="form-select">
+                      <option value="equals">equals</option>
+                      <option value="notEquals">not equals</option>
+                      <option value="greaterThan">greater than</option>
+                      <option value="lessThan">less than</option>
+                      <option value="contains">contains (array/text)</option>
+                      <option value="in">in list</option>
+                      <option value="countMax">count &le; max</option>
+                      <option value="countMin">count &ge; min</option>
+                    </select>
+                  </div>
+                  <div class="form-group flex-1">
+                    <label class="form-label">Value *</label>
+                    <input
+                      type="text"
+                      formControlName="conditionValue"
+                      class="form-input"
+                      placeholder="e.g., 18 or true"
+                    />
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label class="form-label">Required Value</label>
-                  <input
-                    type="text"
-                    formControlName="actionValue"
-                    class="form-input"
-                    placeholder="e.g., true"
-                  />
-                </div>
-              </div>
-            </fieldset>
+              </fieldset>
+
+              @if (selectedRuleType() === 'condition') {
+                <fieldset class="logic-builder-box action-box">
+                  <legend class="builder-legend">Assertion: THEN</legend>
+                  <div class="form-row">
+                    <div class="form-group flex-2">
+                      <label class="form-label">Assertion Target Field *</label>
+                      @if (availableFields().length > 0) {
+                        <select formControlName="actionFieldId" class="form-select">
+                          @for (f of availableFields(); track f.key || f.id) {
+                            <option [value]="f.key || f.id">
+                              {{ f.label }} ({{ f.key || f.id }})
+                            </option>
+                          }
+                        </select>
+                      } @else {
+                        <input
+                          type="text"
+                          formControlName="actionFieldId"
+                          class="form-input"
+                          placeholder="e.g., guardian_consent"
+                        />
+                      }
+                    </div>
+                    <div class="form-group flex-1">
+                      <label class="form-label">Operator *</label>
+                      <select formControlName="actionOperator" class="form-select">
+                        <option value="equals">equals</option>
+                        <option value="notEquals">not equals</option>
+                        <option value="greaterThan">greater than</option>
+                        <option value="lessThan">less than</option>
+                        <option value="contains">contains</option>
+                      </select>
+                    </div>
+                    <div class="form-group flex-1">
+                      <label class="form-label">Required Value *</label>
+                      <input
+                        type="text"
+                        formControlName="actionValue"
+                        class="form-input"
+                        placeholder="e.g., true"
+                      />
+                    </div>
+                  </div>
+                </fieldset>
+              } @else {
+                <fieldset class="logic-builder-box action-box">
+                  <legend class="builder-legend">Action: THEN Field Becomes Mandatory</legend>
+                  <div class="form-group">
+                    <label class="form-label">Target Field to Make Required *</label>
+                    @if (availableFields().length > 0) {
+                      <select formControlName="targetFieldId" class="form-select">
+                        @for (f of availableFields(); track f.key || f.id) {
+                          <option [value]="f.key || f.id">
+                            {{ f.label }} ({{ f.key || f.id }})
+                          </option>
+                        }
+                      </select>
+                    } @else {
+                      <input
+                        type="text"
+                        formControlName="targetFieldId"
+                        class="form-input"
+                        placeholder="e.g., parent_signature"
+                      />
+                    }
+                  </div>
+                </fieldset>
+              }
+            }
 
             <div class="form-group">
               <label for="errorMessage" class="form-label">Validation Error Message *</label>
@@ -280,7 +515,7 @@
                 type="text"
                 class="form-input"
                 formControlName="errorMessage"
-                placeholder="e.g., Minors under 18 must provide guardian consent."
+                placeholder="e.g., You can select at most 3 competition categories."
               />
               @if (
                 ruleForm.get('errorMessage')?.touched &&
@@ -307,7 +542,7 @@
                 @if (isSubmitting()) {
                   <span class="spinner-small"></span> Saving...
                 } @else {
-                  Create Rule
+                  Save Rule
                 }
               </button>
             </footer>

@@ -1268,3 +1268,68 @@ The application provides:
   - The error is surfaced inside the modal alert.
   - `in` operator value is parsed into array for rule engine compatibility.
 - **Final state:** Modal remains usable and unblocked.
+
+**HF-RUL-003: Form-Scoped Rule Management & Real Template Field Dropdown Selection**
+
+- **Preconditions:** User is on `/rule-management`.
+- **User/System actions:**
+  - User selects a Form Template from the template selector dropdown (e.g., "National Sambo Championship Form").
+  - The page loads the rules and fields associated with that specific template.
+  - User clicks "Add Rule".
+  - In the rule builder modal, the "Condition Field" and "Action/Target Field" dropdowns are populated with real fields from the selected template (no freeform string inputs).
+  - User configures a rule (e.g., selection limit or conditional validation) and clicks "Save Rule".
+- **Expected results:**
+  - The rule is validated and added to the template's `compoundRules`.
+  - The template's updated schema is persisted via the backend API.
+  - The new rule appears in the active rules grid under the selected template.
+- **Final state:** Rule is attached to the selected form template and active.
+
+**VR-RULE-001: Multi-Select & Checkbox Group Selection Count Constraints (Max & Min Selections)**
+
+- **Preconditions:** A form template contains a field of type `checkbox` with multiple options (e.g. "Competition Disciplines" with 4 options) and `validationRules: { maxSelections: 3, minSelections: 1 }`.
+- **User/System actions:**
+  - User opens the dynamic form (e.g. in Public Registration or Live Preview).
+  - The options are rendered as a group of individual checkboxes.
+  - User checks 3 options; all 3 remain selected and valid.
+  - User attempts to select a 4th option, or submits with more than 3 options.
+- **Expected results:**
+  - The dynamic form renderer flags a validation error: `"Allows maximum 3 selections"` and unchecks / prevents exceeding max selections.
+  - Submitting with 0 selections triggers: `"Requires at least 1 selection"`.
+  - Rule engine `validateFields` rejects payloads violating selection bounds.
+- **Final state:** Selection count bounds strictly enforced on multi-option fields.
+
+**VR-RULE-002: Dynamic Form Renderer Reactive Rule Evaluation & Conditional Visibility/Requirement**
+
+- **Preconditions:** Form contains compound rules (e.g., conditional requirement or conditional show/hide).
+- **User/System actions:**
+  - User changes values in the form that trigger the `WHEN` condition (e.g., selects "Combat Sambo").
+- **Expected results:**
+  - The renderer reactively evaluates the condition.
+  - For conditional requirement rules, the target field dynamically gains mandatory validation (`*` marker and required validator).
+  - For conditional visibility rules, the target field dynamically appears or disappears.
+  - Compliance validation alerts update immediately if assertion fails.
+- **Final state:** Dynamic form reacts in real-time to user input based on form-scoped rules.
+
+**VR-RULE-003: Backend Dynamic Form Validation Pipe & Registration Rule Enforcement**
+
+- **Preconditions:** Event is associated with a form schema containing `compoundRules` and field selection rules.
+- **User/System actions:**
+  - Participant submits registration payload to `POST /events/:eventId/registrations`.
+  - Payload contains invalid cross-field combination or exceeds `maxSelections`.
+- **Expected results:**
+  - `DynamicFormValidationPipe` and `RegistrationService` validate against both `fields[].validationRules` and `compoundRules`.
+  - The backend rejects the request with HTTP 400 and descriptive error messages.
+- **Final state:** Backend prevents non-compliant data from being persisted.
+
+**EC-RULE-002: Form Template Selection and Empty Schema Handling in Rule Management**
+
+- **Preconditions:** User navigates to `/rule-management`.
+- **User/System actions:**
+  - User switches between different form templates.
+  - User selects a template with no custom fields or no rules configured.
+- **Expected results:**
+  - If a template has no rules, an informative empty state is shown for that template.
+  - The template dropdown displays the count of active rules per template.
+  - If a template has no fields, clicking "Add Rule" alerts the user that fields must be added to the template first.
+- **Final state:** Rule management handles empty or transitioning states gracefully.
+

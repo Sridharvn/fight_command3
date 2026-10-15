@@ -2,7 +2,16 @@
   @if (complianceErrors().length > 0) {
     <div class="compliance-alert" role="alert">
       <div class="alert-icon">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg
+          viewBox="0 0 24 24"
+          width="20"
+          height="20"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="12" y1="8" x2="12" y2="12"></line>
           <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -23,124 +32,147 @@
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="dynamic-form" novalidate>
       <div class="form-grid">
         @for (field of schema().fields; track field.id) {
-          <div
-            class="form-group"
-            [class.col-span-2]="field.columnSpan === 2"
-            [class.col-span-1]="field.columnSpan !== 2"
-            [class.has-error]="isFieldInvalid(field.key || field.id)"
-          >
-            <label [for]="field.key || field.id" class="form-label">
-              {{ field.label }}
-              @if (field.required) {
-                <span class="required-marker" aria-hidden="true">*</span>
-              }
-            </label>
+          @if (isFieldVisible(field)) {
+            <div
+              class="form-group"
+              [class.col-span-2]="field.columnSpan === 2"
+              [class.col-span-1]="field.columnSpan !== 2"
+              [class.has-error]="isFieldInvalid(field.key || field.id)"
+            >
+              <label [for]="field.key || field.id" class="form-label">
+                {{ field.label }}
+                @if (isFieldRequired(field)) {
+                  <span class="required-marker" aria-hidden="true">*</span>
+                }
+              </label>
 
-            @switch (field.type) {
-              @case ('textarea') {
-                <textarea
-                  [id]="field.key || field.id"
-                  [formControlName]="field.key || field.id"
-                  [placeholder]="field.placeholder || ''"
-                  class="form-control textarea"
-                  rows="3"
-                ></textarea>
-              }
-              @case ('select') {
-                <select
-                  [id]="field.key || field.id"
-                  [formControlName]="field.key || field.id"
-                  class="form-control select"
-                >
-                  <option value="" disabled>{{ field.placeholder || 'Select an option...' }}</option>
-                  @for (opt of field.options; track opt.value) {
-                    <option [value]="opt.value">{{ opt.label }}</option>
-                  }
-                </select>
-              }
-              @case ('boolean') {
-                <label class="checkbox-container">
-                  <input
-                    type="checkbox"
+              @switch (field.type) {
+                @case ('textarea') {
+                  <textarea
                     [id]="field.key || field.id"
-                    [name]="field.key || field.id"
                     [formControlName]="field.key || field.id"
-                  />
-                  <span class="checkbox-label">{{ field.helpText || field.label }}</span>
-                </label>
-              }
-              @case ('checkbox') {
-                <label class="checkbox-container">
-                  <input
-                    type="checkbox"
+                    [placeholder]="field.placeholder || ''"
+                    class="form-control textarea"
+                    rows="3"
+                  ></textarea>
+                }
+                @case ('select') {
+                  <select
                     [id]="field.key || field.id"
-                    [name]="field.key || field.id"
                     [formControlName]="field.key || field.id"
-                  />
-                  <span class="checkbox-label">{{ field.helpText || field.label }}</span>
-                </label>
-              }
-              @case ('radio') {
-                <div class="radio-group" role="radiogroup" [attr.aria-label]="field.label">
-                  @for (opt of field.options; track opt.value) {
-                    <label class="radio-option">
+                    class="form-control select"
+                  >
+                    <option value="" disabled>
+                      {{ field.placeholder || 'Select an option...' }}
+                    </option>
+                    @for (opt of field.options; track opt.value) {
+                      <option [value]="opt.value">{{ opt.label }}</option>
+                    }
+                  </select>
+                }
+                @case ('boolean') {
+                  <label class="checkbox-container">
+                    <input
+                      type="checkbox"
+                      [id]="field.key || field.id"
+                      [name]="field.key || field.id"
+                      [formControlName]="field.key || field.id"
+                    />
+                    <span class="checkbox-label">{{ field.helpText || field.label }}</span>
+                  </label>
+                }
+                @case ('checkbox') {
+                  @if (field.options && field.options.length > 0) {
+                    <div class="checkbox-group" role="group" [attr.aria-label]="field.label">
+                      @for (opt of field.options; track opt.value) {
+                        <label class="checkbox-option-container">
+                          <input
+                            type="checkbox"
+                            [id]="(field.key || field.id) + '_' + opt.value"
+                            [name]="field.key || field.id"
+                            [value]="opt.value"
+                            [checked]="isOptionChecked(field.key || field.id, opt.value)"
+                            (change)="onCheckboxGroupChange(field, opt.value, $event)"
+                          />
+                          <span class="checkbox-label">{{ opt.label }}</span>
+                        </label>
+                      }
+                    </div>
+                  } @else {
+                    <label class="checkbox-container">
                       <input
-                        type="radio"
+                        type="checkbox"
+                        [id]="field.key || field.id"
                         [name]="field.key || field.id"
-                        [id]="(field.key || field.id) + '_' + opt.value"
                         [formControlName]="field.key || field.id"
-                        [value]="opt.value"
                       />
-                      <span>{{ opt.label }}</span>
+                      <span class="checkbox-label">{{ field.helpText || field.label }}</span>
                     </label>
                   }
-                </div>
-              }
-              @case ('number') {
-                <input
-                  type="number"
-                  [id]="field.key || field.id"
-                  [formControlName]="field.key || field.id"
-                  [placeholder]="field.placeholder || ''"
-                  class="form-control"
-                />
-              }
-              @case ('date') {
-                <input
-                  type="date"
-                  [id]="field.key || field.id"
-                  [formControlName]="field.key || field.id"
-                  class="form-control"
-                />
-              }
-              @case ('email') {
-                <input
-                  type="email"
-                  [id]="field.key || field.id"
-                  [formControlName]="field.key || field.id"
-                  [placeholder]="field.placeholder || ''"
-                  class="form-control"
-                />
-              }
-              @default {
-                <input
-                  type="text"
-                  [id]="field.key || field.id"
-                  [formControlName]="field.key || field.id"
-                  [placeholder]="field.placeholder || ''"
-                  class="form-control"
-                />
-              }
-            }
+                }
 
-            @if (field.helpText && field.type !== 'boolean' && field.type !== 'checkbox') {
-              <span class="help-text">{{ field.helpText }}</span>
-            }
+                @case ('radio') {
+                  <div class="radio-group" role="radiogroup" [attr.aria-label]="field.label">
+                    @for (opt of field.options; track opt.value) {
+                      <label class="radio-option">
+                        <input
+                          type="radio"
+                          [name]="field.key || field.id"
+                          [id]="(field.key || field.id) + '_' + opt.value"
+                          [formControlName]="field.key || field.id"
+                          [value]="opt.value"
+                        />
+                        <span>{{ opt.label }}</span>
+                      </label>
+                    }
+                  </div>
+                }
+                @case ('number') {
+                  <input
+                    type="number"
+                    [id]="field.key || field.id"
+                    [formControlName]="field.key || field.id"
+                    [placeholder]="field.placeholder || ''"
+                    class="form-control"
+                  />
+                }
+                @case ('date') {
+                  <input
+                    type="date"
+                    [id]="field.key || field.id"
+                    [formControlName]="field.key || field.id"
+                    class="form-control"
+                  />
+                }
+                @case ('email') {
+                  <input
+                    type="email"
+                    [id]="field.key || field.id"
+                    [formControlName]="field.key || field.id"
+                    [placeholder]="field.placeholder || ''"
+                    class="form-control"
+                  />
+                }
+                @default {
+                  <input
+                    type="text"
+                    [id]="field.key || field.id"
+                    [formControlName]="field.key || field.id"
+                    [placeholder]="field.placeholder || ''"
+                    class="form-control"
+                  />
+                }
+              }
 
-            @if (isFieldInvalid(field.key || field.id)) {
-              <span class="field-error">{{ getFieldError(field) }}</span>
-            }
-          </div>
+              @if (field.helpText && field.type !== 'boolean' && field.type !== 'checkbox') {
+                <span class="help-text">{{ field.helpText }}</span>
+              }
+
+              @if (isFieldInvalid(field.key || field.id)) {
+                <span class="field-error">{{ getFieldError(field) }}</span>
+              }
+            </div>
+          }
         }
       </div>
 
