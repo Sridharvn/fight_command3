@@ -13,18 +13,26 @@ export class RuleEngineService {
   /**
    * Evaluates a node (RuleGroup or AtomicRule) against the provided formData.
    */
-  evaluate(node: RuleGroup | AtomicRule, formData: Record<string, any>): boolean {
-    if ('conjunction' in node) {
+  evaluate(node: RuleGroup | AtomicRule | any, formData: Record<string, any>): boolean {
+    if (!node || typeof node !== 'object') {
+      return false;
+    }
+
+    if ('conjunction' in node && Array.isArray(node.conditions)) {
       if (node.conjunction === 'AND') {
-        return node.conditions.every((child) => this.evaluate(child, formData));
+        return node.conditions.every((child: any) => this.evaluate(child, formData));
       }
-      return node.conditions.some((child) => this.evaluate(child, formData));
+      return node.conditions.some((child: any) => this.evaluate(child, formData));
     }
 
     return this.evaluateAtomic(node, formData);
   }
 
-  private evaluateAtomic(rule: AtomicRule, formData: Record<string, any>): boolean {
+  private evaluateAtomic(rule: AtomicRule | any, formData: Record<string, any>): boolean {
+    if (!rule || !rule.fieldId) {
+      return false;
+    }
+
     const rawVal = formData[rule.fieldId];
 
     // Check if target value is referencing another field via { $field: string }
@@ -73,17 +81,30 @@ export class RuleEngineService {
    * Validates cross-field compound rules.
    * If WHEN evaluates to true, THEN must also evaluate to true.
    * If THEN evaluates to false, errorMessage is collected.
+   * Transparently supports both { when, then } and { conditions, actions } formats.
    */
-  validateForm(validations: CrossFieldValidation[], formData: Record<string, any>): string[] {
+  validateForm(
+    validations: (CrossFieldValidation | any)[],
+    formData: Record<string, any>,
+  ): string[] {
     const errors: string[] = [];
     if (!validations || validations.length === 0) return errors;
 
     for (const v of validations) {
-      const isTriggered = this.evaluate(v.when, formData);
+      if (!v) continue;
+      const whenNode = v.when || v.conditions;
+      const thenNode = v.then || v.actions;
+      if (!whenNode) continue;
+
+      const isTriggered = this.evaluate(whenNode, formData);
       if (isTriggered) {
-        const isCompliant = this.evaluate(v.then, formData);
+        if (!thenNode) {
+          errors.push(v.errorMessage || 'Validation rule violation');
+          continue;
+        }
+        const isCompliant = this.evaluate(thenNode, formData);
         if (!isCompliant) {
-          errors.push(v.errorMessage);
+          errors.push(v.errorMessage || 'Validation rule violation');
         }
       }
     }

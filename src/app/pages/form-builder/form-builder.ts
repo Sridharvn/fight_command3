@@ -130,7 +130,7 @@ export class FormBuilderPage implements OnInit {
           fieldDefinitionId: tf.fieldDefinitionId,
           key: tf.fieldDefinition?.fieldName || `field_${tf.fieldDefinitionId}`,
           label: tf.fieldLabelOverride || tf.fieldDefinition?.fieldLabel || 'Field',
-          type: (tf.fieldDefinition?.fieldType || 'text') as FormFieldType,
+          type: (tf.fieldType || tf.fieldDefinition?.fieldType || 'text') as FormFieldType,
           required: tf.isRequired,
           columnSpan: 1,
           isInherited: true,
@@ -158,7 +158,7 @@ export class FormBuilderPage implements OnInit {
           fieldDefinitionId: tf.fieldDefinitionId,
           key: tf.fieldDefinition?.fieldName || `field_${tf.fieldDefinitionId}`,
           label: tf.fieldLabelOverride || tf.fieldDefinition?.fieldLabel || 'Field',
-          type: (tf.fieldDefinition?.fieldType || 'text') as FormFieldType,
+          type: (tf.fieldType || tf.fieldDefinition?.fieldType || 'text') as FormFieldType,
           required: tf.isRequired,
           columnSpan: 1,
         }));
@@ -200,15 +200,21 @@ export class FormBuilderPage implements OnInit {
               tf.customFieldLabel ||
               tf.fieldDefinition?.fieldLabel ||
               'Field',
-            type: (tf.fieldDefinition?.fieldType || 'text') as FormFieldType,
+            type: (tf.fieldType || tf.fieldDefinition?.fieldType || 'text') as FormFieldType,
             required: tf.isRequired,
             columnSpan: 1,
-            options: (tf.fieldDefinition?.defaultOptions as any)?.options
-              ? (tf.fieldDefinition.defaultOptions as any).options.map((opt: string) => ({
-                  label: opt,
-                  value: opt.toLowerCase().replace(/[^a-z0-9]/g, '_'),
-                }))
-              : undefined,
+            options: tf.fieldOptions?.options
+              ? tf.fieldOptions.options.map((opt: any) =>
+                  typeof opt === 'string'
+                    ? { label: opt, value: opt.toLowerCase().replace(/[^a-z0-9]/g, '_') }
+                    : { label: opt.label || opt.value, value: opt.value || opt.label },
+                )
+              : (tf.fieldDefinition?.defaultOptions as any)?.options
+                ? (tf.fieldDefinition.defaultOptions as any).options.map((opt: string) => ({
+                    label: opt,
+                    value: opt.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+                  }))
+                : undefined,
           }));
         }
 
@@ -490,8 +496,9 @@ export class FormBuilderPage implements OnInit {
     this.builderStore.addValidation(rule);
   }
 
-  onRemoveCompoundRule(id: string): void {
-    this.builderStore.removeValidation(id);
+  onRemoveCompoundRule(id: string | number | undefined): void {
+    if (id === undefined || id === null) return;
+    this.builderStore.removeValidation(String(id));
   }
 
   private parseValue(raw: any): any {

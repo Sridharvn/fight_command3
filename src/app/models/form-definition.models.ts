@@ -44,11 +44,16 @@ export interface FormTemplateField {
   templateFieldId?: number;
   fieldDefinitionId: number;
   fieldDefinition?: FieldDefinition;
+  fieldName?: string;
+  fieldLabel?: string;
+  fieldType?: FieldType;
+  customFieldName?: string;
+  customFieldLabel?: string;
   displayOrder: number;
   isRequired: boolean;
   isInherited?: boolean;
   fieldLabelOverride?: string | null;
-  fieldOptions?: { options: string[] } | null;
+  fieldOptions?: { options: any[] } | null;
 }
 
 export interface FormTemplate {

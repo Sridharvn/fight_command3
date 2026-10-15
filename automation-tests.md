@@ -1348,3 +1348,15 @@ The application provides:
   - Custom SVG dropdown chevrons provide high-contrast selection.
   - Rule is persisted to the template schema and updates the rules overview list.
 - **Final state:** Organizers can author both selection-limit and cross-field compliance rules with high visual fidelity and zero horizontal overflow.
+
+**EC-RULE-003: Graceful Evaluation of Compound Rules with conditions/actions Structure & Undefined Nodes**
+
+- **Preconditions:** Form definition schema contains compound rules stored with `conditions` (trigger) and `actions` (enforced target) or contains rules with empty/undefined rule nodes.
+- **User/System actions:**
+  - Public registration page loads `DynamicFormRendererComponent` with the form definition.
+  - Component triggers compliance evaluation via `RuleEngineService.validateForm()` and `RuleEngineService.evaluate()`.
+- **Expected results:**
+  - `RuleEngineService.evaluate()` safely handles `undefined`, `null`, or malformed nodes without throwing `TypeError: Cannot use 'in' operator to search for 'conjunction' in undefined`.
+  - `RuleEngineService.validateForm()` transparently supports both `{ when, then }` and `{ conditions, actions }` rule shapes.
+  - Public registration page and event roster "+ Register Fighter" modal render all form items cleanly without component initialization crashes.
+- **Final state:** Forms with any valid or partially populated compound rules render successfully without runtime exceptions.

@@ -36,11 +36,13 @@ export interface RuleGroup {
 }
 
 export interface CrossFieldValidation {
-  id: string;
-  name: string;
+  id?: string | number;
+  name?: string;
   errorMessage: string;
-  when: RuleGroup;
-  then: RuleGroup;
+  when?: RuleGroup;
+  then?: RuleGroup;
+  conditions?: RuleGroup;
+  actions?: RuleGroup;
   actionType?: 'assert' | 'require' | 'show' | 'hide';
 }
 

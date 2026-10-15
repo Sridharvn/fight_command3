@@ -204,14 +204,17 @@ export class DynamicFormRendererComponent implements OnInit {
     const rules = this.schema()?.validations || (this.schema() as any)?.compoundRules || [];
     const key = field.key || field.id;
     for (const r of rules) {
-      const actionCond = r.then?.conditions?.[0] as any;
+      if (!r) continue;
+      const thenNode = r.then || r.actions;
+      const whenNode = r.when || r.conditions;
+      const actionCond = thenNode?.conditions?.[0] as any;
       const targetFieldId = actionCond?.fieldId;
-      if (targetFieldId === key) {
+      if (targetFieldId === key && whenNode) {
         if (r.actionType === 'hide' || actionCond?.operator === 'hide') {
-          const conditionMet = this.ruleEngine.evaluate(r.when, this.form?.getRawValue() || {});
+          const conditionMet = this.ruleEngine.evaluate(whenNode, this.form?.getRawValue() || {});
           if (conditionMet) return false;
         } else if (r.actionType === 'show' || actionCond?.operator === 'show') {
-          const conditionMet = this.ruleEngine.evaluate(r.when, this.form?.getRawValue() || {});
+          const conditionMet = this.ruleEngine.evaluate(whenNode, this.form?.getRawValue() || {});
           if (!conditionMet) return false;
         }
       }
@@ -224,11 +227,14 @@ export class DynamicFormRendererComponent implements OnInit {
     const rules = this.schema()?.validations || (this.schema() as any)?.compoundRules || [];
     const key = field.key || field.id;
     for (const r of rules) {
-      const actionCond = r.then?.conditions?.[0] as any;
+      if (!r) continue;
+      const thenNode = r.then || r.actions;
+      const whenNode = r.when || r.conditions;
+      const actionCond = thenNode?.conditions?.[0] as any;
       const targetFieldId = actionCond?.fieldId;
-      if (targetFieldId === key) {
+      if (targetFieldId === key && whenNode) {
         if (r.actionType === 'require' || actionCond?.operator === 'require') {
-          const conditionMet = this.ruleEngine.evaluate(r.when, this.form?.getRawValue() || {});
+          const conditionMet = this.ruleEngine.evaluate(whenNode, this.form?.getRawValue() || {});
           if (conditionMet) return true;
         }
       }

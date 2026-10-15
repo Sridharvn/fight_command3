@@ -432,7 +432,10 @@
                   <div class="rule-condition-block when-block">
                     <span class="block-tag">WHEN:</span>
                     <span class="condition-text">
-                      @for (c of rule.when.conditions; track $index) {
+                      @for (
+                        c of rule.when?.conditions || rule.conditions?.conditions || [];
+                        track $index
+                      ) {
                         <span>
                           {{ $any(c).fieldId }} {{ $any(c).operator }} {{ $any(c).value }}
                         </span>
@@ -443,7 +446,10 @@
                   <div class="rule-condition-block then-block">
                     <span class="block-tag">THEN MUST BE:</span>
                     <span class="condition-text">
-                      @for (c of rule.then.conditions; track $index) {
+                      @for (
+                        c of rule.then?.conditions || rule.actions?.conditions || [];
+                        track $index
+                      ) {
                         <span>
                           {{ $any(c).fieldId }} {{ $any(c).operator }} {{ $any(c).value }}
                         </span>

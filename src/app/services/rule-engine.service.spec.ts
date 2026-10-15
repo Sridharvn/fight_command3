@@ -182,4 +182,52 @@ describe('RuleEngineService', () => {
       expect(service.evaluate(countMinRule, data)).toBe(true);
     });
   });
+
+  describe('Graceful Evaluation & Schema Compatibility (EC-RULE-003)', () => {
+    it('should safely handle undefined or null node in evaluate without throwing TypeError', () => {
+      expect(service.evaluate(undefined as any, { belt_rank: 'white' })).toBe(false);
+      expect(service.evaluate(null as any, { belt_rank: 'white' })).toBe(false);
+      expect(service.evaluate({} as any, { belt_rank: 'white' })).toBe(false);
+    });
+
+    it('should evaluate compound rules formatted with conditions and actions', () => {
+      const compoundRule: any = {
+        ruleId: 1792074395538,
+        ruleName: 'Max 2 Belt Ranks',
+        isActive: true,
+        errorMessage: 'You can select at most 2 belt ranks.',
+        conditions: {
+          conjunction: 'AND',
+          conditions: [{ fieldId: 'belt_rank', operator: 'countGreaterThan', value: 2 }],
+        },
+        actions: {
+          conjunction: 'AND',
+          conditions: [{ fieldId: 'belt_rank', operator: 'countMax', value: 2 }],
+        },
+      };
+
+      // 1. Initial state (undefined belt_rank): does not throw, does not trigger
+      const initialErrors = service.validateForm([compoundRule], {});
+      expect(initialErrors).toEqual([]);
+
+      // 2. 2 selections: within limit, trigger is false
+      const validErrors = service.validateForm([compoundRule], {
+        belt_rank: ['white', 'blue'],
+      });
+      expect(validErrors).toEqual([]);
+
+      // 3. 3 selections: exceeds limit (countGreaterThan 2 is true, countMax 2 is false)
+      const invalidErrors = service.validateForm([compoundRule], {
+        belt_rank: ['white', 'blue', 'purple'],
+      });
+      expect(invalidErrors).toEqual(['You can select at most 2 belt ranks.']);
+    });
+
+    it('should safely ignore null/undefined items in validateForm array', () => {
+      const errors = service.validateForm([null as any, undefined as any, {} as any], {
+        belt_rank: 'white',
+      });
+      expect(errors).toEqual([]);
+    });
+  });
 });

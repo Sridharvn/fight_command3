@@ -122,9 +122,58 @@ export class PublicRegistrationPage implements OnInit {
       form.formSchema.fields.length > 0 &&
       form.formSchema.fields[0]?.key
     ) {
+      // Enrich schema fields with templateField types and options if saved as text or missing options
+      const enrichedFields = form.formSchema.fields.map((f: FormField) => {
+        const tf = (form.templateFields || []).find(
+          (t) => t.fieldName === f.key || String(t.templateFieldId) === f.id,
+        );
+        if (!tf) return f;
+        const resolvedType =
+          f.type && f.type !== 'text'
+            ? f.type
+            : (tf.fieldType as FormField['type']) || f.type || 'text';
+        const resolvedOptions =
+          f.options && f.options.length > 0
+            ? f.options
+            : tf.fieldOptions?.options
+              ? tf.fieldOptions.options.map((opt: any) =>
+                  typeof opt === 'string'
+                    ? { label: opt, value: opt }
+                    : { label: opt.label || opt.value, value: opt.value || opt.label },
+                )
+              : undefined;
+        return {
+          ...f,
+          type: resolvedType,
+          options: resolvedOptions || f.options,
+          label: f.label || tf.fieldLabel,
+          required: f.required !== undefined ? f.required : tf.isRequired,
+        };
+      });
+
+      const existingKeys = new Set(enrichedFields.map((f: FormField) => f.key));
+      const missingFields = (form.templateFields || [])
+        .filter((tf) => !existingKeys.has(tf.fieldName))
+        .map((tf) => ({
+          id: String(tf.templateFieldId),
+          key: tf.fieldName,
+          label: tf.fieldLabel,
+          type: (tf.fieldType || 'text') as any,
+          required: tf.isRequired,
+          options: tf.fieldOptions?.options
+            ? tf.fieldOptions.options.map((opt: any) =>
+                typeof opt === 'string'
+                  ? { label: opt, value: opt }
+                  : { label: opt.label || opt.value, value: opt.value || opt.label },
+              )
+            : undefined,
+          helpText: tf.helpText || undefined,
+          defaultValue: tf.defaultValue || undefined,
+        }));
+
       baseDefinition = {
         ...form.formSchema,
-        fields: [...form.formSchema.fields],
+        fields: [...enrichedFields, ...missingFields],
       };
     } else {
       // Build fields from templateFields
