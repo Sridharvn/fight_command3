@@ -67,26 +67,34 @@ export const RuleStore = signalStore(
         ),
       ),
     ),
-    createRule: rxMethod<CreateGlobalCompoundRuleDto>(
-      pipe(
-        tap(() => patchState(store, { status: 'loading', error: null })),
-        switchMap((dto) =>
-          ruleService.createRule(dto).pipe(
-            tap((createdRule) => {
-              patchState(store, (state) => ({
-                rules: [createdRule, ...state.rules],
-                status: 'success' as const,
-              }));
-            }),
-            catchError((err) => {
-              const error = err?.error?.message || 'Failed to create compound rule';
-              patchState(store, { status: 'error', error });
-              return of(null);
-            }),
-          ),
-        ),
-      ),
-    ),
+    clearError(): void {
+      patchState(store, { error: null });
+    },
+    createRule(
+      dto: CreateGlobalCompoundRuleDto,
+      onSuccess?: () => void,
+      onError?: (err: any) => void,
+    ): void {
+      patchState(store, { status: 'loading', error: null });
+      ruleService
+        .createRule(dto)
+        .pipe(
+          tap((createdRule) => {
+            patchState(store, (state) => ({
+              rules: [createdRule, ...state.rules],
+              status: 'success' as const,
+            }));
+            if (onSuccess) onSuccess();
+          }),
+          catchError((err) => {
+            const error = err?.error?.message || 'Failed to create compound rule';
+            patchState(store, { status: 'error', error });
+            if (onError) onError(err);
+            return of(null);
+          }),
+        )
+        .subscribe();
+    },
     updateRule: rxMethod<{ id: number; dto: UpdateGlobalCompoundRuleDto }>(
       pipe(
         tap(() => patchState(store, { status: 'loading', error: null })),

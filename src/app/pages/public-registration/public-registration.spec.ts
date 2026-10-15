@@ -159,4 +159,37 @@ describe('PublicRegistrationPage', () => {
     );
     expect(compiled.querySelector('.registration-form-card')).toBeNull();
   });
+
+  it('should normalize formSchema to guarantee all core demographic fields (fullName, email, phone, dob) are present and required (VR-REG-002)', () => {
+    component.publicForm.set({
+      ...mockPublicForm,
+      formSchema: {
+        templateName: 'Custom Schema',
+        sportType: SportType.SAMBO,
+        tournamentType: TournamentType.NATIONAL,
+        fields: [
+          { id: 'fullName', key: 'fullName', label: 'Full Name', type: 'text', required: true },
+          { id: 'email', key: 'email', label: 'Email', type: 'email', required: false },
+          { id: 'phone', key: 'phone', label: 'Phone', type: 'text', required: false },
+          { id: 'belt', key: 'belt', label: 'Belt', type: 'text', required: true },
+        ],
+        validations: [],
+      },
+    });
+
+    const schema = component.dynamicFormDefinition();
+    expect(schema).toBeTruthy();
+
+    const nameField = schema?.fields.find((f) => f.key === 'fullName');
+    const emailField = schema?.fields.find((f) => f.key === 'email');
+    const phoneField = schema?.fields.find((f) => f.key === 'phone');
+    const dobField = schema?.fields.find((f) => f.key === 'dob' || f.key === 'date_of_birth');
+
+    expect(nameField?.required).toBe(true);
+    expect(emailField?.required).toBe(true);
+    expect(phoneField?.required).toBe(true);
+    expect(dobField).toBeDefined();
+    expect(dobField?.required).toBe(true);
+    expect(dobField?.type).toBe('date');
+  });
 });

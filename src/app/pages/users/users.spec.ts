@@ -123,10 +123,18 @@ describe('UsersPage', () => {
     const countryUser: any = { country: { name: 'Canada' }, role: { scopeType: 'COUNTRY' } };
     expect(component.getJurisdiction(countryUser)).toBe('Canada');
 
-    const stateUser: any = { state: { name: 'Ontario' }, country: { name: 'Canada' }, role: { scopeType: 'STATE' } };
+    const stateUser: any = {
+      state: { name: 'Ontario' },
+      country: { name: 'Canada' },
+      role: { scopeType: 'STATE' },
+    };
     expect(component.getJurisdiction(stateUser)).toBe('Ontario, Canada');
 
-    const districtUser: any = { district: { name: 'Toronto' }, state: { name: 'Ontario' }, role: { scopeType: 'DISTRICT' } };
+    const districtUser: any = {
+      district: { name: 'Toronto' },
+      state: { name: 'Ontario' },
+      role: { scopeType: 'DISTRICT' },
+    };
     expect(component.getJurisdiction(districtUser)).toBe('Toronto, Ontario');
   });
 
@@ -137,5 +145,47 @@ describe('UsersPage', () => {
 
     component.refreshUsers();
     expect(usersStore.loadUsers).toHaveBeenCalled();
+  });
+
+  it('should enforce mandatory validation on password and role in userForm for creation', () => {
+    component.openCreateModal();
+    const form = component.userForm;
+
+    form.patchValue({
+      firstName: 'Jane',
+      lastName: 'Smith',
+      email: 'jane@example.com',
+      password: '',
+    });
+    form.controls.roleId.setValue(null as any);
+
+    expect(form.controls.password.valid).toBe(false);
+    expect(form.controls.roleId.valid).toBe(false);
+    expect(form.valid).toBe(false);
+
+    const usersStore = TestBed.inject(UsersStore);
+    component.onSaveUser();
+    expect(usersStore.createUser).not.toHaveBeenCalled();
+
+    form.patchValue({
+      password: 'password123',
+    });
+    form.controls.roleId.setValue(2);
+
+    expect(form.controls.password.valid).toBe(true);
+    expect(form.controls.roleId.valid).toBe(true);
+    expect(form.valid).toBe(true);
+  });
+
+  it('should filter accounts when switching between All, Active, and Deactivated tabs', () => {
+    const usersStore = TestBed.inject(UsersStore);
+    component.setStatus('deleted');
+    expect(usersStore.setStatus).toHaveBeenCalledWith('deleted');
+
+    component.setStatus('all');
+    expect(usersStore.setStatus).toHaveBeenCalledWith('all');
+
+    component.setStatus('active');
+    expect(usersStore.setStatus).toHaveBeenCalledWith('active');
   });
 });

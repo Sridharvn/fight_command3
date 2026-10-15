@@ -1172,3 +1172,99 @@ The application provides:
   - Application router intercepts `/form-builder` and redirects to `/form-definitions`.
   - Form Builder is not opened in an unanchored state without a template reference.
 - **Final state:** User lands on `/form-definitions`.
+
+**VR-EV-002: Mandatory Event Dates Validation on Event Creation & Edit**
+
+- **Preconditions:** User opens "+ Create Event" or "Edit Event" modal in `/events`.
+- **User/System actions:** User attempts to submit form without Start Date, End Date, Registration Opens, or Registration Closes date.
+- **Expected results:**
+  - All 4 date fields are marked with mandatory indicators (`*`).
+  - Validation messages appear indicating each missing date is required.
+  - Form submission is prevented.
+- **Final state:** Form remains invalid until all 4 dates are provided.
+
+**VR-REG-001: Mandatory Core Demographic Fields for Athlete Registration**
+
+- **Preconditions:** User opens athlete registration form (via "+ Register Fighter" in `/events/:eventId/roster` or `/events/:eventId/register`).
+- **User/System actions:** User leaves Full Name, Email, Phone Number, or Date of Birth blank.
+- **Expected results:**
+  - All four demographic fields are marked required and enforce input values.
+  - Submitting without any of these core fields blocks submission and displays error feedback.
+- **Final state:** Submission prevented until all 4 demographic fields are validly filled.
+
+**HF-REG-010: Successful Admin "Register Fighter" Manual Entry from Event Roster**
+
+- **Preconditions:** Admin is on `/events/:eventId/roster` for a tournament (including tournaments in Draft status or outside public registration dates).
+- **User/System actions:**
+  - Admin clicks "+ Register Fighter".
+  - Fills out required demographic details (Full Name, Email, Phone, DOB) and custom fields.
+  - Clicks "Register Athlete".
+- **Expected results:**
+  - Admin manual registration succeeds.
+  - Modal closes and success toast is displayed.
+  - Roster updates to include the registered athlete.
+- **Final state:** Athlete added to event roster.
+
+**VR-USR-006: User Creation Mandatory Validation for Password and Role**
+
+- **Preconditions:** Admin opens "Add User" modal in `/users`.
+- **User/System actions:** Admin attempts to submit without specifying a valid password or role.
+- **Expected results:**
+  - Form validation flags empty password and empty role as invalid.
+  - Submission is blocked.
+- **Final state:** Form remains invalid until password (min 4 chars) and role are chosen.
+
+**HF-USR-020: User Management Account List Filtering by Status**
+
+- **Preconditions:** Users with active and deactivated/deleted statuses exist in the system.
+- **User/System actions:** Admin or regional admin switches between "Active", "Deactivated", and "All" sub-tabs on `/users`.
+- **Expected results:**
+  - "Active" tab displays only active non-deleted user accounts (`isActive === true`, `isDeleted === false`).
+  - "Deactivated" tab displays deactivated and soft-deleted accounts (`isActive === false` or `isDeleted === true`).
+  - "All" tab displays all accounts regardless of status.
+  - Dataset changes dynamically according to the selected tab.
+- **Final state:** Filtered roster accurately reflects chosen account status.
+
+**HF-RUL-002: Rule Management Initial Navigation and Rule Creation**
+
+- **Preconditions:** User navigates to `/rule-management`.
+- **User/System actions:**
+  - Page loads rules and field definitions.
+  - User clicks "Add Rule", fills name, conditions, actions, error message, and submits.
+- **Expected results:**
+  - Page loads without displaying "numeric string expected" validation error.
+  - Rule creation API call processes and returns the saved rule with normalized ID.
+  - Modal closes upon confirmed creation and rule appears in the active grid.
+- **Final state:** Rule saved and visible in grid.
+
+**VR-REG-002: Dynamic Form Schema Demographic Normalization (DOB & Demographics Strictly Enforced across Custom FormSchemas)**
+
+- **Preconditions:** Tournament uses a template whose JSON `formSchema` does not contain a Date of Birth field or has demographic fields configured with `required: false`.
+- **User/System actions:** User opens "+ Register Fighter" in Event Roster or `/events/:eventId/register`.
+- **Expected results:**
+  - `dynamicFormDefinition` normalizes `formSchema` to guarantee all 4 essential demographic fields (`fullName`, `email`, `phone`, `dob`) exist and are strictly marked `required: true`.
+  - Date of Birth is rendered as an input of type `date`.
+  - Submitting without Date of Birth or any demographic field is blocked by the dynamic form renderer.
+- **Final state:** Form enforces mandatory demographic entry regardless of template schema configuration.
+
+**EC-REG-001: Register Fighter Modal Error Feedback & Form Lifecycle on Backend Error**
+
+- **Preconditions:** Admin opens "+ Register Fighter" modal in Event Roster.
+- **User/System actions:** Admin enters demographic data and submits, but backend returns an error (e.g. 409 Conflict duplicate or 400 validation error).
+- **Expected results:**
+  - `store.error()` is rendered prominently inside the modal body/header.
+  - Modal remains open so user can correct entries.
+  - Submitting state (`actionLoading`) resets cleanly.
+  - Re-opening the modal clears previous errors.
+- **Final state:** User can observe the specific error and retry submission.
+
+**EC-RUL-001: Rule Management Submission Lifecycle on Error & Operator Parsing**
+
+- **Preconditions:** Admin opens "Add Rule" modal in `/rule-management`.
+- **User/System actions:**
+  - Admin submits with invalid payload causing backend rejection, or uses comma-separated list with operator `in`.
+- **Expected results:**
+  - `isSubmitting` signal resets to `false` on failure (not stuck on "Saving...").
+  - The error is surfaced inside the modal alert.
+  - `in` operator value is parsed into array for rule engine compatibility.
+- **Final state:** Modal remains usable and unblocked.

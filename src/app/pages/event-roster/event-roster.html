@@ -2,7 +2,14 @@
   <div class="roster-page">
     @if (toastMessage()) {
       <div class="toast-banner" role="status" aria-live="polite">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+        <svg
+          viewBox="0 0 24 24"
+          width="18"
+          height="18"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
           <polyline points="20 6 9 17 4 12" />
         </svg>
         <span>{{ toastMessage() }}</span>
@@ -12,7 +19,14 @@
     <!-- Breadcrumb / Back Link -->
     <nav class="back-nav" aria-label="Breadcrumb">
       <a routerLink="/events" class="back-link">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+        <svg
+          viewBox="0 0 24 24"
+          width="18"
+          height="18"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
           <polyline points="15 18 9 12 15 6" />
         </svg>
         Back to Tournaments
@@ -31,7 +45,14 @@
         <div class="hero-meta">
           @if (event()?.location) {
             <span class="meta-item">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <svg
+                viewBox="0 0 24 24"
+                width="14"
+                height="14"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                 <circle cx="12" cy="10" r="3" />
               </svg>
@@ -40,13 +61,20 @@
           }
           @if (event()?.eventStartDate) {
             <span class="meta-item">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <svg
+                viewBox="0 0 24 24"
+                width="14"
+                height="14"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                 <line x1="16" y1="2" x2="16" y2="6" />
                 <line x1="8" y1="2" x2="8" y2="6" />
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-              {{ event()?.eventStartDate | date:'mediumDate' }}
+              {{ event()?.eventStartDate | date: 'mediumDate' }}
             </span>
           }
         </div>
@@ -55,7 +83,14 @@
       <!-- Public Registration Link Card -->
       <div class="public-link-card">
         <div class="card-icon">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
           </svg>
@@ -65,10 +100,20 @@
           <span class="link-url">{{ getPublicRegistrationUrl() }}</span>
         </div>
         <div class="link-actions">
-          <button type="button" class="btn btn-sm btn-secondary" (click)="copyPublicLink()" title="Copy shareable link">
+          <button
+            type="button"
+            class="btn btn-sm btn-secondary"
+            (click)="copyPublicLink()"
+            title="Copy shareable link"
+          >
             Copy Link
           </button>
-          <a [routerLink]="getPublicRegistrationUrl()" target="_blank" class="btn btn-sm btn-outline" title="Open public registration form">
+          <a
+            [routerLink]="getPublicRegistrationUrl()"
+            target="_blank"
+            class="btn btn-sm btn-outline"
+            title="Open public registration form"
+          >
             Open Form
           </a>
         </div>
@@ -77,23 +122,43 @@
 
     <!-- KPI Metric Cards -->
     <div class="kpi-grid">
-      <div class="kpi-card" (click)="onSelectTab('all')" [class.active]="store.activeTab() === 'all'">
+      <div
+        class="kpi-card"
+        (click)="onSelectTab('all')"
+        [class.active]="store.activeTab() === 'all'"
+      >
         <span class="kpi-label">Total Entries</span>
         <span class="kpi-value">{{ store.totalRegistrationsCount() }}</span>
       </div>
-      <div class="kpi-card" (click)="onSelectTab('pending')" [class.active]="store.activeTab() === 'pending'">
+      <div
+        class="kpi-card"
+        (click)="onSelectTab('pending')"
+        [class.active]="store.activeTab() === 'pending'"
+      >
         <span class="kpi-label">Pending Approval</span>
         <span class="kpi-value text-amber">{{ store.pendingCount() }}</span>
       </div>
-      <div class="kpi-card" (click)="onSelectTab('approved')" [class.active]="store.activeTab() === 'approved'">
+      <div
+        class="kpi-card"
+        (click)="onSelectTab('approved')"
+        [class.active]="store.activeTab() === 'approved'"
+      >
         <span class="kpi-label">Approved Athletes</span>
         <span class="kpi-value text-emerald">{{ store.approvedCount() }}</span>
       </div>
-      <div class="kpi-card" (click)="onSelectTab('rejected')" [class.active]="store.activeTab() === 'rejected'">
+      <div
+        class="kpi-card"
+        (click)="onSelectTab('rejected')"
+        [class.active]="store.activeTab() === 'rejected'"
+      >
         <span class="kpi-label">Rejected / Waitlist</span>
         <span class="kpi-value">{{ store.rejectedCount() }}</span>
       </div>
-      <div class="kpi-card" (click)="onSelectTab('duplicates')" [class.active]="store.activeTab() === 'duplicates'">
+      <div
+        class="kpi-card"
+        (click)="onSelectTab('duplicates')"
+        [class.active]="store.activeTab() === 'duplicates'"
+      >
         <span class="kpi-label">Duplicates & Flagged</span>
         <span class="kpi-value text-accent">{{ store.duplicatesCount() }}</span>
       </div>
@@ -146,7 +211,14 @@
 
       <div class="actions-group">
         <div class="search-box">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
@@ -159,11 +231,21 @@
           />
         </div>
 
-        <button type="button" class="btn btn-secondary" (click)="onScanDuplicates()" title="Run duplicate detection algorithm">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="onScanDuplicates()"
+          title="Run duplicate detection algorithm"
+        >
           Scan Duplicates
         </button>
 
-        <button type="button" class="btn btn-secondary" (click)="exportRoster()" title="Export all entries to Excel">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="exportRoster()"
+          title="Export all entries to Excel"
+        >
           Export (.xlsx)
         </button>
 
@@ -198,7 +280,9 @@
           <div class="empty-state">
             <div class="empty-icon">✓</div>
             <h3>No Duplicate Conflicts Found</h3>
-            <p>All athlete registrations are verified unique or duplicate flags have been resolved.</p>
+            <p>
+              All athlete registrations are verified unique or duplicate flags have been resolved.
+            </p>
             <button type="button" class="btn btn-secondary" (click)="onScanDuplicates()">
               Re-Scan Duplicates
             </button>
@@ -222,7 +306,10 @@
 
                 <div class="dup-candidates">
                   @for (p of group.participants; track p.participantId) {
-                    <label class="candidate-row" [class.selected]="selectedKeepParticipant()[$index] === p.participantId">
+                    <label
+                      class="candidate-row"
+                      [class.selected]="selectedKeepParticipant()[$index] === p.participantId"
+                    >
                       <input
                         type="radio"
                         [name]="'dup-group-' + $index"
@@ -233,10 +320,18 @@
                         <span class="candidate-name">{{ p.fullName }}</span>
                         <span class="candidate-meta">
                           ID #{{ p.participantId }}
-                          @if (p.email) { | {{ p.email }} }
-                          @if (p.phone) { | {{ p.phone }} }
-                          @if (p.weightCategory) { | Weight: {{ p.weightCategory }} }
-                          @if (p.ageCategory) { | Age: {{ p.ageCategory }} }
+                          @if (p.email) {
+                            | {{ p.email }}
+                          }
+                          @if (p.phone) {
+                            | {{ p.phone }}
+                          }
+                          @if (p.weightCategory) {
+                            | Weight: {{ p.weightCategory }}
+                          }
+                          @if (p.ageCategory) {
+                            | Age: {{ p.ageCategory }}
+                          }
                         </span>
                       </div>
                     </label>
@@ -244,7 +339,9 @@
                 </div>
 
                 <div class="dup-actions">
-                  <span class="dup-instruction">Select the primary athlete profile to keep and approve:</span>
+                  <span class="dup-instruction"
+                    >Select the primary athlete profile to keep and approve:</span
+                  >
                   <div class="dup-buttons">
                     <button
                       type="button"
@@ -274,7 +371,10 @@
         <div class="empty-state">
           <div class="empty-icon">📋</div>
           <h3>No Athletes Registered</h3>
-          <p>No athlete entries match this filter. Share the registration link or manually register fighters.</p>
+          <p>
+            No athlete entries match this filter. Share the registration link or manually register
+            fighters.
+          </p>
           <button type="button" class="btn btn-primary" (click)="openRegisterModal()">
             + Register Fighter
           </button>
@@ -327,7 +427,7 @@
                     </td>
                   }
                   <td class="td-date">
-                    {{ reg.registrationDate | date:'mediumDate' }}
+                    {{ reg.registrationDate | date: 'mediumDate' }}
                   </td>
                   <td class="td-status">
                     <span class="status-badge" [class]="getStatusClass(reg.status)">
@@ -343,7 +443,14 @@
                           (click)="onApprove(reg.registrationId)"
                           title="Approve registration"
                         >
-                          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                          <svg
+                            viewBox="0 0 24 24"
+                            width="16"
+                            height="16"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                          >
                             <polyline points="20 6 9 17 4 12" />
                           </svg>
                         </button>
@@ -355,7 +462,14 @@
                           (click)="onReject(reg.registrationId)"
                           title="Reject registration"
                         >
-                          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                          <svg
+                            viewBox="0 0 24 24"
+                            width="16"
+                            height="16"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                          >
                             <line x1="18" y1="6" x2="6" y2="18" />
                             <line x1="6" y1="6" x2="18" y2="18" />
                           </svg>
@@ -367,7 +481,14 @@
                         (click)="openDetailsModal(reg)"
                         title="View submitted form details"
                       >
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg
+                          viewBox="0 0 24 24"
+                          width="16"
+                          height="16"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
                           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                           <circle cx="12" cy="12" r="3" />
                         </svg>
@@ -385,13 +506,31 @@
     <!-- Manual Register Fighter Modal (using DynamicFormRendererComponent) -->
     @if (isRegisterModalOpen()) {
       <div class="modal-overlay" (click)="closeRegisterModal()">
-        <div class="modal-dialog" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="modal-reg-title">
+        <div
+          class="modal-dialog"
+          (click)="$event.stopPropagation()"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-reg-title"
+        >
           <div class="modal-header">
             <h2 id="modal-reg-title" class="modal-title">Register Fighter — Admin Entry</h2>
-            <button type="button" class="btn-close" (click)="closeRegisterModal()" aria-label="Close dialog">&times;</button>
+            <button
+              type="button"
+              class="btn-close"
+              (click)="closeRegisterModal()"
+              aria-label="Close dialog"
+            >
+              &times;
+            </button>
           </div>
 
           <div class="modal-body">
+            @if (store.error()) {
+              <div class="alert alert-error" role="alert">
+                {{ store.error() }}
+              </div>
+            }
             @if (dynamicFormDefinition(); as schema) {
               <app-dynamic-form-renderer
                 [schema]="schema"
@@ -412,10 +551,22 @@
     <!-- Athlete Details Modal (Read-Only Dynamic Form View) -->
     @if (viewingRegistration(); as reg) {
       <div class="modal-overlay" (click)="closeDetailsModal()">
-        <div class="modal-dialog details-dialog" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+        <div
+          class="modal-dialog details-dialog"
+          (click)="$event.stopPropagation()"
+          role="dialog"
+          aria-modal="true"
+        >
           <div class="modal-header">
             <h2 class="modal-title">Athlete Registration Details</h2>
-            <button type="button" class="btn-close" (click)="closeDetailsModal()" aria-label="Close dialog">&times;</button>
+            <button
+              type="button"
+              class="btn-close"
+              (click)="closeDetailsModal()"
+              aria-label="Close dialog"
+            >
+              &times;
+            </button>
           </div>
 
           <div class="modal-body details-body">
@@ -426,21 +577,33 @@
                 <span class="status-badge" [class]="getStatusClass(reg.status)">
                   {{ getStatusLabel(reg.status) }}
                 </span>
-                <span class="reg-date">Registered on {{ reg.registrationDate | date:'medium' }}</span>
+                <span class="reg-date"
+                  >Registered on {{ reg.registrationDate | date: 'medium' }}</span
+                >
               </div>
             </div>
 
             <div class="details-meta-bar">
-              <span class="meta-item"><span class="meta-label">Reg ID:</span> #{{ reg.registrationId }}</span>
-              <span class="meta-item"><span class="meta-label">Participant ID:</span> #{{ reg.participantId }}</span>
+              <span class="meta-item"
+                ><span class="meta-label">Reg ID:</span> #{{ reg.registrationId }}</span
+              >
+              <span class="meta-item"
+                ><span class="meta-label">Participant ID:</span> #{{ reg.participantId }}</span
+              >
               @if (reg.email) {
-                <span class="meta-item"><span class="meta-label">Email:</span> {{ reg.email }}</span>
+                <span class="meta-item"
+                  ><span class="meta-label">Email:</span> {{ reg.email }}</span
+                >
               }
               @if (reg.phone) {
-                <span class="meta-item"><span class="meta-label">Phone:</span> {{ reg.phone }}</span>
+                <span class="meta-item"
+                  ><span class="meta-label">Phone:</span> {{ reg.phone }}</span
+                >
               }
               @if (reg.dob) {
-                <span class="meta-item"><span class="meta-label">DOB:</span> {{ reg.dob | date:'mediumDate' }}</span>
+                <span class="meta-item"
+                  ><span class="meta-label">DOB:</span> {{ reg.dob | date: 'mediumDate' }}</span
+                >
               }
             </div>
 
@@ -455,26 +618,76 @@
                 ></app-dynamic-form-renderer>
 
                 @if (reg.responses && reg.responses.length > 0) {
-                  <div class="responses-summary-table-wrapper" style="margin-top: 1.5rem;">
+                  <div class="responses-summary-table-wrapper" style="margin-top: 1.5rem">
                     <h4 class="sub-heading">Submitted Custom Field Values</h4>
-                    <table class="roster-table responses-table" style="width: 100%; border-collapse: collapse;">
+                    <table
+                      class="roster-table responses-table"
+                      style="width: 100%; border-collapse: collapse"
+                    >
                       <thead>
                         <tr>
-                          <th style="text-align: left; padding: 8px 12px; background: rgba(255,255,255,0.05);">Field</th>
-                          <th style="text-align: left; padding: 8px 12px; background: rgba(255,255,255,0.05);">Submitted Value</th>
+                          <th
+                            style="
+                              text-align: left;
+                              padding: 8px 12px;
+                              background: rgba(255, 255, 255, 0.05);
+                            "
+                          >
+                            Field
+                          </th>
+                          <th
+                            style="
+                              text-align: left;
+                              padding: 8px 12px;
+                              background: rgba(255, 255, 255, 0.05);
+                            "
+                          >
+                            Submitted Value
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         @for (resp of reg.responses; track resp.templateFieldId) {
                           <tr>
-                            <td style="padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); font-weight: 500;">
+                            <td
+                              style="
+                                padding: 8px 12px;
+                                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                                font-weight: 500;
+                              "
+                            >
                               {{ resp.fieldLabel }}
                             </td>
-                            <td style="padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                            <td
+                              style="
+                                padding: 8px 12px;
+                                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                              "
+                            >
                               @if (resp.value === 'true') {
-                                <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">Yes</span>
+                                <span
+                                  class="badge"
+                                  style="
+                                    background: rgba(16, 185, 129, 0.2);
+                                    color: #10b981;
+                                    padding: 2px 8px;
+                                    border-radius: 4px;
+                                    font-size: 0.8rem;
+                                  "
+                                  >Yes</span
+                                >
                               } @else if (resp.value === 'false') {
-                                <span class="badge" style="background: rgba(239,68,68,0.2); color: #ef4444; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">No</span>
+                                <span
+                                  class="badge"
+                                  style="
+                                    background: rgba(239, 68, 68, 0.2);
+                                    color: #ef4444;
+                                    padding: 2px 8px;
+                                    border-radius: 4px;
+                                    font-size: 0.8rem;
+                                  "
+                                  >No</span
+                                >
                               } @else {
                                 {{ getResponseDisplayValue(resp) }}
                               }
@@ -495,7 +708,9 @@
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="closeDetailsModal()">Close</button>
+            <button type="button" class="btn btn-secondary" (click)="closeDetailsModal()">
+              Close
+            </button>
             @if (reg.status !== 2) {
               <button
                 type="button"

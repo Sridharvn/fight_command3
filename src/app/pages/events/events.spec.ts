@@ -24,6 +24,15 @@ describe('EventsPage', () => {
       eventEndDate: '2026-11-03',
       location: 'New Delhi Arena',
       createdAt: '2026-10-01',
+      registrationForm: {
+        formId: 1,
+        templateId: 1,
+        isActive: true,
+        registrationOpenDate: '2026-10-15',
+        registrationCloseDate: '2026-10-30',
+        formTitle: 'Sambo Cup Registration',
+        formDescription: '',
+      },
     },
     {
       eventId: 102,
@@ -35,6 +44,15 @@ describe('EventsPage', () => {
       eventEndDate: '2026-12-02',
       location: 'Mumbai Complex',
       createdAt: '2026-10-02',
+      registrationForm: {
+        formId: 2,
+        templateId: 1,
+        isActive: true,
+        registrationOpenDate: '2026-11-01',
+        registrationCloseDate: '2026-11-25',
+        formTitle: 'MMA Registration',
+        formDescription: '',
+      },
     },
     {
       eventId: 103,
@@ -46,6 +64,15 @@ describe('EventsPage', () => {
       eventEndDate: '2026-09-02',
       location: 'Delhi Arena',
       createdAt: '2026-09-01',
+      registrationForm: {
+        formId: 3,
+        templateId: 1,
+        isActive: true,
+        registrationOpenDate: '2026-08-01',
+        registrationCloseDate: '2026-08-25',
+        formTitle: 'Boxing Registration',
+        formDescription: '',
+      },
     },
   ];
 
@@ -159,5 +186,42 @@ describe('EventsPage', () => {
 
     component.submitDeleteEvent();
     expect(eventsStoreMock.deleteEvent).toHaveBeenCalledWith(101, expect.any(Function));
+  });
+
+  it('should enforce mandatory validation on all four event date fields in createForm', () => {
+    component.openCreateModal();
+    const form = component.createForm;
+
+    form.patchValue({
+      eventName: 'Valid Tournament',
+      sportType: SportType.SAMBO,
+      tournamentType: TournamentType.NATIONAL,
+      eventStartDate: '',
+      eventEndDate: '',
+      registrationOpenDate: '',
+      registrationCloseDate: '',
+    });
+
+    expect(form.get('eventStartDate')?.valid).toBe(false);
+    expect(form.get('eventEndDate')?.valid).toBe(false);
+    expect(form.get('registrationOpenDate')?.valid).toBe(false);
+    expect(form.get('registrationCloseDate')?.valid).toBe(false);
+    expect(form.valid).toBe(false);
+
+    component.submitCreateEvent();
+    expect(eventsStoreMock.createEvent).not.toHaveBeenCalled();
+
+    form.patchValue({
+      eventStartDate: '2026-11-01',
+      eventEndDate: '2026-11-05',
+      registrationOpenDate: '2026-10-01',
+      registrationCloseDate: '2026-10-25',
+    });
+
+    expect(form.get('eventStartDate')?.valid).toBe(true);
+    expect(form.get('eventEndDate')?.valid).toBe(true);
+    expect(form.get('registrationOpenDate')?.valid).toBe(true);
+    expect(form.get('registrationCloseDate')?.valid).toBe(true);
+    expect(form.valid).toBe(true);
   });
 });

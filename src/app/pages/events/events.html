@@ -422,22 +422,34 @@
 
               <div class="form-row">
                 <div class="form-group col-half">
-                  <label for="eventStartDate" class="form-label">Start Date</label>
+                  <label for="eventStartDate" class="form-label">Start Date *</label>
                   <input
                     id="eventStartDate"
                     type="date"
                     class="form-control"
                     formControlName="eventStartDate"
                   />
+                  @if (
+                    createForm.get('eventStartDate')?.touched &&
+                    createForm.get('eventStartDate')?.invalid
+                  ) {
+                    <span class="error-msg">Start date is required.</span>
+                  }
                 </div>
                 <div class="form-group col-half">
-                  <label for="eventEndDate" class="form-label">End Date</label>
+                  <label for="eventEndDate" class="form-label">End Date *</label>
                   <input
                     id="eventEndDate"
                     type="date"
                     class="form-control"
                     formControlName="eventEndDate"
                   />
+                  @if (
+                    createForm.get('eventEndDate')?.touched &&
+                    createForm.get('eventEndDate')?.invalid
+                  ) {
+                    <span class="error-msg">End date is required.</span>
+                  }
                 </div>
               </div>
 
@@ -485,22 +497,36 @@
 
               <div class="form-row">
                 <div class="form-group col-half">
-                  <label for="registrationOpenDate" class="form-label">Registration Opens</label>
+                  <label for="registrationOpenDate" class="form-label">Registration Opens *</label>
                   <input
                     id="registrationOpenDate"
                     type="date"
                     class="form-control"
                     formControlName="registrationOpenDate"
                   />
+                  @if (
+                    createForm.get('registrationOpenDate')?.touched &&
+                    createForm.get('registrationOpenDate')?.invalid
+                  ) {
+                    <span class="error-msg">Registration open date is required.</span>
+                  }
                 </div>
                 <div class="form-group col-half">
-                  <label for="registrationCloseDate" class="form-label">Registration Closes</label>
+                  <label for="registrationCloseDate" class="form-label"
+                    >Registration Closes *</label
+                  >
                   <input
                     id="registrationCloseDate"
                     type="date"
                     class="form-control"
                     formControlName="registrationCloseDate"
                   />
+                  @if (
+                    createForm.get('registrationCloseDate')?.touched &&
+                    createForm.get('registrationCloseDate')?.invalid
+                  ) {
+                    <span class="error-msg">Registration close date is required.</span>
+                  }
                 </div>
               </div>
 
@@ -636,22 +662,33 @@
 
               <div class="form-row">
                 <div class="form-group col-half">
-                  <label for="editEventStartDate" class="form-label">Start Date</label>
+                  <label for="editEventStartDate" class="form-label">Start Date *</label>
                   <input
                     id="editEventStartDate"
                     type="date"
                     class="form-control"
                     formControlName="eventStartDate"
                   />
+                  @if (
+                    editForm.get('eventStartDate')?.touched &&
+                    editForm.get('eventStartDate')?.invalid
+                  ) {
+                    <span class="error-msg">Start date is required.</span>
+                  }
                 </div>
                 <div class="form-group col-half">
-                  <label for="editEventEndDate" class="form-label">End Date</label>
+                  <label for="editEventEndDate" class="form-label">End Date *</label>
                   <input
                     id="editEventEndDate"
                     type="date"
                     class="form-control"
                     formControlName="eventEndDate"
                   />
+                  @if (
+                    editForm.get('eventEndDate')?.touched && editForm.get('eventEndDate')?.invalid
+                  ) {
+                    <span class="error-msg">End date is required.</span>
+                  }
                 </div>
               </div>
 
@@ -691,7 +728,7 @@
               <div class="form-row">
                 <div class="form-group col-half">
                   <label for="editRegistrationOpenDate" class="form-label"
-                    >Registration Opens</label
+                    >Registration Opens *</label
                   >
                   <input
                     id="editRegistrationOpenDate"
@@ -699,10 +736,16 @@
                     class="form-control"
                     formControlName="registrationOpenDate"
                   />
+                  @if (
+                    editForm.get('registrationOpenDate')?.touched &&
+                    editForm.get('registrationOpenDate')?.invalid
+                  ) {
+                    <span class="error-msg">Registration open date is required.</span>
+                  }
                 </div>
                 <div class="form-group col-half">
                   <label for="editRegistrationCloseDate" class="form-label"
-                    >Registration Closes</label
+                    >Registration Closes *</label
                   >
                   <input
                     id="editRegistrationCloseDate"
@@ -710,6 +753,12 @@
                     class="form-control"
                     formControlName="registrationCloseDate"
                   />
+                  @if (
+                    editForm.get('registrationCloseDate')?.touched &&
+                    editForm.get('registrationCloseDate')?.invalid
+                  ) {
+                    <span class="error-msg">Registration close date is required.</span>
+                  }
                 </div>
               </div>
 

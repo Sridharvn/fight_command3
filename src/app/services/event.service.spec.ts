@@ -44,10 +44,7 @@ describe('EventService', () => {
     };
 
     TestBed.configureTestingModule({
-      providers: [
-        EventService,
-        { provide: ApiService, useValue: apiServiceMock },
-      ],
+      providers: [EventService, { provide: ApiService, useValue: apiServiceMock }],
     });
 
     service = TestBed.inject(EventService);
@@ -84,6 +81,10 @@ describe('EventService', () => {
       eventName: 'New Tournament',
       sportType: SportType.SAMBO,
       tournamentType: TournamentType.NATIONAL,
+      eventStartDate: '2026-11-01',
+      eventEndDate: '2026-11-03',
+      registrationOpenDate: '2026-10-01',
+      registrationCloseDate: '2026-10-25',
     };
     apiServiceMock.post.mockReturnValue(of({ message: 'Event created', eventId: 10 }));
 

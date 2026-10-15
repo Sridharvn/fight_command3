@@ -80,75 +80,91 @@ export class EventRosterPage implements OnInit {
     const pub = this.store.publicEventForm();
     if (!pub) return null;
 
-    if (pub.formSchema && pub.formSchema.fields && pub.formSchema.fields.length > 0 && pub.formSchema.fields[0]?.key) {
-      return pub.formSchema;
+    let baseDefinition: FormDefinition;
+
+    if (
+      pub.formSchema &&
+      pub.formSchema.fields &&
+      pub.formSchema.fields.length > 0 &&
+      pub.formSchema.fields[0]?.key
+    ) {
+      baseDefinition = {
+        ...pub.formSchema,
+        fields: [...pub.formSchema.fields],
+      };
+    } else {
+      // Build FormDefinition from templateFields
+      const customFields = (pub.templateFields || [])
+        .filter(
+          (tf) => !['fullName', 'email', 'phone', 'dob', 'date_of_birth'].includes(tf.fieldName),
+        )
+        .map((tf) => ({
+          id: String(tf.templateFieldId),
+          key: tf.fieldName,
+          label: tf.fieldLabel,
+          type: (tf.fieldType || 'text') as any,
+          required: tf.isRequired,
+          options: tf.fieldOptions?.options
+            ? tf.fieldOptions.options.map((opt: any) =>
+                typeof opt === 'string'
+                  ? { label: opt, value: opt }
+                  : { label: opt.label || opt.value, value: opt.value || opt.label },
+              )
+            : undefined,
+          helpText: tf.helpText || undefined,
+          defaultValue: tf.defaultValue || undefined,
+        }));
+
+      baseDefinition = {
+        templateName: pub.formTitle || pub.eventName,
+        sportType: pub.sportType,
+        tournamentType: pub.tournamentType,
+        fields: customFields,
+        validations: [],
+      };
     }
 
-    // Build FormDefinition from templateFields
-    const fields = (pub.templateFields || [])
-      .filter(
-        (tf) =>
-          !['fullName', 'email', 'phone', 'dob', 'date_of_birth'].includes(
-            tf.fieldName,
-          ),
-      )
-      .map((tf) => ({
-      id: String(tf.templateFieldId),
-      key: tf.fieldName,
-      label: tf.fieldLabel,
-      type: (tf.fieldType || 'text') as any,
-      required: tf.isRequired,
-      options: tf.fieldOptions?.options
-        ? tf.fieldOptions.options.map((opt: any) =>
-            typeof opt === 'string'
-              ? { label: opt, value: opt }
-              : { label: opt.label || opt.value, value: opt.value || opt.label },
-          )
-        : undefined,
-      helpText: tf.helpText || undefined,
-      defaultValue: tf.defaultValue || undefined,
-    }));
+    // Demographic normalization (VR-REG-002):
+    // Ensure fullName, email, phone, and dob exist and are required.
+    const fields = [...baseDefinition.fields];
 
-    return {
-      templateName: pub.formTitle || pub.eventName,
-      sportType: pub.sportType,
-      tournamentType: pub.tournamentType,
-      fields: [
-        {
-          id: 'fullName',
-          key: 'fullName',
-          label: 'Athlete Full Name',
-          type: 'text',
+    const ensureDemographic = (
+      key: string,
+      label: string,
+      type: FormField['type'],
+      altKeys: string[] = [],
+    ) => {
+      let idx = fields.findIndex((f) => f.key === key || altKeys.includes(f.key));
+      if (idx === -1) {
+        idx = fields.findIndex((f) => f.label?.trim().toLowerCase() === label.trim().toLowerCase());
+      }
+
+      if (idx >= 0) {
+        fields[idx] = {
+          ...fields[idx],
+          required: true,
+          type: type || fields[idx].type,
+        };
+      } else {
+        fields.unshift({
+          id: key,
+          key: key,
+          label: label,
+          type: type,
           required: true,
           columnSpan: 1,
-        },
-        {
-          id: 'email',
-          key: 'email',
-          label: 'Email Address',
-          type: 'email',
-          required: false,
-          columnSpan: 1,
-        },
-        {
-          id: 'phone',
-          key: 'phone',
-          label: 'Phone Number',
-          type: 'text',
-          required: false,
-          columnSpan: 1,
-        },
-        {
-          id: 'dob',
-          key: 'dob',
-          label: 'Date of Birth',
-          type: 'date',
-          required: false,
-          columnSpan: 1,
-        },
-        ...fields,
-      ],
-      validations: [],
+        });
+      }
+    };
+
+    ensureDemographic('dob', 'Date of Birth', 'date', ['date_of_birth', 'dateOfBirth']);
+    ensureDemographic('phone', 'Phone Number', 'text', ['contact_number', 'phoneNumber']);
+    ensureDemographic('email', 'Email Address', 'email', ['emailAddress']);
+    ensureDemographic('fullName', 'Athlete Full Name', 'text', ['athlete_name', 'name']);
+
+    return {
+      ...baseDefinition,
+      fields,
     };
   });
 
@@ -249,6 +265,7 @@ export class EventRosterPage implements OnInit {
   }
 
   openRegisterModal(): void {
+    this.store.clearMessages();
     this.isRegisterModalOpen.set(true);
   }
 
@@ -423,9 +440,7 @@ export class EventRosterPage implements OnInit {
 
       if (field.options && field.options.length > 0) {
         const matchingOpt = field.options.find(
-          (o) =>
-            String(o.value) === String(val) ||
-            String(o.label) === String(val),
+          (o) => String(o.value) === String(val) || String(o.label) === String(val),
         );
         if (matchingOpt) {
           return matchingOpt.label;
@@ -459,8 +474,7 @@ export class EventRosterPage implements OnInit {
       );
       if (matchingField?.options && matchingField.options.length > 0) {
         const matchingOpt = matchingField.options.find(
-          (o) =>
-            String(o.value) === String(val) || String(o.label) === String(val),
+          (o) => String(o.value) === String(val) || String(o.label) === String(val),
         );
         if (matchingOpt) return matchingOpt.label;
       }

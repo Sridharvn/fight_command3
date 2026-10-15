@@ -5,7 +5,8 @@
       <div class="header-titles">
         <h1 class="page-title">Rule Management</h1>
         <p class="page-subtitle">
-          Configure cross-field validation rules and compound constraints (e.g. Age checks, Weight division limits, Guardian consents)
+          Configure cross-field validation rules and compound constraints (e.g. Age checks, Weight
+          division limits, Guardian consents)
         </p>
       </div>
       <div class="header-actions">
@@ -70,8 +71,13 @@
           />
         </svg>
         <p class="empty-title">No compound rules found</p>
-        <p class="empty-desc">Create your first cross-field compound rule to enforce validation logic on tournament registrations.</p>
-        <button type="button" class="btn btn-primary" (click)="openCreateModal()">Create New Rule</button>
+        <p class="empty-desc">
+          Create your first cross-field compound rule to enforce validation logic on tournament
+          registrations.
+        </p>
+        <button type="button" class="btn btn-primary" (click)="openCreateModal()">
+          Create New Rule
+        </button>
       </div>
     } @else {
       <div class="rules-grid">
@@ -132,7 +138,10 @@
             </div>
 
             <div class="card-footer">
-              <div class="error-preview" title="Error message displayed to registrant if rule fails">
+              <div
+                class="error-preview"
+                title="Error message displayed to registrant if rule fails"
+              >
                 <span class="error-icon">⚠️</span>
                 <span class="error-text">{{ rule.errorMessage }}</span>
               </div>
@@ -165,6 +174,11 @@
           </header>
 
           <form [formGroup]="ruleForm" (ngSubmit)="onSubmit()" class="modal-form">
+            @if (ruleStore.error()) {
+              <div class="alert alert-error" role="alert">
+                {{ ruleStore.error() }}
+              </div>
+            }
             <div class="form-group">
               <label for="ruleName" class="form-label">Rule Name *</label>
               <input
@@ -174,7 +188,9 @@
                 formControlName="ruleName"
                 placeholder="e.g., Minor Participant Guardian Consent"
               />
-              @if (ruleForm.get('ruleName')?.touched && ruleForm.get('ruleName')?.hasError('required')) {
+              @if (
+                ruleForm.get('ruleName')?.touched && ruleForm.get('ruleName')?.hasError('required')
+              ) {
                 <span class="field-error">Rule name is required</span>
               }
             </div>
@@ -266,7 +282,10 @@
                 formControlName="errorMessage"
                 placeholder="e.g., Minors under 18 must provide guardian consent."
               />
-              @if (ruleForm.get('errorMessage')?.touched && ruleForm.get('errorMessage')?.hasError('required')) {
+              @if (
+                ruleForm.get('errorMessage')?.touched &&
+                ruleForm.get('errorMessage')?.hasError('required')
+              ) {
                 <span class="field-error">Error message is required</span>
               }
             </div>
@@ -280,7 +299,11 @@
               >
                 Cancel
               </button>
-              <button type="submit" class="btn btn-primary" [disabled]="ruleForm.invalid || isSubmitting()">
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="ruleForm.invalid || isSubmitting()"
+              >
                 @if (isSubmitting()) {
                   <span class="spinner-small"></span> Saving...
                 } @else {

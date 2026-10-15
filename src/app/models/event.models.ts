@@ -90,8 +90,8 @@ export interface CreateEventDto {
   eventName: string;
   sportType: SportType;
   tournamentType: TournamentType;
-  eventStartDate?: string;
-  eventEndDate?: string;
+  eventStartDate: string;
+  eventEndDate: string;
   location?: string;
   posterImageUrl?: string;
   countryId?: number;
@@ -100,8 +100,8 @@ export interface CreateEventDto {
   templateId?: number;
   formTitle?: string;
   formDescription?: string;
-  registrationOpenDate?: string;
-  registrationCloseDate?: string;
+  registrationOpenDate: string;
+  registrationCloseDate: string;
 }
 
 export interface UpdateEventDto {

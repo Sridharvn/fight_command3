@@ -44,6 +44,7 @@ export class RuleManagementPage implements OnInit {
   }
 
   openCreateModal(): void {
+    this.ruleStore.clearError();
     this.ruleForm.reset({
       ruleName: '',
       description: '',
@@ -71,48 +72,76 @@ export class RuleManagementPage implements OnInit {
     const val = this.ruleForm.getRawValue();
     this.isSubmitting.set(true);
 
-    // Parse value to number if numeric, boolean if true/false
+    // Parse value to number if numeric, boolean if true/false, array if 'in' / 'notIn'
     let condVal: any = val.conditionValue;
-    if (!isNaN(Number(condVal))) condVal = Number(condVal);
-    else if (condVal === 'true') condVal = true;
-    else if (condVal === 'false') condVal = false;
+    if (val.conditionOperator === 'in' || val.conditionOperator === 'notIn') {
+      if (typeof condVal === 'string') {
+        condVal = condVal
+          .split(',')
+          .map((s: string) => s.trim())
+          .filter((s: string) => s.length > 0)
+          .map((s: string) => (!isNaN(Number(s)) ? Number(s) : s));
+      }
+    } else if (typeof condVal === 'string' && condVal.trim() !== '' && !isNaN(Number(condVal))) {
+      condVal = Number(condVal);
+    } else if (condVal === 'true') {
+      condVal = true;
+    } else if (condVal === 'false') {
+      condVal = false;
+    }
 
     let actVal: any = val.actionValue;
-    if (!isNaN(Number(actVal))) actVal = Number(actVal);
-    else if (actVal === 'true') actVal = true;
-    else if (actVal === 'false') actVal = false;
+    if (val.actionOperator === 'in' || val.actionOperator === 'notIn') {
+      if (typeof actVal === 'string') {
+        actVal = actVal
+          .split(',')
+          .map((s: string) => s.trim())
+          .filter((s: string) => s.length > 0)
+          .map((s: string) => (!isNaN(Number(s)) ? Number(s) : s));
+      }
+    } else if (typeof actVal === 'string' && actVal.trim() !== '' && !isNaN(Number(actVal))) {
+      actVal = Number(actVal);
+    } else if (actVal === 'true') {
+      actVal = true;
+    } else if (actVal === 'false') {
+      actVal = false;
+    }
 
-    this.ruleStore.createRule({
-      ruleName: val.ruleName!,
-      description: val.description || undefined,
-      conditions: {
-        conjunction: 'AND',
-        conditions: [
-          {
-            fieldId: val.conditionFieldId!,
-            operator: val.conditionOperator!,
-            value: condVal,
-          },
-        ],
+    this.ruleStore.createRule(
+      {
+        ruleName: val.ruleName!,
+        description: val.description || undefined,
+        conditions: {
+          conjunction: 'AND',
+          conditions: [
+            {
+              fieldId: val.conditionFieldId!,
+              operator: val.conditionOperator!,
+              value: condVal,
+            },
+          ],
+        },
+        actions: {
+          conjunction: 'AND',
+          conditions: [
+            {
+              fieldId: val.actionFieldId!,
+              operator: val.actionOperator!,
+              value: actVal,
+            },
+          ],
+        },
+        errorMessage: val.errorMessage!,
+        isActive: true,
       },
-      actions: {
-        conjunction: 'AND',
-        conditions: [
-          {
-            fieldId: val.actionFieldId!,
-            operator: val.actionOperator!,
-            value: actVal,
-          },
-        ],
+      () => {
+        this.isSubmitting.set(false);
+        this.closeModal();
       },
-      errorMessage: val.errorMessage!,
-      isActive: true,
-    });
-
-    setTimeout(() => {
-      this.isSubmitting.set(false);
-      this.closeModal();
-    }, 200);
+      () => {
+        this.isSubmitting.set(false);
+      },
+    );
   }
 
   onDelete(id: number): void {

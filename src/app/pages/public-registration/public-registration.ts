@@ -18,7 +18,7 @@ import {
   TOURNAMENT_TYPE_LABELS,
 } from '../../models/event.models';
 import { SubmitRegistrationDto } from '../../models/registration.models';
-import { FormDefinition } from '../../models/dynamic-form.models';
+import { FormDefinition, FormField } from '../../models/dynamic-form.models';
 
 @Component({
   selector: 'app-public-registration',
@@ -114,77 +114,91 @@ export class PublicRegistrationPage implements OnInit {
     const form = this.publicForm();
     if (!form) return null;
 
+    let baseDefinition: FormDefinition;
+
     if (
       form.formSchema &&
       form.formSchema.fields &&
       form.formSchema.fields.length > 0 &&
       form.formSchema.fields[0]?.key
     ) {
-      return form.formSchema;
+      baseDefinition = {
+        ...form.formSchema,
+        fields: [...form.formSchema.fields],
+      };
+    } else {
+      // Build fields from templateFields
+      const customFields = (form.templateFields || [])
+        .filter(
+          (tf) => !['fullName', 'email', 'phone', 'dob', 'date_of_birth'].includes(tf.fieldName),
+        )
+        .map((tf) => ({
+          id: String(tf.templateFieldId),
+          key: tf.fieldName,
+          label: tf.fieldLabel,
+          type: (tf.fieldType || 'text') as any,
+          required: tf.isRequired,
+          options: tf.fieldOptions?.options
+            ? tf.fieldOptions.options.map((opt: any) =>
+                typeof opt === 'string'
+                  ? { label: opt, value: opt }
+                  : { label: opt.label || opt.value, value: opt.value || opt.label },
+              )
+            : undefined,
+          helpText: tf.helpText || undefined,
+          defaultValue: tf.defaultValue || undefined,
+        }));
+
+      baseDefinition = {
+        templateName: form.formTitle || form.eventName,
+        sportType: form.sportType,
+        tournamentType: form.tournamentType,
+        fields: customFields,
+        validations: [],
+      };
     }
 
-    // Build fields from templateFields
-    const customFields = (form.templateFields || [])
-      .filter(
-        (tf) => !['fullName', 'email', 'phone', 'dob', 'date_of_birth'].includes(tf.fieldName),
-      )
-      .map((tf) => ({
-        id: String(tf.templateFieldId),
-        key: tf.fieldName,
-        label: tf.fieldLabel,
-        type: (tf.fieldType || 'text') as any,
-        required: tf.isRequired,
-        options: tf.fieldOptions?.options
-          ? tf.fieldOptions.options.map((opt: any) =>
-              typeof opt === 'string'
-                ? { label: opt, value: opt }
-                : { label: opt.label || opt.value, value: opt.value || opt.label },
-            )
-          : undefined,
-        helpText: tf.helpText || undefined,
-        defaultValue: tf.defaultValue || undefined,
-      }));
+    // Demographic normalization (VR-REG-002):
+    // Ensure fullName, email, phone, and dob exist and are required.
+    const fields = [...baseDefinition.fields];
 
-    return {
-      templateName: form.formTitle || form.eventName,
-      sportType: form.sportType,
-      tournamentType: form.tournamentType,
-      fields: [
-        {
-          id: 'fullName',
-          key: 'fullName',
-          label: 'Athlete Full Name',
-          type: 'text',
+    const ensureDemographic = (
+      key: string,
+      label: string,
+      type: FormField['type'],
+      altKeys: string[] = [],
+    ) => {
+      let idx = fields.findIndex((f) => f.key === key || altKeys.includes(f.key));
+      if (idx === -1) {
+        idx = fields.findIndex((f) => f.label?.trim().toLowerCase() === label.trim().toLowerCase());
+      }
+
+      if (idx >= 0) {
+        fields[idx] = {
+          ...fields[idx],
+          required: true,
+          type: type || fields[idx].type,
+        };
+      } else {
+        fields.unshift({
+          id: key,
+          key: key,
+          label: label,
+          type: type,
           required: true,
           columnSpan: 1,
-        },
-        {
-          id: 'email',
-          key: 'email',
-          label: 'Email Address',
-          type: 'email',
-          required: false,
-          columnSpan: 1,
-        },
-        {
-          id: 'phone',
-          key: 'phone',
-          label: 'Phone Number',
-          type: 'text',
-          required: false,
-          columnSpan: 1,
-        },
-        {
-          id: 'dob',
-          key: 'dob',
-          label: 'Date of Birth',
-          type: 'date',
-          required: false,
-          columnSpan: 1,
-        },
-        ...customFields,
-      ],
-      validations: [],
+        });
+      }
+    };
+
+    ensureDemographic('dob', 'Date of Birth', 'date', ['date_of_birth', 'dateOfBirth']);
+    ensureDemographic('phone', 'Phone Number', 'text', ['contact_number', 'phoneNumber']);
+    ensureDemographic('email', 'Email Address', 'email', ['emailAddress']);
+    ensureDemographic('fullName', 'Athlete Full Name', 'text', ['athlete_name', 'name']);
+
+    return {
+      ...baseDefinition,
+      fields,
     };
   });
 

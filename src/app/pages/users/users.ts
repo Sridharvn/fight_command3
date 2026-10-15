@@ -35,7 +35,7 @@ export class UsersPage implements OnInit {
     firstName: ['', [Validators.required]],
     lastName: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
-    password: [''],
+    password: ['', [Validators.required, Validators.minLength(4)]],
     roleId: [1, [Validators.required]],
     designation: [''],
     countryId: [null as number | null],
@@ -264,7 +264,17 @@ export class UsersPage implements OnInit {
     const users = this.usersStore.sortedUsers();
     if (!users || users.length === 0) return;
 
-    const headers = ['User ID', 'First Name', 'Last Name', 'Email', 'Role', 'Jurisdiction', 'Designation', 'Phone', 'Status'];
+    const headers = [
+      'User ID',
+      'First Name',
+      'Last Name',
+      'Email',
+      'Role',
+      'Jurisdiction',
+      'Designation',
+      'Phone',
+      'Status',
+    ];
     const rows = users.map((u) => [
       u.id,
       `"${(u.firstName || '').replace(/"/g, '""')}"`,
@@ -277,7 +287,9 @@ export class UsersPage implements OnInit {
       u.isDeleted ? 'Deactivated' : u.isActive ? 'Active' : 'Pending',
     ]);
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+    const csvContent =
+      'data:text/csv;charset=utf-8,' +
+      [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
