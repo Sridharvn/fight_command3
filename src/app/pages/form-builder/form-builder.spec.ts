@@ -137,6 +137,58 @@ describe('FormBuilderPage', () => {
     expect(builderStore.template()!.validations[0].name).toBe('Weight Limit Check');
   });
 
+  it('should open enhanced rule modal, toggle between types, and save selection limit rule', () => {
+    builderStore.setTemplate({
+      templateName: 'Tournament with Choice Field',
+      sportType: 1,
+      tournamentType: 1,
+      fields: [
+        {
+          id: 'field_cat_1',
+          key: 'categories',
+          label: 'Weight Categories',
+          type: 'checkbox',
+          options: [
+            { label: 'Cat A', value: 'cat_a' },
+            { label: 'Cat B', value: 'cat_b' },
+          ],
+        },
+      ],
+      validations: [],
+    });
+
+    component.openAddRuleModal();
+    expect(component.isRuleModalOpen()).toBe(true);
+    expect(component.activeRuleType()).toBe('selectionLimit');
+
+    // Switch to condition
+    component.setRuleType('condition');
+    expect(component.activeRuleType()).toBe('condition');
+
+    // Switch back to selection limit
+    component.setRuleType('selectionLimit');
+    expect(component.activeRuleType()).toBe('selectionLimit');
+
+    component.ruleForm.patchValue({
+      name: 'Max 2 Categories',
+      targetFieldId: 'categories',
+      limitType: 'maxSelections',
+      limitCount: 2,
+      errorMessage: 'You can select at most 2 categories.',
+    });
+
+    component.onSaveRule();
+    expect(component.isRuleModalOpen()).toBe(false);
+
+    const validations = builderStore.template()!.validations;
+    expect(validations.length).toBe(1);
+    expect(validations[0].name).toBe('Max 2 Categories');
+    expect(validations[0].errorMessage).toBe('You can select at most 2 categories.');
+
+    const targetField = builderStore.template()!.fields.find((f) => f.key === 'categories');
+    expect(targetField?.validationRules?.maxSelections).toBe(2);
+  });
+
   it('should switch to settings tab and update template metadata', () => {
     component.activeTab.set('settings');
     fixture.detectChanges();

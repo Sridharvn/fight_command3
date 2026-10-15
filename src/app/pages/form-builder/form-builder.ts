@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  inject,
+  signal,
+  computed,
+} from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
@@ -55,10 +62,30 @@ export class FormBuilderPage implements OnInit {
     { type: 'textarea', label: 'Text Area', icon: '¶' },
   ];
 
+  readonly activeRuleType = signal<'condition' | 'selectionLimit'>('condition');
+
+  readonly choiceFields = computed<FormField[]>(() => {
+    return (
+      this.builderStore
+        .template()
+        ?.fields.filter(
+          (f) =>
+            (f.options && f.options.length > 0) ||
+            f.type === 'select' ||
+            f.type === 'radio' ||
+            f.type === 'checkbox',
+        ) || []
+    );
+  });
+
   // Rule Modal Form
   readonly ruleForm = new FormGroup({
-    name: new FormControl('', [Validators.required]),
-    errorMessage: new FormControl('', [Validators.required]),
+    ruleType: new FormControl<'condition' | 'selectionLimit'>('condition'),
+    name: new FormControl('', [Validators.required, Validators.minLength(3)]),
+    errorMessage: new FormControl('', [Validators.required, Validators.minLength(3)]),
+    targetFieldId: new FormControl(''),
+    limitType: new FormControl<'maxSelections' | 'minSelections'>('maxSelections'),
+    limitCount: new FormControl<number>(3, [Validators.min(1)]),
     whenField: new FormControl('', [Validators.required]),
     whenOperator: new FormControl<ComparisonOperator>('equals', [Validators.required]),
     whenValue: new FormControl('', [Validators.required]),
@@ -288,11 +315,87 @@ export class FormBuilderPage implements OnInit {
   }
 
   // Cross-Field Validations
-  openAddRuleModal(): void {
-    this.ruleForm.reset({
-      whenOperator: 'equals',
-      thenOperator: 'equals',
+  setRuleType(type: 'condition' | 'selectionLimit'): void {
+    this.activeRuleType.set(type);
+    this.ruleForm.patchValue({ ruleType: type });
+    if (type === 'selectionLimit') {
+      const choices = this.choiceFields();
+      const defaultField = choices[0]?.key || '';
+      if (!this.ruleForm.value.targetFieldId) {
+        this.ruleForm.patchValue({
+          targetFieldId: defaultField,
+          errorMessage: `You can select at most ${this.ruleForm.value.limitCount || 3} options.`,
+        });
+      }
+      this.ruleForm.get('whenField')?.clearValidators();
+      this.ruleForm.get('whenOperator')?.clearValidators();
+      this.ruleForm.get('whenValue')?.clearValidators();
+      this.ruleForm.get('thenField')?.clearValidators();
+      this.ruleForm.get('thenOperator')?.clearValidators();
+      this.ruleForm.get('thenValue')?.clearValidators();
+      this.ruleForm.get('targetFieldId')?.setValidators([Validators.required]);
+      this.ruleForm.get('limitCount')?.setValidators([Validators.required, Validators.min(1)]);
+    } else {
+      const fields = this.builderStore.template()?.fields || [];
+      if (!this.ruleForm.value.whenField && fields.length > 0) {
+        this.ruleForm.patchValue({
+          whenField: fields[0]?.key || '',
+          thenField: fields[1]?.key || fields[0]?.key || '',
+        });
+      }
+      this.ruleForm.get('targetFieldId')?.clearValidators();
+      this.ruleForm.get('limitCount')?.clearValidators();
+      this.ruleForm.get('whenField')?.setValidators([Validators.required]);
+      this.ruleForm.get('whenOperator')?.setValidators([Validators.required]);
+      this.ruleForm.get('whenValue')?.setValidators([Validators.required]);
+      this.ruleForm.get('thenField')?.setValidators([Validators.required]);
+      this.ruleForm.get('thenOperator')?.setValidators([Validators.required]);
+      this.ruleForm.get('thenValue')?.setValidators([Validators.required]);
+    }
+    this.ruleForm.get('whenField')?.updateValueAndValidity();
+    this.ruleForm.get('whenOperator')?.updateValueAndValidity();
+    this.ruleForm.get('whenValue')?.updateValueAndValidity();
+    this.ruleForm.get('thenField')?.updateValueAndValidity();
+    this.ruleForm.get('thenOperator')?.updateValueAndValidity();
+    this.ruleForm.get('thenValue')?.updateValueAndValidity();
+    this.ruleForm.get('targetFieldId')?.updateValueAndValidity();
+    this.ruleForm.get('limitCount')?.updateValueAndValidity();
+  }
+
+  onLimitChange(): void {
+    const val = this.ruleForm.getRawValue();
+    const field = this.builderStore.template()?.fields.find((f) => f.key === val.targetFieldId);
+    const label = field?.label || 'options';
+    const count = val.limitCount || 3;
+    const isMax = val.limitType === 'maxSelections';
+    this.ruleForm.patchValue({
+      errorMessage: isMax
+        ? `Field "${label}" allows maximum ${count} selection${count > 1 ? 's' : ''}.`
+        : `Field "${label}" requires at least ${count} selection${count > 1 ? 's' : ''}.`,
     });
+  }
+
+  openAddRuleModal(): void {
+    const fields = this.builderStore.template()?.fields || [];
+    const choices = this.choiceFields();
+    const defaultType: 'condition' | 'selectionLimit' =
+      choices.length > 0 ? 'selectionLimit' : 'condition';
+
+    this.ruleForm.reset({
+      ruleType: defaultType,
+      name: '',
+      errorMessage: defaultType === 'selectionLimit' ? 'You can select at most 3 options.' : '',
+      targetFieldId: choices[0]?.key || '',
+      limitType: 'maxSelections',
+      limitCount: 3,
+      whenField: fields[0]?.key || '',
+      whenOperator: 'equals',
+      whenValue: '',
+      thenField: fields[1]?.key || fields[0]?.key || '',
+      thenOperator: 'equals',
+      thenValue: '',
+    });
+    this.setRuleType(defaultType);
     this.isRuleModalOpen.set(true);
   }
 
@@ -306,34 +409,80 @@ export class FormBuilderPage implements OnInit {
       return;
     }
 
-    const val = this.ruleForm.value;
-    const rule: CrossFieldValidation = {
-      id: `rule_${Date.now()}`,
-      name: val.name!,
-      errorMessage: val.errorMessage!,
-      when: {
-        conjunction: 'AND',
-        conditions: [
-          {
-            fieldId: val.whenField!,
-            operator: val.whenOperator!,
-            value: this.parseValue(val.whenValue),
-          },
-        ],
-      },
-      then: {
-        conjunction: 'AND',
-        conditions: [
-          {
-            fieldId: val.thenField!,
-            operator: val.thenOperator!,
-            value: this.parseValue(val.thenValue),
-          },
-        ],
-      },
-    };
+    const val = this.ruleForm.getRawValue();
+    if (val.ruleType === 'selectionLimit') {
+      const fieldKey = val.targetFieldId || '';
+      const limitType = val.limitType || 'maxSelections';
+      const limitCount = Number(val.limitCount) || 3;
+      const isMax = limitType === 'maxSelections';
 
-    this.onAddCompoundRule(rule);
+      // 1. Update validationRules on the field in template
+      const targetField = this.builderStore.template()?.fields.find((f) => f.key === fieldKey);
+      if (targetField) {
+        this.builderStore.updateField(targetField.id, {
+          validationRules: {
+            ...(targetField.validationRules || {}),
+            [limitType]: limitCount,
+          },
+        });
+      }
+
+      // 2. Add compound validation rule
+      const rule: CrossFieldValidation = {
+        id: `rule_${Date.now()}`,
+        name: val.name!,
+        errorMessage: val.errorMessage!,
+        when: {
+          conjunction: 'AND',
+          conditions: [
+            {
+              fieldId: fieldKey,
+              operator: isMax ? 'countGreaterThan' : 'countLessThan',
+              value: limitCount,
+            },
+          ],
+        },
+        then: {
+          conjunction: 'AND',
+          conditions: [
+            {
+              fieldId: fieldKey,
+              operator: isMax ? 'countMax' : 'countMin',
+              value: limitCount,
+            },
+          ],
+        },
+      };
+      this.onAddCompoundRule(rule);
+    } else {
+      const rule: CrossFieldValidation = {
+        id: `rule_${Date.now()}`,
+        name: val.name!,
+        errorMessage: val.errorMessage!,
+        when: {
+          conjunction: 'AND',
+          conditions: [
+            {
+              fieldId: val.whenField!,
+              operator: val.whenOperator!,
+              value: this.parseValue(val.whenValue),
+            },
+          ],
+        },
+        then: {
+          conjunction: 'AND',
+          conditions: [
+            {
+              fieldId: val.thenField!,
+              operator: val.thenOperator!,
+              value: this.parseValue(val.thenValue),
+            },
+          ],
+        },
+      };
+      this.onAddCompoundRule(rule);
+    }
+
     this.closeRuleModal();
   }
 

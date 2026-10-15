@@ -575,94 +575,259 @@
     @if (isRuleModalOpen()) {
       <div class="preview-modal-backdrop" (click)="closeRuleModal()">
         <div class="rule-modal-card" (click)="$event.stopPropagation()">
-          <div class="preview-modal-header">
-            <h3 class="preview-modal-title">Add Cross-Field Compliance Rule</h3>
-            <button type="button" class="btn-close" (click)="closeRuleModal()">✕</button>
-          </div>
+          <header class="rule-modal-header">
+            <div class="header-titles">
+              <div class="title-with-badge">
+                <h3 class="rule-modal-title">Add Compliance Rule</h3>
+                <span class="badge-scope">Template Scoped</span>
+              </div>
+              <p class="rule-modal-subtitle">
+                Configure selection limits or cross-field validation rules enforced in real time
+                during athlete registration.
+              </p>
+            </div>
+            <button
+              type="button"
+              class="btn-close-modal"
+              (click)="closeRuleModal()"
+              title="Close dialog"
+              aria-label="Close dialog"
+            >
+              ✕
+            </button>
+          </header>
 
           <form [formGroup]="ruleForm" (ngSubmit)="onSaveRule()" class="rule-modal-form">
-            <div class="modal-form-group">
-              <label class="modal-label">Rule Name</label>
-              <input
-                type="text"
-                formControlName="name"
-                class="field-input"
-                placeholder="e.g. Minor Consent Requirement"
-              />
+            <!-- Rule Type Selector Segmented Tabs -->
+            <div class="rule-type-toggle">
+              <button
+                type="button"
+                class="type-toggle-btn"
+                [class.active]="activeRuleType() === 'selectionLimit'"
+                (click)="setRuleType('selectionLimit')"
+              >
+                <span class="toggle-icon">☑</span>
+                <span class="toggle-label">Selection Limit (e.g. Max 3 Checkboxes)</span>
+              </button>
+              <button
+                type="button"
+                class="type-toggle-btn"
+                [class.active]="activeRuleType() === 'condition'"
+                (click)="setRuleType('condition')"
+              >
+                <span class="toggle-icon">➔</span>
+                <span class="toggle-label">Conditional Validation (WHEN / THEN)</span>
+              </button>
             </div>
 
-            <div class="modal-form-group">
-              <label class="modal-label">Error Message If Non-Compliant</label>
-              <input
-                type="text"
-                formControlName="errorMessage"
-                class="field-input"
-                placeholder="e.g. Minors under 18 must have guardian consent."
-              />
-            </div>
-
-            <!-- WHEN -->
-            <div class="rule-builder-section">
-              <h4 class="section-heading">WHEN (Trigger Condition):</h4>
-              <div class="builder-columns">
-                <select formControlName="whenField" class="field-input">
-                  <option value="" disabled>Select Trigger Field</option>
-                  @for (f of builderStore.template()?.fields; track f.id) {
-                    <option [value]="f.key">{{ f.label }} ({{ f.key }})</option>
-                  }
-                </select>
-
-                <select formControlName="whenOperator" class="field-input">
-                  <option value="equals">equals</option>
-                  <option value="notEquals">not equals</option>
-                  <option value="greaterThan">greater than</option>
-                  <option value="lessThan">less than</option>
-                </select>
-
+            <!-- General Rule Info: Name & Error Message -->
+            <div class="form-grid-2">
+              <div class="form-field-group">
+                <label class="form-field-label" for="ruleName">
+                  Rule Name <span class="required-star">*</span>
+                </label>
                 <input
+                  id="ruleName"
                   type="text"
-                  formControlName="whenValue"
-                  class="field-input"
-                  placeholder="Target value"
+                  formControlName="name"
+                  class="modal-input"
+                  placeholder="e.g. Max 3 Category Checkboxes"
                 />
+                @if (ruleForm.get('name')?.touched && ruleForm.get('name')?.hasError('required')) {
+                  <span class="field-error-hint">Rule name is required</span>
+                }
+              </div>
+
+              <div class="form-field-group">
+                <label class="form-field-label" for="ruleErrorMsg">
+                  Validation Error Message <span class="required-star">*</span>
+                </label>
+                <input
+                  id="ruleErrorMsg"
+                  type="text"
+                  formControlName="errorMessage"
+                  class="modal-input"
+                  placeholder="e.g. You can select at most 3 options."
+                />
+                @if (
+                  ruleForm.get('errorMessage')?.touched &&
+                  ruleForm.get('errorMessage')?.hasError('required')
+                ) {
+                  <span class="field-error-hint">Error message is required</span>
+                }
               </div>
             </div>
 
-            <!-- THEN -->
-            <div class="rule-builder-section">
-              <h4 class="section-heading">THEN (Enforced Condition):</h4>
-              <div class="builder-columns">
-                <select formControlName="thenField" class="field-input">
-                  <option value="" disabled>Select Target Field</option>
-                  @for (f of builderStore.template()?.fields; track f.id) {
-                    <option [value]="f.key">{{ f.label }} ({{ f.key }})</option>
-                  }
-                </select>
+            <!-- SELECTION LIMIT BUILDER -->
+            @if (activeRuleType() === 'selectionLimit') {
+              <div class="builder-block limit-block">
+                <div class="block-header">
+                  <span class="block-pill pill-cyan">Option Selection Bounds</span>
+                  <span class="block-hint">Restricts how many options an athlete can choose</span>
+                </div>
 
-                <select formControlName="thenOperator" class="field-input">
-                  <option value="equals">equals</option>
-                  <option value="notEquals">not equals</option>
-                  <option value="greaterThan">greater than</option>
-                  <option value="lessThan">less than</option>
-                </select>
+                <div class="form-grid-3">
+                  <div class="form-field-group">
+                    <label class="form-field-label">Target Multi-Option Field</label>
+                    <select
+                      formControlName="targetFieldId"
+                      (change)="onLimitChange()"
+                      class="modal-select"
+                    >
+                      <option value="" disabled>Select choice field...</option>
+                      @for (f of choiceFields(); track f.id) {
+                        <option [value]="f.key">{{ f.label }} ({{ f.key }})</option>
+                      }
+                    </select>
+                  </div>
 
-                <input
-                  type="text"
-                  formControlName="thenValue"
-                  class="field-input"
-                  placeholder="Required value"
-                />
+                  <div class="form-field-group">
+                    <label class="form-field-label">Constraint Type</label>
+                    <select
+                      formControlName="limitType"
+                      (change)="onLimitChange()"
+                      class="modal-select"
+                    >
+                      <option value="maxSelections">Maximum Selections</option>
+                      <option value="minSelections">Minimum Selections</option>
+                    </select>
+                  </div>
+
+                  <div class="form-field-group">
+                    <label class="form-field-label">Allowed Limit</label>
+                    <input
+                      type="number"
+                      formControlName="limitCount"
+                      (input)="onLimitChange()"
+                      min="1"
+                      max="50"
+                      class="modal-input"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
+            }
 
-            <div class="modal-actions">
-              <button type="button" class="btn btn-secondary" (click)="closeRuleModal()">
+            <!-- CONDITIONAL VALIDATION BUILDER -->
+            @if (activeRuleType() === 'condition') {
+              <div class="condition-flow-container">
+                <!-- WHEN (Trigger) Block -->
+                <div class="builder-block when-block">
+                  <div class="block-header">
+                    <span class="block-pill pill-amber">WHEN (Trigger Condition)</span>
+                    <span class="block-hint">When an athlete enters or selects this value...</span>
+                  </div>
+
+                  <div class="condition-row-grid">
+                    <div class="form-field-group">
+                      <label class="form-field-label">Trigger Field</label>
+                      <select formControlName="whenField" class="modal-select">
+                        <option value="" disabled>Select trigger field...</option>
+                        @for (f of builderStore.template()?.fields; track f.id) {
+                          <option [value]="f.key">{{ f.label }} ({{ f.key }})</option>
+                        }
+                      </select>
+                    </div>
+
+                    <div class="form-field-group">
+                      <label class="form-field-label">Operator</label>
+                      <select formControlName="whenOperator" class="modal-select">
+                        <option value="equals">equals</option>
+                        <option value="notEquals">not equals</option>
+                        <option value="greaterThan">greater than (&gt;)</option>
+                        <option value="greaterThanOrEqual">greater or equal (&ge;)</option>
+                        <option value="lessThan">less than (&lt;)</option>
+                        <option value="lessThanOrEqual">less or equal (&le;)</option>
+                        <option value="contains">contains</option>
+                        <option value="in">in list</option>
+                      </select>
+                    </div>
+
+                    <div class="form-field-group">
+                      <label class="form-field-label">Target Value</label>
+                      <input
+                        type="text"
+                        formControlName="whenValue"
+                        class="modal-input"
+                        placeholder="e.g. 18, junior, true"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Causation / Connector Badge -->
+                <div class="flow-connector">
+                  <div class="connector-line"></div>
+                  <div class="connector-pill">
+                    <span class="connector-arrow">➔</span>
+                    <span class="connector-text">THEN MUST SATISFY</span>
+                  </div>
+                  <div class="connector-line"></div>
+                </div>
+
+                <!-- THEN (Enforced) Block -->
+                <div class="builder-block then-block">
+                  <div class="block-header">
+                    <span class="block-pill pill-emerald">THEN (Enforced Condition)</span>
+                    <span class="block-hint"
+                      >The registration is valid only if this condition holds:</span
+                    >
+                  </div>
+
+                  <div class="condition-row-grid">
+                    <div class="form-field-group">
+                      <label class="form-field-label">Enforced Field</label>
+                      <select formControlName="thenField" class="modal-select">
+                        <option value="" disabled>Select target field...</option>
+                        @for (f of builderStore.template()?.fields; track f.id) {
+                          <option [value]="f.key">{{ f.label }} ({{ f.key }})</option>
+                        }
+                      </select>
+                    </div>
+
+                    <div class="form-field-group">
+                      <label class="form-field-label">Operator</label>
+                      <select formControlName="thenOperator" class="modal-select">
+                        <option value="equals">equals</option>
+                        <option value="notEquals">not equals</option>
+                        <option value="greaterThan">greater than (&gt;)</option>
+                        <option value="greaterThanOrEqual">greater or equal (&ge;)</option>
+                        <option value="lessThan">less than (&lt;)</option>
+                        <option value="lessThanOrEqual">less or equal (&le;)</option>
+                        <option value="contains">contains</option>
+                      </select>
+                    </div>
+
+                    <div class="form-field-group">
+                      <label class="form-field-label">Required Value</label>
+                      <input
+                        type="text"
+                        formControlName="thenValue"
+                        class="modal-input"
+                        placeholder="e.g. true, yes, 60"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- Modal Footer Actions -->
+            <footer class="rule-modal-footer">
+              <button type="button" class="btn btn-secondary-modal" (click)="closeRuleModal()">
                 Cancel
               </button>
-              <button type="submit" class="btn btn-primary" [disabled]="ruleForm.invalid">
+              <button type="submit" class="btn btn-primary-modal" [disabled]="ruleForm.invalid">
+                <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                  <path
+                    fill-rule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
                 Save Rule
               </button>
-            </div>
+            </footer>
           </form>
         </div>
       </div>

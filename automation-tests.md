@@ -1333,3 +1333,18 @@ The application provides:
   - If a template has no fields, clicking "Add Rule" alerts the user that fields must be added to the template first.
 - **Final state:** Rule management handles empty or transitioning states gracefully.
 
+**HF-RUL-004: Form Builder Redesigned Cross-Field & Selection-Limit Rule Modal**
+
+- **Preconditions:** User is authoring or editing a form template in Form Builder (`/form-builder/:id`).
+- **User/System actions:**
+  - User navigates to the "Cross-Field Rules" sub-tab and clicks "+ Add Rule".
+  - In the modal dialog, user switches between "Selection Limit" and "Conditional Validation" pill tabs.
+  - When "Selection Limit" is selected, the modal presents choice field selector and max/min selection count bounds.
+  - When "Conditional Validation" is selected, the modal presents WHEN trigger conditions, THEN enforced conditions, and an informative causation connector.
+  - User fills out rule properties and saves.
+- **Expected results:**
+  - Modal conforms to the dark theme (`#111827` / `#1f2937`) with zero unstyled white inputs.
+  - Inputs fit cleanly without overflowing the modal viewport.
+  - Custom SVG dropdown chevrons provide high-contrast selection.
+  - Rule is persisted to the template schema and updates the rules overview list.
+- **Final state:** Organizers can author both selection-limit and cross-field compliance rules with high visual fidelity and zero horizontal overflow.
