@@ -58,6 +58,12 @@ describe('BaseSidebar', () => {
     expect(links.length).toBeGreaterThanOrEqual(3); // Dashboard, Users, Roles
   });
 
+  it('should render Fight Command brand text when expanded (HF-007, HF-PWA-001)', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const brandText = compiled.querySelector('.brand-text');
+    expect(brandText?.textContent?.trim()).toBe('Fight Command');
+  });
+
   it('should render Form Definitions but not standalone Form Builder in sidebar navigation (HF-NAV-008)', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const links = Array.from(compiled.querySelectorAll('.nav-link'));

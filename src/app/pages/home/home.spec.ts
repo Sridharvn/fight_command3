@@ -53,7 +53,7 @@ describe('Home', () => {
 
   it('should render header logo text from BaseLayout', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.logo-text')?.textContent).toContain('Martial Arts Arena');
+    expect(compiled.querySelector('.logo-text')?.textContent).toContain('Fight Command');
   });
 
   it('should render dashboard modules for user and role management', () => {

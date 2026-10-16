@@ -19,4 +19,10 @@ describe('BaseFooter', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should render Fight Command copyright text (HF-PWA-001)', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const copyright = compiled.querySelector('.copyright');
+    expect(copyright?.textContent).toContain('Fight Command');
+  });
 });

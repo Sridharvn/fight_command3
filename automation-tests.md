@@ -96,10 +96,11 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Preconditions:** User is authenticated, sidemenu is expanded (250px).
 - **User/System actions:** User clicks the hamburger menu toggle button in the header (`.btn-menu-toggle`).
 - **Expected results:**
+  - Sidebar header renders "Fight Command" branding text (`.brand-text`) when expanded.
   - The arrow collapse button (`.btn-collapse`) is removed from the sidebar header; only the header hamburger button controls sidebar collapsing/expanding.
   - Clicking the hamburger button toggles the sidemenu between expanded mode (250px) and compact icon-only mode (68px).
   - Preference is saved to `localStorage`.
-- **Final state:** Sidemenu is collapsed or expanded solely via the header hamburger toggle.
+- **Final state:** Sidemenu displays Fight Command brand and is collapsed or expanded solely via the header hamburger toggle.
 
 **HF-008: Sidemenu Active Route Highlighting**
 
@@ -206,10 +207,11 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Preconditions:** User is authenticated.
 - **User/System actions:** User views the application header.
 - **Expected results:**
+  - Header displays brand logo with text "Fight Command" (`.logo-text`).
   - Header displays user profile container with user avatar (initials), full name, email address, and role badge.
   - Header does NOT render a Logout button (`.btn-logout`), centralizing logout functionality exclusively in the sidebar footer.
   - Header does NOT render redundant navigation links (`.nav-links`), keeping the top header clean and uncluttered.
-- **Final state:** User identity details clearly visible in streamlined header with zero redundancy.
+- **Final state:** User identity details clearly visible in streamlined header with zero redundancy and Fight Command branding.
 
 **HF-021: Sidebar Footer Logout Action**
 
@@ -1516,7 +1518,7 @@ The application provides:
 **HF-PWA-001: PWA Web App Manifest Configuration & App Identity**
 
 - **Preconditions:** Web application build and public assets are served.
-- **User/System actions:** Browser requests `/manifest.webmanifest`.
+- **User/System actions:** Browser requests `/manifest.webmanifest` and user browses application surfaces.
 - **Expected results:**
   - Manifest returns valid JSON with:
     - `name`: "Fight Command"
@@ -1532,7 +1534,9 @@ The application provides:
     - `<link rel="manifest" href="manifest.webmanifest">` is present.
     - `<meta name="theme-color" content="#dc2626">` is present.
     - iOS PWA meta tags (`apple-mobile-web-app-capable`, `apple-mobile-web-app-title`, `apple-touch-icon`) are properly configured.
-- **Final state:** The web application is recognized as an installable PWA named "Fight Command".
+  - In application components (Header, Sidebar, Footer, Login, Public Registration):
+    - App branding is harmonized to "Fight Command" across all navigation and shell layouts.
+- **Final state:** The web application is recognized as an installable PWA named "Fight Command" with unified brand presence throughout the UI.
 
 **HF-PWA-002: Service Worker Registration & Offline Caching Asset Groups**
 

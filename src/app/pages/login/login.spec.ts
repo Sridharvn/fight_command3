@@ -58,6 +58,12 @@ describe('LoginPage', () => {
     expect(component.loginForm.valid).toBe(false);
   });
 
+  it('should render Fight Command title (HF-PWA-001)', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const title = compiled.querySelector('.title');
+    expect(title?.textContent?.trim()).toBe('Fight Command');
+  });
+
   it('should validate email format and required fields', () => {
     const emailCtrl = component.loginForm.controls.email;
     const passCtrl = component.loginForm.controls.password;

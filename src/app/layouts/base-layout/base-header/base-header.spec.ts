@@ -51,6 +51,13 @@ describe('BaseHeader', () => {
     expect(component).toBeTruthy();
   });
 
+  it('should render Fight Command brand text in logo container (HF-020, HF-PWA-001)', () => {
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const logoText = compiled.querySelector('.logo-text');
+    expect(logoText?.textContent?.trim()).toBe('Fight Command');
+  });
+
   it('should render user avatar, full name, email, and role badge when authenticated (HF-020)', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
