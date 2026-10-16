@@ -273,8 +273,13 @@ export class EventRosterPage implements OnInit {
   }
 
   onScanDuplicates(): void {
-    this.store.scanDuplicates(() => {
-      this.showToast('Duplicate scan completed!');
+    this.store.scanDuplicates((duplicateCount) => {
+      if (duplicateCount > 0) {
+        this.store.setActiveTab('duplicates');
+        this.showToast(`Duplicates found (${duplicateCount})`);
+      } else {
+        this.showToast('No duplicates found');
+      }
     });
   }
 
@@ -588,6 +593,6 @@ export class EventRosterPage implements OnInit {
     this.toastMessage.set(message);
     setTimeout(() => {
       this.toastMessage.set(null);
-    }, 3500);
+    }, 5000);
   }
 }

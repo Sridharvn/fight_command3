@@ -170,4 +170,16 @@ describe('RegistrationStore', () => {
     expect(eventServiceMock.resolveDuplicates).toHaveBeenCalledWith(1, dto);
     expect(onSuccess).toHaveBeenCalled();
   });
+
+  it('should scan duplicates, refresh duplicate list from backend, and trigger onSuccess with duplicate count (HF-DUP-001)', () => {
+    store.setEventId(1);
+    const onSuccess = vi.fn();
+
+    store.scanDuplicates(onSuccess);
+
+    expect(eventServiceMock.scanDuplicates).toHaveBeenCalledWith(1);
+    expect(eventServiceMock.getDuplicates).toHaveBeenCalledWith(1);
+    expect(onSuccess).toHaveBeenCalledWith(1);
+    expect(store.duplicates().length).toBe(1);
+  });
 });

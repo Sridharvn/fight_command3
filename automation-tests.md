@@ -1633,3 +1633,35 @@ The application provides:
   - Form control is marked invalid.
   - Required validation error message is displayed.
 - **Final state:** Submission prevented until valid date is supplied.
+
+**HF-DUP-001: Duplicate Scan Completed - Duplicates Found with Count and Tab Switch**
+
+- **Preconditions:** User is on `/events/:eventId/roster` for an event that has duplicate athlete registrations.
+- **User/System actions:** User clicks "Scan Duplicates" (or "Re-Scan Duplicates").
+- **Expected results:**
+  - System executes duplicate detection API and re-fetches duplicate groups.
+  - Identifies $N > 0$ duplicate conflict groups.
+  - Toast banner displays `"Duplicates found (N)"` (replacing the generic "Duplicate scan completed!").
+  - Active tab automatically transitions to `'duplicates'` view so conflicts can be resolved immediately.
+- **Final state:** Active tab is `'duplicates'`, duplicate conflict cards are rendered, and toast confirms `"Duplicates found (N)"`.
+
+**HF-DUP-002: Duplicate Scan Completed - No Duplicates Found**
+
+- **Preconditions:** User is on `/events/:eventId/roster` for an event with unique athlete registrations (0 duplicates).
+- **User/System actions:** User clicks "Scan Duplicates" (or "Re-Scan Duplicates").
+- **Expected results:**
+  - System executes duplicate detection API and re-fetches duplicate groups.
+  - Identifies 0 duplicate conflict groups.
+  - Toast banner displays `"No duplicates found"`.
+  - Active tab remains on the user's current tab (or displays empty state if currently on Duplicates tab).
+- **Final state:** Toast confirms `"No duplicates found"` without disrupting the user's current tab view.
+
+**NF-DUP-001: Duplicate Scan API Failure Graceful Handling**
+
+- **Preconditions:** Server error (e.g., 500) occurs during duplicate scan execution.
+- **User/System actions:** User clicks "Scan Duplicates".
+- **Expected results:**
+  - Store resets `actionLoading` to `false` and sets normalized error message.
+  - Active tab does not incorrectly switch to `'duplicates'`.
+  - Error is handled gracefully without crashing the UI.
+- **Final state:** User view remains intact with error status recorded.

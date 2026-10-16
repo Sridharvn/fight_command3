@@ -518,4 +518,32 @@ describe('EventRosterPage', () => {
     expect(registrationStoreMock.clearMessages).toHaveBeenCalled();
     expect(component.isRegisterModalOpen()).toBe(true);
   });
+
+  it('should display "Duplicates found (X)" and automatically switch to duplicates tab when duplicates are found (HF-DUP-001)', () => {
+    registrationStoreMock.scanDuplicates.mockImplementation(
+      (callback?: (count: number) => void) => {
+        if (callback) callback(2);
+      },
+    );
+
+    component.onScanDuplicates();
+
+    expect(registrationStoreMock.scanDuplicates).toHaveBeenCalled();
+    expect(registrationStoreMock.setActiveTab).toHaveBeenCalledWith('duplicates');
+    expect(component.toastMessage()).toBe('Duplicates found (2)');
+  });
+
+  it('should display "No duplicates found" and remain on current tab when no duplicates are found (HF-DUP-002)', () => {
+    registrationStoreMock.scanDuplicates.mockImplementation(
+      (callback?: (count: number) => void) => {
+        if (callback) callback(0);
+      },
+    );
+
+    component.onScanDuplicates();
+
+    expect(registrationStoreMock.scanDuplicates).toHaveBeenCalled();
+    expect(registrationStoreMock.setActiveTab).not.toHaveBeenCalledWith('duplicates');
+    expect(component.toastMessage()).toBe('No duplicates found');
+  });
 });

@@ -271,7 +271,7 @@ export const RegistrationStore = signalStore(
             .subscribe();
         },
 
-        scanDuplicates(onSuccess?: () => void): void {
+        scanDuplicates(onSuccess?: (duplicateCount: number) => void): void {
           const evId = store.eventId();
           if (!evId) return;
 
@@ -279,10 +279,11 @@ export const RegistrationStore = signalStore(
           eventService
             .scanDuplicates(evId)
             .pipe(
-              tap(() => {
-                patchState(store, { actionLoading: false });
-                loadDuplicates(evId);
-                if (onSuccess) onSuccess();
+              switchMap(() => eventService.getDuplicates(evId)),
+              tap((duplicates) => {
+                const list = duplicates || [];
+                patchState(store, { actionLoading: false, duplicates: list });
+                if (onSuccess) onSuccess(list.length);
               }),
               catchError((err) => {
                 const msg = err.error?.message || 'Failed to scan duplicates';
