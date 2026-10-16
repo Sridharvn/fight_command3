@@ -53,9 +53,7 @@ export const FormDefinitionStore = signalStore(
       const q = searchQuery().toLowerCase().trim();
       if (!q) return templates();
       return templates().filter(
-        (t) =>
-          t.templateName.toLowerCase().includes(q) ||
-          t.templateType.toLowerCase().includes(q),
+        (t) => t.templateName.toLowerCase().includes(q) || t.templateType.toLowerCase().includes(q),
       );
     }),
   })),
@@ -132,6 +130,28 @@ export const FormDefinitionStore = signalStore(
             }),
             catchError((err) => {
               const error = err?.error?.message || 'Failed to create field definition';
+              patchState(store, { status: 'error', error });
+              return of(null);
+            }),
+          ),
+        ),
+      ),
+    ),
+    updateFieldDefinition: rxMethod<{ id: number; dto: Partial<CreateFieldDefinitionDto> }>(
+      pipe(
+        tap(() => patchState(store, { status: 'loading', error: null })),
+        switchMap(({ id, dto }) =>
+          formService.updateFieldDefinition(id, dto).pipe(
+            tap((updated) => {
+              patchState(store, (state) => ({
+                fieldDefinitions: state.fieldDefinitions.map((f) =>
+                  f.fieldDefinitionId === id ? updated : f,
+                ),
+                status: 'success' as const,
+              }));
+            }),
+            catchError((err) => {
+              const error = err?.error?.message || 'Failed to update field definition';
               patchState(store, { status: 'error', error });
               return of(null);
             }),

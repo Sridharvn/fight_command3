@@ -25,7 +25,11 @@
             New Form Template
           </button>
         } @else {
-          <button type="button" class="btn btn-primary create-field-btn" (click)="openFieldModal()">
+          <button
+            type="button"
+            class="btn btn-primary create-field-btn"
+            (click)="openCreateFieldModal()"
+          >
             <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
               <path
                 d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
@@ -278,7 +282,7 @@
               Register reusable field types (e.g. Weight, DOB, Medical Certificate) in the master
               library.
             </p>
-            <button type="button" class="btn btn-primary" (click)="openFieldModal()">
+            <button type="button" class="btn btn-primary" (click)="openCreateFieldModal()">
               Create New Field
             </button>
           </div>
@@ -289,7 +293,9 @@
                 <tr>
                   <th scope="col">Field Label</th>
                   <th scope="col">Key (snake_case)</th>
-                  <th scope="col">Data Type</th>
+                  <th scope="col">Base Type</th>
+                  <th scope="col">Custom Options</th>
+                  <th scope="col">Validation Rules</th>
                   <th scope="col">Flags</th>
                   <th scope="col" class="text-right">Actions</th>
                 </tr>
@@ -310,6 +316,40 @@
                       <span class="badge badge-type">{{ field.fieldType }}</span>
                     </td>
                     <td>
+                      @if (['select', 'radio', 'checkbox'].includes(field.fieldType)) {
+                        @if (getOptionsList(field).length > 0) {
+                          <div class="options-summary" [title]="getOptionsList(field).join(', ')">
+                            <span class="badge badge-options"
+                              >{{ getOptionsList(field).length }} options</span
+                            >
+                            <span class="options-preview-text"
+                              >{{ getOptionsList(field).slice(0, 2).join(', ')
+                              }}{{ getOptionsList(field).length > 2 ? '...' : '' }}</span
+                            >
+                          </div>
+                        } @else {
+                          <span class="text-muted">No options configured</span>
+                        }
+                      } @else {
+                        <span class="text-muted">—</span>
+                      }
+                    </td>
+                    <td>
+                      @if (formatRulesSummary(field).length > 0) {
+                        <div class="rules-badges-group">
+                          @for (rule of formatRulesSummary(field); track rule) {
+                            <span
+                              class="badge badge-rule"
+                              [class.badge-required]="rule === 'Required'"
+                              >{{ rule }}</span
+                            >
+                          }
+                        </div>
+                      } @else {
+                        <span class="text-muted">None</span>
+                      }
+                    </td>
+                    <td>
                       <div class="flags-group">
                         @if (field.isFilterable) {
                           <span class="flag-badge">Filterable</span>
@@ -323,21 +363,36 @@
                       </div>
                     </td>
                     <td class="text-right">
-                      <button
-                        type="button"
-                        class="btn-action btn-delete"
-                        (click)="onDeleteField(field.fieldDefinitionId)"
-                        title="Delete field"
-                        aria-label="Delete field"
-                      >
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                          <path
-                            fill-rule="evenodd"
-                            d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                            clip-rule="evenodd"
-                          />
-                        </svg>
-                      </button>
+                      <div class="row-actions-group">
+                        <button
+                          type="button"
+                          class="btn-action btn-edit"
+                          (click)="openEditFieldModal(field)"
+                          title="Edit field definition"
+                          aria-label="Edit field definition"
+                        >
+                          <svg viewBox="0 0 20 20" fill="currentColor">
+                            <path
+                              d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"
+                            />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          class="btn-action btn-delete"
+                          (click)="onDeleteField(field.fieldDefinitionId)"
+                          title="Delete field definition"
+                          aria-label="Delete field definition"
+                        >
+                          <svg viewBox="0 0 20 20" fill="currentColor">
+                            <path
+                              fill-rule="evenodd"
+                              d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                              clip-rule="evenodd"
+                            />
+                          </svg>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 }
@@ -348,18 +403,20 @@
       </div>
     }
 
-    <!-- Modal: Create Field Definition -->
+    <!-- Modal: Create / Edit Field Definition -->
     @if (isFieldModalOpen()) {
       <div class="modal-backdrop" (click)="closeFieldModal()">
         <div
-          class="modal-dialog"
+          class="modal-dialog modal-dialog-large"
           role="dialog"
           aria-modal="true"
           aria-labelledby="field-modal-title"
           (click)="$event.stopPropagation()"
         >
           <header class="modal-header">
-            <h2 id="field-modal-title" class="modal-title">Create Field Definition</h2>
+            <h2 id="field-modal-title" class="modal-title">
+              {{ editingFieldId() ? 'Edit Form Definition' : 'Create Form Definition' }}
+            </h2>
             <button
               type="button"
               class="btn-close"
@@ -371,15 +428,32 @@
           </header>
 
           <form [formGroup]="fieldForm" (ngSubmit)="onSubmitField()" class="modal-form">
-            <div class="form-group">
-              <label for="fieldLabel" class="form-label">Field Label *</label>
-              <input
-                id="fieldLabel"
-                type="text"
-                formControlName="fieldLabel"
-                class="form-input"
-                placeholder="e.g., Medical Insurance Policy"
-              />
+            <div class="form-row">
+              <div class="form-group flex-2">
+                <label for="fieldLabel" class="form-label">Field Label *</label>
+                <input
+                  id="fieldLabel"
+                  type="text"
+                  formControlName="fieldLabel"
+                  class="form-input"
+                  placeholder="e.g., Medical Insurance Policy, Weight Category"
+                />
+              </div>
+
+              <div class="form-group flex-1">
+                <label for="fieldType" class="form-label">Base Form Type *</label>
+                <select id="fieldType" formControlName="fieldType" class="form-select">
+                  <option value="text">Single Line Text (text)</option>
+                  <option value="textarea">Multi-line Text (textarea)</option>
+                  <option value="number">Numeric Value (number)</option>
+                  <option value="date">Calendar Date (date)</option>
+                  <option value="select">Dropdown Select (select)</option>
+                  <option value="radio">Radio Buttons (radio)</option>
+                  <option value="checkbox">Multiselect Checkboxes (checkbox)</option>
+                  <option value="boolean">Yes / No Toggle (boolean)</option>
+                  <option value="file">File / Photo Upload (file)</option>
+                </select>
+              </div>
             </div>
 
             <div class="form-group">
@@ -391,7 +465,11 @@
                 class="form-input"
                 placeholder="e.g., medical_insurance_policy"
               />
-              @if (
+              @if (editingFieldId()) {
+                <span class="field-hint"
+                  >Key cannot be changed after creation to maintain schema references.</span
+                >
+              } @else if (
                 fieldForm.get('fieldName')?.touched &&
                 fieldForm.get('fieldName')?.hasError('pattern')
               ) {
@@ -401,38 +479,201 @@
               }
             </div>
 
-            <div class="form-group">
-              <label for="fieldType" class="form-label">Field Data Type *</label>
-              <select id="fieldType" formControlName="fieldType" class="form-select">
-                <option value="text">Single Line Text</option>
-                <option value="textarea">Multi-line Text</option>
-                <option value="number">Number</option>
-                <option value="date">Date</option>
-                <option value="select">Dropdown Select</option>
-                <option value="radio">Radio Buttons</option>
-                <option value="checkbox">Checkboxes</option>
-                <option value="file">File / Photo Upload</option>
-                <option value="boolean">Yes / No Toggle</option>
-              </select>
-            </div>
-
+            <!-- Choice Options Manager (for select, radio, checkbox) -->
             @if (
               ['select', 'radio', 'checkbox'].includes(fieldForm.get('fieldType')?.value || '')
             ) {
-              <div class="form-group">
-                <label for="optionsInput" class="form-label"
-                  >Choice Options (comma-separated)</label
-                >
-                <input
-                  id="optionsInput"
-                  type="text"
-                  formControlName="optionsInput"
-                  class="form-input"
-                  placeholder="e.g., White Belt, Blue Belt, Purple Belt, Brown Belt, Black Belt"
-                />
+              <div class="options-manager-card">
+                <div class="options-header">
+                  <label class="form-label font-semibold">Custom Choice Options *</label>
+                  <span class="options-counter">{{ optionsList().length }} defined</span>
+                </div>
+                <p class="field-hint">
+                  Athletes will be able to select from these predefined values.
+                </p>
+
+                <div class="options-input-row">
+                  <input
+                    type="text"
+                    [formControl]="newOptionInput"
+                    class="form-input"
+                    placeholder="Enter option value (e.g., Combat Sambo, Featherweight)"
+                    (keydown.enter)="$event.preventDefault(); addOption()"
+                  />
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    (click)="addOption()"
+                    [disabled]="!newOptionInput.value?.trim()"
+                  >
+                    + Add Option
+                  </button>
+                </div>
+
+                @if (optionsList().length > 0) {
+                  <div class="options-chips-container">
+                    @for (opt of optionsList(); track opt; let idx = $index) {
+                      <span class="option-chip">
+                        <span class="chip-label">{{ opt }}</span>
+                        <button
+                          type="button"
+                          class="btn-chip-remove"
+                          (click)="removeOption(idx)"
+                          title="Remove option"
+                          aria-label="Remove option"
+                        >
+                          &times;
+                        </button>
+                      </span>
+                    }
+                  </div>
+                } @else {
+                  <p class="options-empty-notice">
+                    No options added yet. Type an option name above and click "+ Add Option".
+                  </p>
+                }
               </div>
             }
 
+            <!-- Validation Rules Section -->
+            <div class="validation-rules-section">
+              <div class="rules-section-header">
+                <svg viewBox="0 0 20 20" fill="currentColor" class="rules-header-icon">
+                  <path
+                    fill-rule="evenodd"
+                    d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <h3 class="rules-title">Validation Constraints & Rules</h3>
+              </div>
+
+              <!-- Mandatory toggle -->
+              <div class="rule-control-item">
+                <label class="checkbox-item mandatory-toggle">
+                  <input type="checkbox" formControlName="required" />
+                  <span class="toggle-text">
+                    <strong>Mandatory Field</strong>
+                    <small>Athletes cannot submit registration without filling this field</small>
+                  </span>
+                </label>
+              </div>
+
+              <!-- Dynamic type-specific inputs -->
+              @if (['text', 'textarea'].includes(fieldForm.get('fieldType')?.value || '')) {
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="minLength" class="form-label">Min Length (chars)</label>
+                    <input
+                      id="minLength"
+                      type="number"
+                      formControlName="minLength"
+                      class="form-input"
+                      placeholder="e.g., 2"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="maxLength" class="form-label">Max Length (chars)</label>
+                    <input
+                      id="maxLength"
+                      type="number"
+                      formControlName="maxLength"
+                      class="form-input"
+                      placeholder="e.g., 100"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="pattern" class="form-label">Regex Pattern</label>
+                    <input
+                      id="pattern"
+                      type="text"
+                      formControlName="pattern"
+                      class="form-input"
+                      placeholder="e.g., ^[A-Z0-9]+$"
+                    />
+                  </div>
+                </div>
+              }
+
+              @if (fieldForm.get('fieldType')?.value === 'number') {
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="minVal" class="form-label">Minimum Value</label>
+                    <input
+                      id="minVal"
+                      type="number"
+                      formControlName="min"
+                      class="form-input"
+                      placeholder="e.g., 18"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="maxVal" class="form-label">Maximum Value</label>
+                    <input
+                      id="maxVal"
+                      type="number"
+                      formControlName="max"
+                      class="form-input"
+                      placeholder="e.g., 100"
+                    />
+                  </div>
+                </div>
+              }
+
+              @if (['checkbox', 'select'].includes(fieldForm.get('fieldType')?.value || '')) {
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="minSelections" class="form-label">Minimum Selections</label>
+                    <input
+                      id="minSelections"
+                      type="number"
+                      formControlName="minSelections"
+                      class="form-input"
+                      placeholder="e.g., 1"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="maxSelections" class="form-label">Maximum Selections</label>
+                    <input
+                      id="maxSelections"
+                      type="number"
+                      formControlName="maxSelections"
+                      class="form-input"
+                      placeholder="e.g., 3"
+                    />
+                  </div>
+                </div>
+              }
+
+              @if (fieldForm.get('fieldType')?.value === 'file') {
+                <div class="form-row">
+                  <div class="form-group flex-2">
+                    <label for="allowedExtensions" class="form-label"
+                      >Allowed Extensions (comma-separated)</label
+                    >
+                    <input
+                      id="allowedExtensions"
+                      type="text"
+                      formControlName="allowedExtensions"
+                      class="form-input"
+                      placeholder="e.g., pdf, jpg, png"
+                    />
+                  </div>
+                  <div class="form-group flex-1">
+                    <label for="maxSizeMb" class="form-label">Max File Size (MB)</label>
+                    <input
+                      id="maxSizeMb"
+                      type="number"
+                      formControlName="maxSizeMb"
+                      class="form-input"
+                      placeholder="e.g., 5"
+                    />
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Flags -->
             <div class="checkbox-row">
               <label class="checkbox-item">
                 <input type="checkbox" formControlName="isFilterable" />
@@ -460,7 +701,7 @@
                 @if (isSubmitting()) {
                   <span class="spinner-small"></span> Saving...
                 } @else {
-                  Create Field
+                  {{ editingFieldId() ? 'Save Changes' : 'Create Definition' }}
                 }
               </button>
             </footer>

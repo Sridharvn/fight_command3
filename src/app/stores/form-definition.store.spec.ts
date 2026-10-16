@@ -11,6 +11,7 @@ describe('FormDefinitionStore', () => {
     getTemplates: ReturnType<typeof vi.fn>;
     getPresets: ReturnType<typeof vi.fn>;
     createFieldDefinition: ReturnType<typeof vi.fn>;
+    updateFieldDefinition: ReturnType<typeof vi.fn>;
     deleteFieldDefinition: ReturnType<typeof vi.fn>;
     createTemplate: ReturnType<typeof vi.fn>;
     updateTemplate: ReturnType<typeof vi.fn>;
@@ -44,6 +45,7 @@ describe('FormDefinitionStore', () => {
       getTemplates: vi.fn().mockReturnValue(of({ data: [mockTemplate], total: 1 })),
       getPresets: vi.fn().mockReturnValue(of([])),
       createFieldDefinition: vi.fn(),
+      updateFieldDefinition: vi.fn(),
       deleteFieldDefinition: vi.fn(),
       createTemplate: vi.fn(),
       updateTemplate: vi.fn(),
@@ -128,6 +130,42 @@ describe('FormDefinitionStore', () => {
 
     const found = store.templates().find((t) => t.templateId === 1);
     expect(found?.templateName).toBe('Updated State Championship');
+  });
+
+  it('should update an existing field definition in state via updateFieldDefinition', async () => {
+    store.loadAll();
+    await new Promise((r) => setTimeout(r, 20));
+
+    const updatedField: FieldDefinition = {
+      ...mockField,
+      fieldLabel: 'Updated Belt Rank',
+      validationRules: { required: true, minSelections: 1, maxSelections: 3 },
+    };
+    formServiceMock.updateFieldDefinition = vi.fn().mockReturnValue(of(updatedField));
+
+    store.updateFieldDefinition({
+      id: 1,
+      dto: {
+        fieldLabel: 'Updated Belt Rank',
+        validationRules: { required: true, minSelections: 1, maxSelections: 3 },
+      },
+    });
+    await new Promise((r) => setTimeout(r, 20));
+
+    const found = store.fieldDefinitions().find((f) => f.fieldDefinitionId === 1);
+    expect(found?.fieldLabel).toBe('Updated Belt Rank');
+    expect(found?.validationRules).toEqual({ required: true, minSelections: 1, maxSelections: 3 });
+  });
+
+  it('should remove field definition from state via deleteFieldDefinition', async () => {
+    store.loadAll();
+    await new Promise((r) => setTimeout(r, 20));
+
+    formServiceMock.deleteFieldDefinition.mockReturnValue(of({ message: 'Deleted' }));
+    store.deleteFieldDefinition(1);
+    await new Promise((r) => setTimeout(r, 20));
+
+    expect(store.fieldDefinitions().find((f) => f.fieldDefinitionId === 1)).toBeUndefined();
   });
 
   it('should remove template from state via deleteTemplate', async () => {

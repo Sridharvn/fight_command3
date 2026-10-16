@@ -3,7 +3,11 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { FormDefinitionStore } from '../../stores/form-definition.store';
 import { RuleStore } from '../../stores/rule.store';
 import { FormDefinitionService } from '../../services/form-definition.service';
-import { FieldType, FormTemplate } from '../../models/form-definition.models';
+import {
+  FieldDefinition as LibFieldDefinition,
+  FieldType,
+  FormTemplate,
+} from '../../models/form-definition.models';
 import {
   CrossFieldValidation,
   FormDefinition,
@@ -15,6 +19,19 @@ import { DynamicFormRendererComponent } from '../../components/dynamic-form-rend
 
 import { RouterLink } from '@angular/router';
 import { BaseLayout } from '../../layouts/base-layout/base-layout';
+
+export interface FieldValidationRules {
+  required?: boolean;
+  minLength?: number | null;
+  maxLength?: number | null;
+  min?: number | null;
+  max?: number | null;
+  pattern?: string | null;
+  minSelections?: number | null;
+  maxSelections?: number | null;
+  allowedExtensions?: string[] | string | null;
+  maxSizeMb?: number | null;
+}
 
 @Component({
   selector: 'app-form-definitions',
@@ -29,6 +46,9 @@ export class FormDefinitionsPage implements OnInit {
   protected readonly formDefinitionService = inject(FormDefinitionService);
 
   readonly isFieldModalOpen = signal(false);
+  readonly editingFieldId = signal<number | null>(null);
+  readonly optionsList = signal<string[]>([]);
+  readonly newOptionInput = new FormControl('');
   readonly isCreateTemplateModalOpen = signal(false);
   readonly selectedBasePresetId = signal<number | null>(null);
   readonly previewingTemplate = signal<FormTemplate | null>(null);
@@ -38,15 +58,25 @@ export class FormDefinitionsPage implements OnInit {
 
   readonly searchControl = new FormControl('');
 
-  // Field creation form
+  // Field form with base type, options, and dynamic validation rules
   readonly fieldForm = new FormGroup({
     fieldName: new FormControl('', [Validators.required, Validators.pattern(/^[a-z0-9_]+$/)]),
     fieldLabel: new FormControl('', [Validators.required]),
     fieldType: new FormControl<FieldType>('text', [Validators.required]),
-    optionsInput: new FormControl(''),
     isFilterable: new FormControl(false),
     isSortable: new FormControl(false),
     isSearchable: new FormControl(false),
+    // Validation rules
+    required: new FormControl(false),
+    minLength: new FormControl<number | null>(null),
+    maxLength: new FormControl<number | null>(null),
+    min: new FormControl<number | null>(null),
+    max: new FormControl<number | null>(null),
+    pattern: new FormControl(''),
+    minSelections: new FormControl<number | null>(null),
+    maxSelections: new FormControl<number | null>(null),
+    allowedExtensions: new FormControl(''),
+    maxSizeMb: new FormControl<number | null>(null),
   });
 
   ngOnInit(): void {
@@ -64,21 +94,97 @@ export class FormDefinitionsPage implements OnInit {
   }
 
   // ── Field Modal ────────────────────────────────────────────────────────────
-  openFieldModal(): void {
+  openCreateFieldModal(): void {
+    this.editingFieldId.set(null);
     this.fieldForm.reset({
       fieldName: '',
       fieldLabel: '',
       fieldType: 'text',
-      optionsInput: '',
       isFilterable: false,
       isSortable: false,
       isSearchable: false,
+      required: false,
+      minLength: null,
+      maxLength: null,
+      min: null,
+      max: null,
+      pattern: '',
+      minSelections: null,
+      maxSelections: null,
+      allowedExtensions: '',
+      maxSizeMb: null,
     });
+    this.fieldForm.get('fieldName')?.enable();
+    this.optionsList.set([]);
+    this.newOptionInput.reset();
+    this.isFieldModalOpen.set(true);
+  }
+
+  openFieldModal(): void {
+    this.openCreateFieldModal();
+  }
+
+  openEditFieldModal(field: LibFieldDefinition): void {
+    this.editingFieldId.set(field.fieldDefinitionId);
+
+    // Parse options
+    let opts: string[] = [];
+    const rawOpts = (field.defaultOptions as any)?.options;
+    if (Array.isArray(rawOpts)) {
+      opts = rawOpts.map((o) => (typeof o === 'string' ? o : o.label || o.value || String(o)));
+    }
+    this.optionsList.set(opts);
+    this.newOptionInput.reset();
+
+    // Parse validation rules
+    const rules: FieldValidationRules = (field.validationRules as FieldValidationRules) || {};
+
+    this.fieldForm.reset({
+      fieldName: field.fieldName,
+      fieldLabel: field.fieldLabel,
+      fieldType: field.fieldType,
+      isFilterable: !!field.isFilterable,
+      isSortable: !!field.isSortable,
+      isSearchable: !!field.isSearchable,
+      required: !!rules.required,
+      minLength: rules.minLength ?? null,
+      maxLength: rules.maxLength ?? null,
+      min: rules.min ?? null,
+      max: rules.max ?? null,
+      pattern: rules.pattern ?? '',
+      minSelections: rules.minSelections ?? null,
+      maxSelections: rules.maxSelections ?? null,
+      allowedExtensions: Array.isArray(rules.allowedExtensions)
+        ? rules.allowedExtensions.join(', ')
+        : (rules.allowedExtensions ?? ''),
+      maxSizeMb: rules.maxSizeMb ?? null,
+    });
+    this.fieldForm.get('fieldName')?.disable();
     this.isFieldModalOpen.set(true);
   }
 
   closeFieldModal(): void {
     this.isFieldModalOpen.set(false);
+    this.editingFieldId.set(null);
+    this.optionsList.set([]);
+    this.newOptionInput.reset();
+  }
+
+  addOption(opt?: string): void {
+    const value = (opt !== undefined ? opt : this.newOptionInput.value || '').trim();
+    if (!value) return;
+
+    const current = this.optionsList();
+    if (current.some((existing) => existing.toLowerCase() === value.toLowerCase())) {
+      return;
+    }
+
+    this.optionsList.update((list) => [...list, value]);
+    this.newOptionInput.reset();
+  }
+
+  removeOption(index: number): void {
+    this.optionsList.update((list) => list.filter((_, i) => i !== index));
   }
 
   onSubmitField(): void {
@@ -91,30 +197,99 @@ export class FormDefinitionsPage implements OnInit {
     this.isSubmitting.set(true);
 
     let defaultOptions: { options: string[] } | undefined;
-    if (['select', 'radio', 'checkbox'].includes(val.fieldType!) && val.optionsInput?.trim()) {
-      defaultOptions = {
-        options: val.optionsInput
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean),
-      };
+    if (['select', 'radio', 'checkbox'].includes(val.fieldType!) && this.optionsList().length > 0) {
+      defaultOptions = { options: [...this.optionsList()] };
     }
 
-    this.formStore.createFieldDefinition({
-      fieldName: val.fieldName!,
-      fieldLabel: val.fieldLabel!,
-      fieldType: val.fieldType!,
-      defaultOptions,
-      isFilterable: !!val.isFilterable,
-      isSortable: !!val.isSortable,
-      isSearchable: !!val.isSearchable,
-      isGlobal: true,
-    });
+    const rules: FieldValidationRules = {};
+    if (val.required) rules.required = true;
+
+    if (['text', 'textarea'].includes(val.fieldType!)) {
+      if (val.minLength != null && (val.minLength as any) !== '')
+        rules.minLength = Number(val.minLength);
+      if (val.maxLength != null && (val.maxLength as any) !== '')
+        rules.maxLength = Number(val.maxLength);
+      if (val.pattern?.trim()) rules.pattern = val.pattern.trim();
+    } else if (val.fieldType === 'number') {
+      if (val.min != null && (val.min as any) !== '') rules.min = Number(val.min);
+      if (val.max != null && (val.max as any) !== '') rules.max = Number(val.max);
+    } else if (['checkbox', 'select'].includes(val.fieldType!)) {
+      if (val.minSelections != null && (val.minSelections as any) !== '')
+        rules.minSelections = Number(val.minSelections);
+      if (val.maxSelections != null && (val.maxSelections as any) !== '')
+        rules.maxSelections = Number(val.maxSelections);
+    } else if (val.fieldType === 'file') {
+      if (val.allowedExtensions?.trim()) {
+        rules.allowedExtensions = val.allowedExtensions
+          .split(',')
+          .map((s) => s.trim().toLowerCase())
+          .filter(Boolean);
+      }
+      if (val.maxSizeMb != null && (val.maxSizeMb as any) !== '')
+        rules.maxSizeMb = Number(val.maxSizeMb);
+    }
+
+    const validationRules =
+      Object.keys(rules).length > 0 ? (rules as Record<string, unknown>) : undefined;
+
+    const editId = this.editingFieldId();
+    if (editId) {
+      this.formStore.updateFieldDefinition({
+        id: editId,
+        dto: {
+          fieldName: val.fieldName!,
+          fieldLabel: val.fieldLabel!,
+          fieldType: val.fieldType!,
+          defaultOptions,
+          validationRules,
+          isFilterable: !!val.isFilterable,
+          isSortable: !!val.isSortable,
+          isSearchable: !!val.isSearchable,
+        },
+      });
+    } else {
+      this.formStore.createFieldDefinition({
+        fieldName: val.fieldName!,
+        fieldLabel: val.fieldLabel!,
+        fieldType: val.fieldType!,
+        defaultOptions,
+        validationRules,
+        isFilterable: !!val.isFilterable,
+        isSortable: !!val.isSortable,
+        isSearchable: !!val.isSearchable,
+        isGlobal: true,
+      });
+    }
 
     setTimeout(() => {
       this.isSubmitting.set(false);
       this.closeFieldModal();
     }, 200);
+  }
+
+  formatRulesSummary(field: LibFieldDefinition): string[] {
+    const rules: FieldValidationRules = (field.validationRules as FieldValidationRules) || {};
+    const badges: string[] = [];
+    if (rules.required) badges.push('Required');
+    if (rules.minSelections != null) badges.push(`Min Pick: ${rules.minSelections}`);
+    if (rules.maxSelections != null) badges.push(`Max Pick: ${rules.maxSelections}`);
+    if (rules.minLength != null) badges.push(`Min Len: ${rules.minLength}`);
+    if (rules.maxLength != null) badges.push(`Max Len: ${rules.maxLength}`);
+    if (rules.min != null) badges.push(`Min: ${rules.min}`);
+    if (rules.max != null) badges.push(`Max: ${rules.max}`);
+    if (rules.allowedExtensions && Array.isArray(rules.allowedExtensions)) {
+      badges.push(`Ext: ${rules.allowedExtensions.join('/')}`);
+    }
+    if (rules.maxSizeMb != null) badges.push(`Max: ${rules.maxSizeMb}MB`);
+    return badges;
+  }
+
+  getOptionsList(field: LibFieldDefinition): string[] {
+    const raw = (field.defaultOptions as any)?.options;
+    if (Array.isArray(raw)) {
+      return raw.map((o) => (typeof o === 'string' ? o : o.label || o.value || String(o)));
+    }
+    return [];
   }
 
   onDeleteField(id: number): void {

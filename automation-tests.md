@@ -1360,3 +1360,68 @@ The application provides:
   - `RuleEngineService.validateForm()` transparently supports both `{ when, then }` and `{ conditions, actions }` rule shapes.
   - Public registration page and event roster "+ Register Fighter" modal render all form items cleanly without component initialization crashes.
 - **Final state:** Forms with any valid or partially populated compound rules render successfully without runtime exceptions.
+
+**HF-FD-001: Form Definitions - Create Reusable Definition from Base Form Type with Custom Options and Validation Rules**
+
+- **Preconditions:** User is authenticated and on `/form-definitions` under the "Field Library" tab.
+- **User/System actions:**
+  - User clicks "+ Add Field".
+  - In the modal, selects a Base Form Type (e.g. `checkbox` for multiselect checkboxes, `select`, `number`, `text`, etc.).
+  - Enters field label and machine key (snake_case).
+  - For choice types, adds custom options via the interactive options builder (e.g., "Combat Sambo", "Sport Sambo").
+  - Configures type-specific validation rules (e.g., `required: true`, `minSelections: 1`, `maxSelections: 3`).
+  - Submits the form.
+- **Expected results:**
+  - `POST /templates/field-definitions` is called with the complete payload including `fieldType`, `defaultOptions`, and `validationRules`.
+  - Modal closes, and the new form definition appears in the library table with its base type badge, options count, and rules summary.
+- **Final state:** Form definition persisted and available across templates.
+
+**HF-FD-002: Form Definitions - Edit Existing Form Definition**
+
+- **Preconditions:** Reusable form definitions exist in the Field Library table.
+- **User/System actions:**
+  - User clicks the "Edit" (pencil icon) button on a row.
+  - Modal opens in "Edit Form Definition" mode pre-populated with existing label, key, base form type, custom options, and validation rules.
+  - User modifies the options or validation constraints (e.g. changes `maxSelections` or adds a new option) and clicks "Save Changes".
+- **Expected results:**
+  - `PUT /templates/field-definitions/:id` is called with the updated payload.
+  - Modal closes and the table row reflects the updated options and rules summary.
+  - `FormDefinitionStore` updates the entity in state immutably.
+- **Final state:** Form definition successfully updated.
+
+**HF-FD-003: Form Definitions - Delete Reusable Definition**
+
+- **Preconditions:** Form definition exists in the Field Library table.
+- **User/System actions:**
+  - User clicks the "Delete" button on a row and confirms the confirmation prompt.
+- **Expected results:**
+  - `DELETE /templates/field-definitions/:id` is executed.
+  - The definition is removed from the store and table row is removed.
+- **Final state:** Form definition deleted from library.
+
+**HF-FD-004: Form Definitions - Dynamic Type-Sensitive Validation Rules Panel**
+
+- **Preconditions:** User has the Form Definition modal open.
+- **User/System actions:**
+  - User switches the Base Form Type between Text, Number, Multiselect Checkbox, Date, etc.
+- **Expected results:**
+  - The validation rules section dynamically adapts:
+    - Text/Textarea exposes Min Length and Max Length inputs.
+    - Number exposes Minimum Value and Maximum Value inputs.
+    - Multiselect Checkbox exposes Minimum Selections and Maximum Selections inputs.
+    - File Upload exposes Allowed Extensions and Max File Size (MB).
+    - All types expose the Required toggle.
+- **Final state:** Contextual validation rules presented accurately per base type.
+
+**HF-FD-005: Form Definitions - Interactive Custom Options Manager**
+
+- **Preconditions:** User selects a choice-based base form type (`select`, `radio`, `checkbox`).
+- **User/System actions:**
+  - User types an option name and presses Enter or clicks "+ Add Option".
+  - User clicks the remove (✕) button on an option pill.
+- **Expected results:**
+  - Options appear as interactive removable badges/chips.
+  - Duplicate or empty options are rejected.
+  - The options list is accurately serialized to `defaultOptions.options`.
+- **Final state:** Custom options easily authored and edited.
+

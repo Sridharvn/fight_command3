@@ -57,6 +57,7 @@ describe('FormDefinitionsPage', () => {
       setActiveTab: vi.fn((tab: 'templates' | 'fields') => activeTabSignal.set(tab)),
       setSearchQuery: vi.fn(),
       createFieldDefinition: vi.fn(),
+      updateFieldDefinition: vi.fn(),
       createTemplate: vi.fn(),
       deleteFieldDefinition: vi.fn(),
       deleteTemplate: vi.fn(),
@@ -235,5 +236,149 @@ describe('FormDefinitionsPage', () => {
     expect(component.previewFormDefinition()?.fields.length).toBeGreaterThanOrEqual(5); // fullName + email + 3 custom fields
     expect(component.previewFormDefinition()?.fields.some((f) => f.key === 'belt_rank')).toBe(true);
     expect(component.previewFormDefinition()?.fields.some((f) => f.key === 'dob')).toBe(true);
+  });
+
+  describe('Form Definitions Management (HF-FD-001 to HF-FD-005)', () => {
+    it('should open create field modal with blank state and reset options (HF-FD-001)', () => {
+      component.openCreateFieldModal();
+      expect(component.isFieldModalOpen()).toBe(true);
+      expect(component.editingFieldId()).toBeNull();
+      expect(component.optionsList()).toEqual([]);
+      expect(component.fieldForm.get('fieldLabel')?.value).toBe('');
+      expect(component.fieldForm.get('fieldType')?.value).toBe('text');
+    });
+
+    it('should create field definition with base form type, custom options, and validation rules (HF-FD-001)', () => {
+      component.openCreateFieldModal();
+      component.fieldForm.patchValue({
+        fieldLabel: 'Weight Category',
+        fieldName: 'weight_category',
+        fieldType: 'select',
+        required: true,
+      });
+      component.addOption('Under 64kg');
+      component.addOption('Under 71kg');
+
+      component.onSubmitField();
+
+      expect(formStoreMock.createFieldDefinition).toHaveBeenCalledWith(
+        expect.objectContaining({
+          fieldLabel: 'Weight Category',
+          fieldName: 'weight_category',
+          fieldType: 'select',
+          defaultOptions: { options: ['Under 64kg', 'Under 71kg'] },
+          validationRules: expect.objectContaining({ required: true }),
+        }),
+      );
+    });
+
+    it('should open edit field modal and pre-populate field data, options, and rules (HF-FD-002)', () => {
+      const existingField: FieldDefinition = {
+        fieldDefinitionId: 10,
+        fieldName: 'disciplines',
+        fieldLabel: 'Disciplines',
+        fieldType: 'checkbox',
+        defaultOptions: { options: ['Combat Sambo', 'Sport Sambo'] },
+        validationRules: { required: true, minSelections: 1, maxSelections: 2 },
+        isFilterable: true,
+        isSortable: false,
+        isSearchable: false,
+        isGlobal: true,
+      };
+
+      component.openEditFieldModal(existingField);
+
+      expect(component.isFieldModalOpen()).toBe(true);
+      expect(component.editingFieldId()).toBe(10);
+      expect(component.fieldForm.get('fieldLabel')?.value).toBe('Disciplines');
+      expect(component.fieldForm.get('fieldName')?.value).toBe('disciplines');
+      expect(component.fieldForm.get('fieldType')?.value).toBe('checkbox');
+      expect(component.fieldForm.get('required')?.value).toBe(true);
+      expect(component.fieldForm.get('minSelections')?.value).toBe(1);
+      expect(component.fieldForm.get('maxSelections')?.value).toBe(2);
+      expect(component.optionsList()).toEqual(['Combat Sambo', 'Sport Sambo']);
+    });
+
+    it('should submit update to existing field definition via updateFieldDefinition (HF-FD-002)', () => {
+      const existingField: FieldDefinition = {
+        fieldDefinitionId: 10,
+        fieldName: 'disciplines',
+        fieldLabel: 'Disciplines',
+        fieldType: 'checkbox',
+        defaultOptions: { options: ['Combat Sambo', 'Sport Sambo'] },
+        validationRules: { required: true, minSelections: 1, maxSelections: 2 },
+        isFilterable: true,
+        isSortable: false,
+        isSearchable: false,
+        isGlobal: true,
+      };
+
+      component.openEditFieldModal(existingField);
+      component.fieldForm.patchValue({
+        fieldLabel: 'Disciplines & Styles',
+        maxSelections: 3,
+      });
+      component.addOption('Beach Sambo');
+
+      component.onSubmitField();
+
+      expect(formStoreMock.updateFieldDefinition).toHaveBeenCalledWith({
+        id: 10,
+        dto: expect.objectContaining({
+          fieldLabel: 'Disciplines & Styles',
+          defaultOptions: { options: ['Combat Sambo', 'Sport Sambo', 'Beach Sambo'] },
+          validationRules: expect.objectContaining({
+            required: true,
+            minSelections: 1,
+            maxSelections: 3,
+          }),
+        }),
+      });
+    });
+
+    it('should delete field definition with user confirmation (HF-FD-003)', () => {
+      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      component.onDeleteField(5);
+      expect(formStoreMock.deleteFieldDefinition).toHaveBeenCalledWith(5);
+    });
+
+    it('should manage interactive options list: add, deduplicate, reject empty, and remove (HF-FD-005)', () => {
+      component.openCreateFieldModal();
+      component.addOption('Option A');
+      expect(component.optionsList()).toEqual(['Option A']);
+
+      // Duplicate should not be added
+      component.addOption('Option A');
+      expect(component.optionsList()).toEqual(['Option A']);
+
+      // Empty / whitespace should not be added
+      component.addOption('   ');
+      expect(component.optionsList()).toEqual(['Option A']);
+
+      component.addOption('Option B');
+      expect(component.optionsList()).toEqual(['Option A', 'Option B']);
+
+      component.removeOption(0);
+      expect(component.optionsList()).toEqual(['Option B']);
+    });
+
+    it('should format rules summary into badges accurately', () => {
+      const fieldWithRules: FieldDefinition = {
+        fieldDefinitionId: 1,
+        fieldName: 'test',
+        fieldLabel: 'Test',
+        fieldType: 'number',
+        validationRules: { required: true, min: 10, max: 100 },
+        isFilterable: false,
+        isSortable: false,
+        isSearchable: false,
+        isGlobal: true,
+      };
+
+      const summary = component.formatRulesSummary(fieldWithRules);
+      expect(summary).toContain('Required');
+      expect(summary).toContain('Min: 10');
+      expect(summary).toContain('Max: 100');
+    });
   });
 });
