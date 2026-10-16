@@ -101,7 +101,6 @@ The application provides an accessible login screen (`/login`) allowing users to
   - Preference is saved to `localStorage`.
 - **Final state:** Sidemenu is collapsed or expanded solely via the header hamburger toggle.
 
-
 **HF-008: Sidemenu Active Route Highlighting**
 
 - **Preconditions:** User is authenticated.
@@ -202,14 +201,15 @@ The application provides an accessible login screen (`/login`) allowing users to
   - User is navigated to `/login`.
 - **Final state:** Session terminated; unauthenticated view displayed.
 
-**HF-020: Header User Details Display**
+**HF-020: Header User Details Display & Streamlined Design**
 
 - **Preconditions:** User is authenticated.
 - **User/System actions:** User views the application header.
 - **Expected results:**
   - Header displays user profile container with user avatar (initials), full name, email address, and role badge.
   - Header displays a "Logout" button.
-- **Final state:** User details and logout button clearly visible in header.
+  - Header does NOT render redundant navigation links (`.nav-links`), keeping the top header clean and uncluttered.
+- **Final state:** User details and logout button clearly visible in streamlined header.
 
 **HF-021: Header Logout Action**
 
@@ -279,7 +279,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Expected results:**
   - Page is enclosed in `<app-base-layout>`.
   - Authenticated sidemenu (`<app-base-sidebar>`) is rendered with collapsible toggle, navigation links, and user bottom details.
-  - Header (`<app-base-header>`) is rendered with navigation links, user profile details pill, and logout button.
+  - Header (`<app-base-header>`) is rendered with brand logo, user profile details pill, and logout button, without redundant navigation links.
   - Page visuals (header, title typography, search toolbar, buttons, cards, modals) match the design system established in Users and Roles.
 - **Final state:** Consistent shell and theme displayed.
 
@@ -290,7 +290,7 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Expected results:**
   - Page is enclosed in `<app-base-layout>`.
   - Authenticated sidemenu (`<app-base-sidebar>`) is rendered with collapsible toggle, navigation links, and user bottom details.
-  - Header (`<app-base-header>`) is rendered with navigation links, user profile details pill, and logout button.
+  - Header (`<app-base-header>`) is rendered with brand logo, user profile details pill, and logout button, without redundant navigation links.
   - Page visuals (header, title typography, tab navigation, search toolbar, table, badges, modals) match the design system established in Users and Roles.
 - **Final state:** Consistent shell and theme displayed.
 
@@ -1496,7 +1496,19 @@ The application provides:
   - Complete feature parity is maintained for both templates and field definitions.
 - **Final state:** Clear separation between form templates and underlying field definitions in routing, navigation, and page presentation.
 
+**HF-NAV-012: Streamlined Header - Redundant Navigation Links Removed**
 
-
-
-
+- **Preconditions:** User is viewing the application shell (`<app-base-layout>`), authenticated or unauthenticated.
+- **User/System actions:**
+  1. Inspect the top header (`<app-base-header>`):
+     - Verify `.nav-links` container is completely absent.
+     - Verify no navigation links for Events, Users, Roles, Rules, Templates, or Definitions exist in the header.
+  2. Inspect the remaining header elements:
+     - When authenticated: Hamburger menu toggle button (`.btn-menu-toggle`), brand logo (`.logo-container`), user profile details container (`.user-profile-header`), and logout button (`.btn-logout`).
+     - When unauthenticated: Brand logo (`.logo-container`) and "Sign In" button (`.btn-primary`).
+  3. Verify navigation across pages:
+     - All primary application navigation (Tournaments/Events, User Management, Role Management, Rule Management, Form Templates, Form Definitions) is handled exclusively via the sidemenu (`<app-base-sidebar>`).
+- **Expected results:**
+  - Redundant header navigation links are eliminated.
+  - Header is clean, focused on identity and controls, while sidemenu provides single source of navigation truth.
+- **Final state:** Streamlined, modern header layout with zero navigation redundancy.

@@ -47,17 +47,6 @@
     </div>
   </div>
 
-  <nav class="nav-links">
-    <a routerLink="/" class="nav-link">Events</a>
-    @if (authStore.isAuthenticated()) {
-      <a routerLink="/users" class="nav-link">Users</a>
-      <a routerLink="/roles" class="nav-link">Roles</a>
-      <a routerLink="/rule-management" class="nav-link">Rules</a>
-      <a routerLink="/form-templates" class="nav-link">Templates</a>
-      <a routerLink="/form-definitions" class="nav-link">Definitions</a>
-    }
-  </nav>
-
   <div class="actions">
     @if (authStore.isAuthenticated()) {
       <div

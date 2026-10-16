@@ -55,29 +55,6 @@
     }
   }
 
-  .nav-links {
-    display: flex;
-    gap: 1.5rem;
-
-    .nav-link {
-      color: oklch(72% 0.02 245);
-      text-decoration: none;
-      font-size: 0.95rem;
-      font-weight: 500;
-      transition: color 0.2s ease;
-
-      &:hover,
-      &.active {
-        color: oklch(96% 0.01 245);
-      }
-
-      &.active {
-        font-weight: 600;
-        color: var(--accent-primary-light);
-      }
-    }
-  }
-
   .actions {
     display: flex;
     align-items: center;

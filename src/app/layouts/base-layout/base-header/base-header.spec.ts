@@ -89,4 +89,21 @@ describe('BaseHeader', () => {
     menuToggleBtn.click();
     expect(TestBed.inject(LayoutStore).toggleSidebar).toHaveBeenCalledTimes(1);
   });
+
+  it('should not render redundant navigation links in header when authenticated (HF-NAV-012)', () => {
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    expect(compiled.querySelector('.nav-links')).toBeNull();
+    expect(compiled.querySelectorAll('.nav-link').length).toBe(0);
+  });
+
+  it('should not render redundant navigation links in header when unauthenticated (HF-NAV-012)', () => {
+    isAuthSignal.set(false);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    expect(compiled.querySelector('.nav-links')).toBeNull();
+    expect(compiled.querySelectorAll('.nav-link').length).toBe(0);
+  });
 });
