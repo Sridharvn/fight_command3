@@ -1512,3 +1512,71 @@ The application provides:
   - Redundant header navigation links are eliminated.
   - Header is clean, focused on identity and controls, while sidemenu provides single source of navigation truth.
 - **Final state:** Streamlined, modern header layout with zero navigation redundancy.
+
+**HF-PWA-001: PWA Web App Manifest Configuration & App Identity**
+
+- **Preconditions:** Web application build and public assets are served.
+- **User/System actions:** Browser requests `/manifest.webmanifest`.
+- **Expected results:**
+  - Manifest returns valid JSON with:
+    - `name`: "Fight Command"
+    - `short_name`: "Fight Command"
+    - `start_url`: "/"
+    - `display`: "standalone"
+    - `background_color`: "#0a0e17"
+    - `theme_color`: "#dc2626"
+    - `orientation`: "any"
+    - `icons`: complete set including 72x72, 96x96, 128x128, 144x144, 152x152, 192x192, 384x384, and 512x512 maskable/any icons.
+  - In `src/index.html`:
+    - Document title is updated to "Fight Command".
+    - `<link rel="manifest" href="manifest.webmanifest">` is present.
+    - `<meta name="theme-color" content="#dc2626">` is present.
+    - iOS PWA meta tags (`apple-mobile-web-app-capable`, `apple-mobile-web-app-title`, `apple-touch-icon`) are properly configured.
+- **Final state:** The web application is recognized as an installable PWA named "Fight Command".
+
+**HF-PWA-002: Service Worker Registration & Offline Caching Asset Groups**
+
+- **Preconditions:** Application is built or configured with Angular Service Worker.
+- **User/System actions:** Application bootstraps via `app.config.ts`.
+- **Expected results:**
+  - `provideServiceWorker('ngsw-worker.js', ...)` is registered in `app.config.ts`.
+  - `ngsw-config.json` specifies prefetch caching for shell assets (`/index.html`, `/manifest.webmanifest`, `/*.css`, `/*.js`, `/favicon.ico`) and lazy caching for icons/media.
+  - `angular.json` configures `serviceWorker: "ngsw-config.json"` for production builds.
+- **Final state:** Service worker registers and provides offline caching capabilities.
+
+**HF-MOB-001: Mobile Device Desktop Advisory Screen on Non-Public Routes**
+
+- **Preconditions:** User accesses any dashboard or administrative route (e.g., `/`, `/users`, `/roles`, `/rule-management`, `/form-templates`, `/form-definitions`, `/form-builder/:id`, `/events/:eventId/roster`, `/login`) on a mobile screen viewport (< 768px).
+- **User/System actions:** Page loads on mobile viewport.
+- **Expected results:**
+  - The "Open in desktop to see the full app experience" advisory screen is rendered.
+  - Advisory presents Fight Command branding, desktop icon/illustration, descriptive message explaining that management tools are optimized for desktop, and a "Continue anyway (preview)" button.
+  - Clarifies that public athlete registration forms are fully mobile enabled.
+- **Final state:** Mobile users are guided to desktop for complex dashboard operations.
+
+**HF-MOB-002: Public Registration Form Exempt From Mobile Advisory**
+
+- **Preconditions:** User accesses a public registration route (e.g., `/events/:eventId/register`) on a mobile screen viewport (< 768px).
+- **User/System actions:** Page loads on mobile viewport.
+- **Expected results:**
+  - The mobile desktop advisory is NOT rendered.
+  - The public tournament registration form is rendered directly and remains fully responsive, styled, and interactive on mobile devices.
+- **Final state:** Public athletes can complete event registration seamlessly on their mobile phones.
+
+**HF-MOB-003: Desktop Viewport Advisory Suppression**
+
+- **Preconditions:** User accesses any application route (public or private) on a desktop screen viewport (width >= 768px).
+- **User/System actions:** Page loads or renders on desktop viewport.
+- **Expected results:**
+  - The mobile advisory is completely hidden (`display: none` / omitted).
+  - Full desktop interface renders without interruption.
+- **Final state:** Desktop users experience standard uninterrupted workflow.
+
+**HF-MOB-004: Continue Anyway Action Dismisses Mobile Advisory**
+
+- **Preconditions:** Mobile advisory is displayed on a non-public route on a mobile viewport (< 768px).
+- **User/System actions:** User clicks the "Continue anyway (preview)" button.
+- **Expected results:**
+  - Advisory is dismissed for the session.
+  - Underlying desktop interface is revealed to allow mobile preview.
+- **Final state:** User can preview the desktop layout on mobile if intentionally desired.

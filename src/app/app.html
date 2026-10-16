@@ -1,1 +1,4 @@
+@if (isAdvisoryVisible()) {
+  <app-desktop-only-notice (continueAnyway)="dismissAdvisory()"></app-desktop-only-notice>
+}
 <router-outlet></router-outlet>

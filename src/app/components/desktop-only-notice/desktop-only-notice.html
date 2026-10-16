@@ -1,0 +1,74 @@
+<aside
+  class="desktop-notice-overlay"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="desktop-notice-title"
+>
+  <div class="notice-card">
+    <div class="brand-header">
+      <div class="brand-logo" aria-hidden="true">
+        <svg
+          viewBox="0 0 24 24"
+          width="28"
+          height="28"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+        >
+          <path d="M12 2L2 7l10 5 10-5-10-5Z" />
+          <path d="M2 17l10 5 10-5" />
+          <path d="M2 12l10 5 10-5" />
+        </svg>
+      </div>
+      <span class="brand-name">Fight Command</span>
+    </div>
+
+    <div class="icon-wrapper" aria-hidden="true">
+      <svg
+        viewBox="0 0 24 24"
+        width="48"
+        height="48"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+        <line x1="8" y1="21" x2="16" y2="21" />
+        <line x1="12" y1="17" x2="12" y2="21" />
+      </svg>
+    </div>
+
+    <span class="badge-desktop">Desktop Experience Optimized</span>
+
+    <h2 id="desktop-notice-title" class="notice-title">
+      Open in desktop to see the full app experience
+    </h2>
+
+    <p class="notice-description">
+      Fight Command tournament brackets, form builders, and administrative tools are tailored for
+      desktop viewports. For the best management experience, please access this page from a desktop
+      or laptop computer.
+    </p>
+
+    <div class="public-form-callout">
+      <div class="callout-icon" aria-hidden="true">📱</div>
+      <div class="callout-text">
+        <strong>Mobile Athlete Registration:</strong> Public tournament forms are fully mobile
+        responsive and ready for fighter sign-ups on phones.
+      </div>
+    </div>
+
+    <div class="notice-actions">
+      <button
+        type="button"
+        class="btn btn-continue-preview"
+        (click)="onContinueAnyway()"
+        aria-label="Continue anyway to view desktop layout on mobile"
+      >
+        Continue anyway (preview)
+      </button>
+    </div>
+  </div>
+</aside>
