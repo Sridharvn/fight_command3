@@ -99,11 +99,10 @@ export class RuleManagementPage implements OnInit {
     }));
   });
 
-  // Choice fields (checkbox groups with options, dropdowns, radios) suitable for option selection limits
+  // Checkbox fields (multiselect checkboxes with options) suitable for option selection limits
   readonly choiceFields = computed<AvailableRuleField[]>(() => {
     return this.availableFields().filter(
-      (f: AvailableRuleField) =>
-        (f.options && f.options.length > 0) || f.type === 'select' || f.type === 'radio',
+      (f: AvailableRuleField) => f.type === 'checkbox' && f.options && f.options.length > 0,
     );
   });
 

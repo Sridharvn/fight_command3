@@ -674,13 +674,17 @@
 
                 <div class="form-grid-3">
                   <div class="form-field-group">
-                    <label class="form-field-label">Target Multi-Option Field</label>
+                    <label class="form-field-label">Target Checkbox Field *</label>
                     <select
                       formControlName="targetFieldId"
                       (change)="onLimitChange()"
                       class="modal-select"
                     >
-                      <option value="" disabled>Select choice field...</option>
+                      @if (choiceFields().length === 0) {
+                        <option value="" disabled>No checkbox fields in template</option>
+                      } @else {
+                        <option value="" disabled>Select checkbox field...</option>
+                      }
                       @for (f of choiceFields(); track f.id) {
                         <option [value]="f.key">{{ f.label }} ({{ f.key }})</option>
                       }

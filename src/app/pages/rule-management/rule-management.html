@@ -338,22 +338,17 @@
                 <legend class="builder-legend">Option Selection Constraint</legend>
                 <div class="form-row">
                   <div class="form-group flex-2">
-                    <label class="form-label">Target Multi-Option Field *</label>
+                    <label class="form-label">Target Checkbox Field *</label>
                     <select
                       formControlName="targetFieldId"
                       class="form-select"
                       (change)="onLimitChange()"
                     >
                       @if (choiceFields().length === 0) {
-                        <option value="" disabled>
-                          No multi-option fields found in this scope
-                        </option>
+                        <option value="" disabled>No checkbox fields found in this scope</option>
                       }
-                      @for (
-                        f of choiceFields().length > 0 ? choiceFields() : availableFields();
-                        track f.key || f.id
-                      ) {
-                        <option [value]="f.key || f.id">{{ f.label }} ({{ f.type }})</option>
+                      @for (f of choiceFields(); track f.key || f.id) {
+                        <option [value]="f.key || f.id">{{ f.label }} (checkbox)</option>
                       }
                     </select>
                   </div>

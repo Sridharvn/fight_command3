@@ -331,4 +331,41 @@ describe('FormBuilderPage', () => {
       expect(builderStore.template()!.fields.length).toBe(countBefore);
     }
   });
+
+  it('should restrict selection limit target fields (choiceFields) strictly to checkbox types (HF-FD-007)', () => {
+    builderStore.setTemplate({
+      templateName: 'Mixed Types Template',
+      sportType: 1,
+      tournamentType: 1,
+      fields: [
+        {
+          id: 'f1',
+          key: 'division',
+          label: 'Division',
+          type: 'select',
+          options: [{ label: 'A', value: 'a' }],
+        },
+        {
+          id: 'f2',
+          key: 'gender',
+          label: 'Gender',
+          type: 'radio',
+          options: [{ label: 'M', value: 'm' }],
+        },
+        {
+          id: 'f3',
+          key: 'styles',
+          label: 'Styles',
+          type: 'checkbox',
+          options: [{ label: 'Sambo', value: 'sambo' }],
+        },
+      ],
+      validations: [],
+    });
+
+    const choices = component.choiceFields();
+    expect(choices.length).toBe(1);
+    expect(choices[0].key).toBe('styles');
+    expect(choices[0].type).toBe('checkbox');
+  });
 });

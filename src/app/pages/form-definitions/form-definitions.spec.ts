@@ -435,5 +435,86 @@ describe('FormDefinitionsPage', () => {
         expect(component.fieldForm.get('fieldName')?.value).toBe('disciplines');
       });
     });
+
+    describe('Selection Limits Restriction (HF-FD-007)', () => {
+      it('should reset minSelections and maxSelections when switching fieldType away from checkbox', () => {
+        component.openCreateFieldModal();
+        component.fieldForm.patchValue({
+          fieldType: 'checkbox',
+          minSelections: 1,
+          maxSelections: 3,
+        });
+
+        // Switch to select (dropdown)
+        component.fieldForm.get('fieldType')?.setValue('select');
+        expect(component.fieldForm.get('minSelections')?.value).toBeNull();
+        expect(component.fieldForm.get('maxSelections')?.value).toBeNull();
+
+        // Set back to checkbox, fill, then switch to radio
+        component.fieldForm.patchValue({
+          fieldType: 'checkbox',
+          minSelections: 2,
+          maxSelections: 4,
+        });
+        component.fieldForm.get('fieldType')?.setValue('radio');
+        expect(component.fieldForm.get('minSelections')?.value).toBeNull();
+        expect(component.fieldForm.get('maxSelections')?.value).toBeNull();
+      });
+
+      it('should not persist minSelections or maxSelections in validationRules when fieldType is select or radio', () => {
+        component.openCreateFieldModal();
+        component.fieldForm.patchValue({
+          fieldLabel: 'Weight Division',
+          fieldName: 'weight_division',
+          fieldType: 'select',
+          minSelections: 1 as any,
+          maxSelections: 2 as any,
+        });
+        component.addOption('Lightweight');
+
+        component.onSubmitField();
+
+        expect(formStoreMock.createFieldDefinition).toHaveBeenCalledWith(
+          expect.objectContaining({
+            fieldType: 'select',
+            validationRules: undefined,
+          }),
+        );
+      });
+
+      it('should only render Min/Max Pick badges in formatRulesSummary for checkbox fields', () => {
+        const selectField: FieldDefinition = {
+          fieldDefinitionId: 1,
+          fieldName: 'style',
+          fieldLabel: 'Style',
+          fieldType: 'select',
+          validationRules: { minSelections: 1, maxSelections: 3 },
+          isFilterable: false,
+          isSortable: false,
+          isSearchable: false,
+          isGlobal: true,
+        };
+
+        const checkboxField: FieldDefinition = {
+          fieldDefinitionId: 2,
+          fieldName: 'categories',
+          fieldLabel: 'Categories',
+          fieldType: 'checkbox',
+          validationRules: { minSelections: 1, maxSelections: 3 },
+          isFilterable: false,
+          isSortable: false,
+          isSearchable: false,
+          isGlobal: true,
+        };
+
+        const selectSummary = component.formatRulesSummary(selectField);
+        expect(selectSummary).not.toContain('Min Pick: 1');
+        expect(selectSummary).not.toContain('Max Pick: 3');
+
+        const checkboxSummary = component.formatRulesSummary(checkboxField);
+        expect(checkboxSummary).toContain('Min Pick: 1');
+        expect(checkboxSummary).toContain('Max Pick: 3');
+      });
+    });
   });
 });

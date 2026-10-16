@@ -104,6 +104,12 @@ export class FormDefinitionsPage implements OnInit {
         this.fieldForm.get('fieldName')?.setValue(generatedKey, { emitEvent: false });
       }
     });
+
+    this.fieldForm.get('fieldType')?.valueChanges.subscribe((type) => {
+      if (type !== 'checkbox') {
+        this.fieldForm.patchValue({ minSelections: null, maxSelections: null });
+      }
+    });
   }
 
   onKeyManualInput(): void {
@@ -245,7 +251,7 @@ export class FormDefinitionsPage implements OnInit {
     } else if (val.fieldType === 'number') {
       if (val.min != null && (val.min as any) !== '') rules.min = Number(val.min);
       if (val.max != null && (val.max as any) !== '') rules.max = Number(val.max);
-    } else if (['checkbox', 'select'].includes(val.fieldType!)) {
+    } else if (val.fieldType === 'checkbox') {
       if (val.minSelections != null && (val.minSelections as any) !== '')
         rules.minSelections = Number(val.minSelections);
       if (val.maxSelections != null && (val.maxSelections as any) !== '')
@@ -303,8 +309,10 @@ export class FormDefinitionsPage implements OnInit {
     const rules: FieldValidationRules = (field.validationRules as FieldValidationRules) || {};
     const badges: string[] = [];
     if (rules.required) badges.push('Required');
-    if (rules.minSelections != null) badges.push(`Min Pick: ${rules.minSelections}`);
-    if (rules.maxSelections != null) badges.push(`Max Pick: ${rules.maxSelections}`);
+    if (field.fieldType === 'checkbox') {
+      if (rules.minSelections != null) badges.push(`Min Pick: ${rules.minSelections}`);
+      if (rules.maxSelections != null) badges.push(`Max Pick: ${rules.maxSelections}`);
+    }
     if (rules.minLength != null) badges.push(`Min Len: ${rules.minLength}`);
     if (rules.maxLength != null) badges.push(`Max Len: ${rules.maxLength}`);
     if (rules.min != null) badges.push(`Min: ${rules.min}`);

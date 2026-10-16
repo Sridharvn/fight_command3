@@ -65,17 +65,7 @@ export class FormBuilderPage implements OnInit {
   readonly activeRuleType = signal<'condition' | 'selectionLimit'>('condition');
 
   readonly choiceFields = computed<FormField[]>(() => {
-    return (
-      this.builderStore
-        .template()
-        ?.fields.filter(
-          (f) =>
-            (f.options && f.options.length > 0) ||
-            f.type === 'select' ||
-            f.type === 'radio' ||
-            f.type === 'checkbox',
-        ) || []
-    );
+    return this.builderStore.template()?.fields.filter((f) => f.type === 'checkbox') || [];
   });
 
   // Rule Modal Form

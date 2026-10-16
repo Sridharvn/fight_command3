@@ -644,7 +644,7 @@
                 </div>
               }
 
-              @if (['checkbox', 'select'].includes(fieldForm.get('fieldType')?.value || '')) {
+              @if (fieldForm.get('fieldType')?.value === 'checkbox') {
                 <div class="form-row">
                   <div class="form-group">
                     <label for="minSelections" class="form-label">Minimum Selections</label>

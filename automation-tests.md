@@ -1440,4 +1440,21 @@ The application provides:
   - In Edit mode for existing fields, the field key remains locked/disabled to protect existing schema references.
 - **Final state:** Fast, frictionless field creation with zero manual snake_case formatting required and zero pattern validation errors.
 
+**HF-FD-007: Selection Limits Restriction - Min/Max Selection Rules Applicable Exclusively to Checkboxes**
+
+- **Preconditions:** User is creating or editing form definitions in `/form-definitions`, or defining selection limit rules in `/form-builder/:id` or `/rule-management`.
+- **User/System actions:**
+  - In Form Definition modal:
+    1. Select Base Form Type = `checkbox` -> Verify Minimum Selections and Maximum Selections input controls are visible.
+    2. Select Base Form Type = `select` (dropdown) or `radio` (radio button) -> Verify Minimum Selections and Maximum Selections input controls are hidden.
+    3. Input values in `minSelections` and `maxSelections` under `checkbox`, then switch type to `select` or `text` -> Verify `minSelections` and `maxSelections` form controls are reset to null.
+    4. Save a `select` or `radio` field -> Verify `validationRules` contains no `minSelections` or `maxSelections`.
+  - In Form Builder & Rule Management:
+    1. In the rule creation modal under "Selection Limit" constraint type, inspect the target field dropdown.
+    2. Verify only `checkbox` fields are available in the target field selector (neither `select` nor `radio` are offered, since dropdowns and radio buttons cannot multiselect).
+- **Expected results:**
+  - Selection limit bounds are restricted strictly to `checkbox` multiselect fields across field definitions, form builder, and rule management.
+- **Final state:** Unambiguous selection limit enforcement matching the true single-choice nature of radio buttons and select dropdowns.
+
+
 
