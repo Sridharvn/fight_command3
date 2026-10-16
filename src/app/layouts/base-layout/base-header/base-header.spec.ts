@@ -51,7 +51,7 @@ describe('BaseHeader', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render user avatar, full name, email, role badge, and logout button when authenticated', () => {
+  it('should render user avatar, full name, email, and role badge when authenticated (HF-020)', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
 
@@ -59,13 +59,13 @@ describe('BaseHeader', () => {
     expect(compiled.textContent).toContain('test@arena.com');
     expect(compiled.textContent).toContain('SUPERADMIN');
     expect(compiled.textContent).toContain('TU');
+  });
 
-    const logoutBtn = compiled.querySelector('.btn-logout') as HTMLButtonElement;
-    expect(logoutBtn).toBeTruthy();
-    expect(logoutBtn.textContent).toContain('Logout');
-
-    logoutBtn.click();
-    expect(logoutMock).toHaveBeenCalledTimes(1);
+  it('should not render logout button in header (HF-020)', () => {
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const logoutBtn = compiled.querySelector('.btn-logout');
+    expect(logoutBtn).toBeNull();
   });
 
   it('should render Sign In link and no user details when not authenticated', () => {

@@ -207,14 +207,14 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **User/System actions:** User views the application header.
 - **Expected results:**
   - Header displays user profile container with user avatar (initials), full name, email address, and role badge.
-  - Header displays a "Logout" button.
+  - Header does NOT render a Logout button (`.btn-logout`), centralizing logout functionality exclusively in the sidebar footer.
   - Header does NOT render redundant navigation links (`.nav-links`), keeping the top header clean and uncluttered.
-- **Final state:** User details and logout button clearly visible in streamlined header.
+- **Final state:** User identity details clearly visible in streamlined header with zero redundancy.
 
-**HF-021: Header Logout Action**
+**HF-021: Sidebar Footer Logout Action**
 
-- **Preconditions:** User is authenticated and header is visible.
-- **User/System actions:** User clicks the "Logout" button in the header.
+- **Preconditions:** User is authenticated and sidebar footer is visible.
+- **User/System actions:** User clicks the "Logout" button in the sidebar footer (`BaseSidebar`).
 - **Expected results:**
   - `authStore.logout()` is called.
   - Tokens cleared, user redirected to `/login`, header switches to public "Sign In" button.
@@ -278,8 +278,8 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **User/System actions:** User accesses or refreshes `/rule-management`.
 - **Expected results:**
   - Page is enclosed in `<app-base-layout>`.
-  - Authenticated sidemenu (`<app-base-sidebar>`) is rendered with collapsible toggle, navigation links, and user bottom details.
-  - Header (`<app-base-header>`) is rendered with brand logo, user profile details pill, and logout button, without redundant navigation links.
+  - Authenticated sidemenu (`<app-base-sidebar>`) is rendered with collapsible toggle, navigation links, and user bottom details with logout button.
+  - Header (`<app-base-header>`) is rendered with brand logo and user profile details pill (without redundant navigation links or header logout button).
   - Page visuals (header, title typography, search toolbar, buttons, cards, modals) match the design system established in Users and Roles.
 - **Final state:** Consistent shell and theme displayed.
 
@@ -289,8 +289,8 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **User/System actions:** User accesses or refreshes `/form-definitions`.
 - **Expected results:**
   - Page is enclosed in `<app-base-layout>`.
-  - Authenticated sidemenu (`<app-base-sidebar>`) is rendered with collapsible toggle, navigation links, and user bottom details.
-  - Header (`<app-base-header>`) is rendered with brand logo, user profile details pill, and logout button, without redundant navigation links.
+  - Authenticated sidemenu (`<app-base-sidebar>`) is rendered with collapsible toggle, navigation links, and user bottom details with logout button.
+  - Header (`<app-base-header>`) is rendered with brand logo and user profile details pill (without redundant navigation links or header logout button).
   - Page visuals (header, title typography, tab navigation, search toolbar, table, badges, modals) match the design system established in Users and Roles.
 - **Final state:** Consistent shell and theme displayed.
 
@@ -1504,14 +1504,14 @@ The application provides:
      - Verify `.nav-links` container is completely absent.
      - Verify no navigation links for Events, Users, Roles, Rules, Templates, or Definitions exist in the header.
   2. Inspect the remaining header elements:
-     - When authenticated: Hamburger menu toggle button (`.btn-menu-toggle`), brand logo (`.logo-container`), user profile details container (`.user-profile-header`), and logout button (`.btn-logout`).
+     - When authenticated: Hamburger menu toggle button (`.btn-menu-toggle`), brand logo (`.logo-container`), and user profile details container (`.user-profile-header`). The header does not render a logout button; logout is centralized in the sidemenu footer (`BaseSidebar`).
      - When unauthenticated: Brand logo (`.logo-container`) and "Sign In" button (`.btn-primary`).
-  3. Verify navigation across pages:
-     - All primary application navigation (Tournaments/Events, User Management, Role Management, Rule Management, Form Templates, Form Definitions) is handled exclusively via the sidemenu (`<app-base-sidebar>`).
+  3. Verify navigation and logout across pages:
+     - All primary application navigation and logout actions are handled exclusively via the sidemenu (`<app-base-sidebar>`).
 - **Expected results:**
-  - Redundant header navigation links are eliminated.
-  - Header is clean, focused on identity and controls, while sidemenu provides single source of navigation truth.
-- **Final state:** Streamlined, modern header layout with zero navigation redundancy.
+  - Redundant header navigation links and header logout button are eliminated.
+  - Header is clean, focused on branding and identity, while sidemenu provides single source of truth for navigation and logout.
+- **Final state:** Streamlined, modern header layout with zero redundancy.
 
 **HF-PWA-001: PWA Web App Manifest Configuration & App Identity**
 
