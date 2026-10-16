@@ -82,6 +82,12 @@ describe('BaseSidebar', () => {
     expect(linkTexts.some((text) => text?.includes('Form Definitions'))).toBe(true);
   });
 
+  it('should not render collapse arrow button in sidebar header (HF-007)', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const arrowBtn = compiled.querySelector('.btn-collapse');
+    expect(arrowBtn).toBeNull();
+  });
+
   it('should apply collapsed class when isSidebarCollapsed is true', () => {
     isCollapsedSignal.set(true);
     fixture.detectChanges();

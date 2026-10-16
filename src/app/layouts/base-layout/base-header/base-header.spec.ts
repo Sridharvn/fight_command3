@@ -78,4 +78,15 @@ describe('BaseHeader', () => {
     expect(signInBtn).toBeTruthy();
     expect(signInBtn?.textContent).toContain('Sign In');
   });
+
+  it('should render hamburger menu toggle button in header to collapse and expand sidebar (HF-007)', () => {
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const menuToggleBtn = compiled.querySelector('.btn-menu-toggle') as HTMLButtonElement;
+    expect(menuToggleBtn).toBeTruthy();
+    expect(menuToggleBtn.getAttribute('aria-label')).toBe('Collapse sidebar');
+
+    menuToggleBtn.click();
+    expect(TestBed.inject(LayoutStore).toggleSidebar).toHaveBeenCalledTimes(1);
+  });
 });

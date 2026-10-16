@@ -91,12 +91,16 @@ The application provides an accessible login screen (`/login`) allowing users to
 - **Expected results:** Sidemenu is visible in layout with navigation buttons for Home (`/`), User Management (`/users`), and Role Management (`/roles`).
 - **Final state:** Sidemenu rendered.
 
-**HF-007: Sidemenu Collapse & Expand Toggle**
+**HF-007: Sidemenu Collapse & Expand Toggle via Header Hamburger Button**
 
 - **Preconditions:** User is authenticated, sidemenu is expanded (250px).
-- **User/System actions:** User clicks collapse toggle button in header/sidebar.
-- **Expected results:** Sidemenu transitions to compact icon-only mode (68px); preference is saved to `localStorage`.
-- **Final state:** Sidemenu is collapsed.
+- **User/System actions:** User clicks the hamburger menu toggle button in the header (`.btn-menu-toggle`).
+- **Expected results:**
+  - The arrow collapse button (`.btn-collapse`) is removed from the sidebar header; only the header hamburger button controls sidebar collapsing/expanding.
+  - Clicking the hamburger button toggles the sidemenu between expanded mode (250px) and compact icon-only mode (68px).
+  - Preference is saved to `localStorage`.
+- **Final state:** Sidemenu is collapsed or expanded solely via the header hamburger toggle.
+
 
 **HF-008: Sidemenu Active Route Highlighting**
 
