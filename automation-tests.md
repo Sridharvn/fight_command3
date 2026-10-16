@@ -1456,5 +1456,21 @@ The application provides:
   - Selection limit bounds are restricted strictly to `checkbox` multiselect fields across field definitions, form builder, and rule management.
 - **Final state:** Unambiguous selection limit enforcement matching the true single-choice nature of radio buttons and select dropdowns.
 
+**HF-FD-008: Form Definitions - Default Enabled State for Filterable, Sortable, and Searchable Flags**
+
+- **Preconditions:** Administrator is on `/form-definitions` under the "Field Library" tab.
+- **User/System actions:**
+  1. Click "+ Add Field" to open the creation modal.
+  2. Inspect the checkboxes for "Filterable", "Sortable", and "Searchable".
+  3. Verify that `isFilterable`, `isSortable`, and `isSearchable` are pre-checked (`true`) by default.
+  4. Submit the creation form without altering the flags -> verify `isFilterable: true, isSortable: true, isSearchable: true` are sent in the creation payload.
+  5. Uncheck one or more flags (e.g. uncheck `isSearchable`) -> verify the submitted payload sends `isSearchable: false`.
+  6. Edit an existing field that was previously saved with `isFilterable: false` -> verify the edit modal preserves `isFilterable: false` and does not force it to `true`.
+- **Expected results:**
+  - New form definitions have filterable, sortable, and searchable enabled out-of-the-box.
+  - Manual toggling and existing values in edit mode are strictly respected.
+- **Final state:** Streamlined field creation with discoverability and search indexing enabled by default.
+
+
 
 

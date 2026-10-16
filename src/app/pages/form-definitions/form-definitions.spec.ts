@@ -516,5 +516,32 @@ describe('FormDefinitionsPage', () => {
         expect(checkboxSummary).toContain('Max Pick: 3');
       });
     });
+
+    describe('Default Enabled Flags (HF-FD-008)', () => {
+      it('should initialize isFilterable, isSortable, and isSearchable to true by default in create mode', () => {
+        component.openCreateFieldModal();
+        expect(component.fieldForm.get('isFilterable')?.value).toBe(true);
+        expect(component.fieldForm.get('isSortable')?.value).toBe(true);
+        expect(component.fieldForm.get('isSearchable')?.value).toBe(true);
+      });
+
+      it('should preserve false values when editing an existing field definition with disabled flags', () => {
+        const existingField: FieldDefinition = {
+          fieldDefinitionId: 5,
+          fieldName: 'notes',
+          fieldLabel: 'Internal Notes',
+          fieldType: 'textarea',
+          isFilterable: false,
+          isSortable: false,
+          isSearchable: false,
+          isGlobal: true,
+        };
+
+        component.openEditFieldModal(existingField);
+        expect(component.fieldForm.get('isFilterable')?.value).toBe(false);
+        expect(component.fieldForm.get('isSortable')?.value).toBe(false);
+        expect(component.fieldForm.get('isSearchable')?.value).toBe(false);
+      });
+    });
   });
 });
