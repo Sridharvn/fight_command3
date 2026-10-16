@@ -212,4 +212,28 @@ describe('DynamicFormRendererComponent', () => {
       'allows maximum 2 selections',
     );
   });
+
+  it('should render app-date-selector for date fields with isDob configuration for birth dates (HF-DATE-003)', () => {
+    const dateSchema: FormDefinition = {
+      templateName: 'DOB Form',
+      sportType: 1,
+      tournamentType: 1,
+      fields: [
+        {
+          id: 'dob',
+          key: 'dob',
+          label: 'Date of Birth',
+          type: 'date',
+          required: true,
+        },
+      ],
+      validations: [],
+    };
+
+    fixture.componentRef.setInput('schema', dateSchema);
+    fixture.detectChanges();
+
+    const dateSelector = fixture.nativeElement.querySelector('app-date-selector');
+    expect(dateSelector).toBeTruthy();
+  });
 });

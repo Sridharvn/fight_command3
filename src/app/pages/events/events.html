@@ -423,12 +423,11 @@
               <div class="form-row">
                 <div class="form-group col-half">
                   <label for="eventStartDate" class="form-label">Start Date *</label>
-                  <input
+                  <app-date-selector
                     id="eventStartDate"
-                    type="date"
-                    class="form-control"
                     formControlName="eventStartDate"
-                  />
+                    placeholder="YYYY-MM-DD"
+                  ></app-date-selector>
                   @if (
                     createForm.get('eventStartDate')?.touched &&
                     createForm.get('eventStartDate')?.invalid
@@ -438,12 +437,11 @@
                 </div>
                 <div class="form-group col-half">
                   <label for="eventEndDate" class="form-label">End Date *</label>
-                  <input
+                  <app-date-selector
                     id="eventEndDate"
-                    type="date"
-                    class="form-control"
                     formControlName="eventEndDate"
-                  />
+                    placeholder="YYYY-MM-DD"
+                  ></app-date-selector>
                   @if (
                     createForm.get('eventEndDate')?.touched &&
                     createForm.get('eventEndDate')?.invalid
@@ -498,12 +496,11 @@
               <div class="form-row">
                 <div class="form-group col-half">
                   <label for="registrationOpenDate" class="form-label">Registration Opens *</label>
-                  <input
+                  <app-date-selector
                     id="registrationOpenDate"
-                    type="date"
-                    class="form-control"
                     formControlName="registrationOpenDate"
-                  />
+                    placeholder="YYYY-MM-DD"
+                  ></app-date-selector>
                   @if (
                     createForm.get('registrationOpenDate')?.touched &&
                     createForm.get('registrationOpenDate')?.invalid
@@ -515,12 +512,11 @@
                   <label for="registrationCloseDate" class="form-label"
                     >Registration Closes *</label
                   >
-                  <input
+                  <app-date-selector
                     id="registrationCloseDate"
-                    type="date"
-                    class="form-control"
                     formControlName="registrationCloseDate"
-                  />
+                    placeholder="YYYY-MM-DD"
+                  ></app-date-selector>
                   @if (
                     createForm.get('registrationCloseDate')?.touched &&
                     createForm.get('registrationCloseDate')?.invalid
@@ -663,12 +659,11 @@
               <div class="form-row">
                 <div class="form-group col-half">
                   <label for="editEventStartDate" class="form-label">Start Date *</label>
-                  <input
+                  <app-date-selector
                     id="editEventStartDate"
-                    type="date"
-                    class="form-control"
                     formControlName="eventStartDate"
-                  />
+                    placeholder="YYYY-MM-DD"
+                  ></app-date-selector>
                   @if (
                     editForm.get('eventStartDate')?.touched &&
                     editForm.get('eventStartDate')?.invalid
@@ -678,12 +673,11 @@
                 </div>
                 <div class="form-group col-half">
                   <label for="editEventEndDate" class="form-label">End Date *</label>
-                  <input
+                  <app-date-selector
                     id="editEventEndDate"
-                    type="date"
-                    class="form-control"
                     formControlName="eventEndDate"
-                  />
+                    placeholder="YYYY-MM-DD"
+                  ></app-date-selector>
                   @if (
                     editForm.get('eventEndDate')?.touched && editForm.get('eventEndDate')?.invalid
                   ) {
@@ -730,12 +724,11 @@
                   <label for="editRegistrationOpenDate" class="form-label"
                     >Registration Opens *</label
                   >
-                  <input
+                  <app-date-selector
                     id="editRegistrationOpenDate"
-                    type="date"
-                    class="form-control"
                     formControlName="registrationOpenDate"
-                  />
+                    placeholder="YYYY-MM-DD"
+                  ></app-date-selector>
                   @if (
                     editForm.get('registrationOpenDate')?.touched &&
                     editForm.get('registrationOpenDate')?.invalid
@@ -747,12 +740,11 @@
                   <label for="editRegistrationCloseDate" class="form-label"
                     >Registration Closes *</label
                   >
-                  <input
+                  <app-date-selector
                     id="editRegistrationCloseDate"
-                    type="date"
-                    class="form-control"
                     formControlName="registrationCloseDate"
-                  />
+                    placeholder="YYYY-MM-DD"
+                  ></app-date-selector>
                   @if (
                     editForm.get('registrationCloseDate')?.touched &&
                     editForm.get('registrationCloseDate')?.invalid

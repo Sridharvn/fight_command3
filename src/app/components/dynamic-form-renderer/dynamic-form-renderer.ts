@@ -18,9 +18,11 @@ import {
 import { FormDefinition, FormField } from '../../models/dynamic-form.models';
 import { RuleEngineService } from '../../services/rule-engine.service';
 
+import { DateSelectorComponent } from '../date-selector/date-selector';
+
 @Component({
   selector: 'app-dynamic-form-renderer',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, DateSelectorComponent],
   templateUrl: './dynamic-form-renderer.html',
   styleUrl: './dynamic-form-renderer.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -284,5 +286,19 @@ export class DynamicFormRendererComponent implements OnInit {
       return;
     }
     this.formSubmit.emit(this.form.getRawValue());
+  }
+
+  isDobField(field: FormField): boolean {
+    const key = (field.key || field.id || '').toLowerCase();
+    const label = (field.label || '').toLowerCase();
+    return (
+      key === 'dob' ||
+      key === 'date_of_birth' ||
+      key === 'dateofbirth' ||
+      key === 'birth_date' ||
+      key === 'birthdate' ||
+      label.includes('birth') ||
+      label.includes('dob')
+    );
   }
 }

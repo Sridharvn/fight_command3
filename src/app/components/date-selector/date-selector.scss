@@ -1,0 +1,84 @@
+.date-selector-wrapper {
+  position: relative;
+  width: 100%;
+
+  &.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+}
+
+.input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+
+  .date-input {
+    width: 100%;
+    padding: 0.65rem 4.5rem 0.65rem 0.85rem;
+    background: oklch(18% 0.02 245);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    color: oklch(96% 0.01 245);
+    font-size: 0.875rem;
+    font-family: inherit;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+    &::placeholder {
+      color: oklch(55% 0.02 245);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px var(--accent-primary-subtle);
+    }
+
+    &:disabled {
+      background: rgba(255, 255, 255, 0.03);
+      cursor: not-allowed;
+    }
+  }
+
+  .actions {
+    position: absolute;
+    right: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+
+    .btn-clear {
+      background: transparent;
+      border: none;
+      color: oklch(65% 0.02 245);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.25rem;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+
+      &:hover {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.1);
+      }
+    }
+
+    mat-datepicker-toggle {
+      color: oklch(75% 0.02 245);
+
+      ::ng-deep .mat-mdc-icon-button {
+        width: 32px;
+        height: 32px;
+        padding: 6px;
+        color: oklch(75% 0.02 245);
+
+        &:hover {
+          color: var(--accent-primary-light);
+        }
+      }
+    }
+  }
+}

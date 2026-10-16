@@ -19,9 +19,18 @@ import { publicRegistrationRoute } from '../../constants/app-routes';
 
 import { EventService } from '../../services/event.service';
 
+import { DateSelectorComponent } from '../../components/date-selector/date-selector';
+
 @Component({
   selector: 'app-events',
-  imports: [CommonModule, BaseLayout, RouterLink, ReactiveFormsModule, DatePipe],
+  imports: [
+    CommonModule,
+    BaseLayout,
+    RouterLink,
+    ReactiveFormsModule,
+    DatePipe,
+    DateSelectorComponent,
+  ],
   templateUrl: './events.html',
   styleUrl: './events.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

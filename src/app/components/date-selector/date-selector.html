@@ -1,0 +1,71 @@
+<div class="date-selector-wrapper" [class.disabled]="isDisabled()">
+  <div class="input-container">
+    <input
+      [id]="id()"
+      matInput
+      class="form-control date-input"
+      [placeholder]="placeholder()"
+      [value]="selectedDate()"
+      (blur)="onBlur()"
+      [disabled]="isDisabled()"
+      [matDatepicker]="picker"
+      [min]="effectiveMinDate()"
+      [max]="effectiveMaxDate()"
+      (dateChange)="onDateChange($event)"
+    />
+
+    <div class="actions">
+      @if (selectedDate() && !isDisabled()) {
+        <button
+          type="button"
+          class="btn-icon btn-clear"
+          (click)="clearDate($event)"
+          title="Clear date"
+          aria-label="Clear date"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="14"
+            height="14"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      }
+
+      <mat-datepicker-toggle
+        [for]="picker"
+        [disabled]="isDisabled()"
+        aria-label="Open calendar selector"
+      >
+        <svg
+          matDatepickerToggleIcon
+          viewBox="0 0 24 24"
+          width="18"
+          height="18"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+      </mat-datepicker-toggle>
+    </div>
+  </div>
+
+  <mat-datepicker
+    #picker
+    [startView]="effectiveStartView()"
+    [startAt]="startAtDate()"
+    panelClass="fight-command-datepicker-panel"
+  ></mat-datepicker>
+</div>

@@ -1584,3 +1584,52 @@ The application provides:
   - Advisory is dismissed for the session.
   - Underlying desktop interface is revealed to allow mobile preview.
 - **Final state:** User can preview the desktop layout on mobile if intentionally desired.
+
+**HF-DATE-001: Date Selector Component Integration & ControlValueAccessor**
+
+- **Preconditions:** Form contains `<app-date-selector>`.
+- **User/System actions:** Component initializes with reactive `formControl` or `formControlName`.
+- **Expected results:**
+  - Component integrates Angular Material Datepicker primitives with native date adapter.
+  - Emits and receives standard ISO format `YYYY-MM-DD`.
+  - Form control dirty/touched states update correctly upon date selection or blur.
+- **Final state:** Seamless 2-way reactive form binding with ISO date values.
+
+**HF-DATE-002: Multi-Year Decade View for Date of Birth (DOB)**
+
+- **Preconditions:** Date selector has `isDob="true"` or `startView="multi-year"`.
+- **User/System actions:** User clicks the calendar toggle button.
+- **Expected results:**
+  - Datepicker popup opens directly into `multi-year` view displaying a 24-year decade grid.
+  - User can jump across decades (e.g., 1980s, 1990s, 2000s) with a single click.
+  - Clicking a year displays the 12-month grid; clicking a month displays the day grid; clicking a day completes the selection.
+  - Maximum date is bounded to prevent future dates from being selected for Date of Birth.
+- **Final state:** Date of birth selected in 3 intuitive clicks without sequential month scrolling.
+
+**HF-DATE-003: Dynamic Form Renderer Date Selection for Athlete Registration**
+
+- **Preconditions:** Athlete registration or tournament form schema contains field with `type: 'date'`.
+- **User/System actions:** DynamicFormRenderer renders the field.
+- **Expected results:**
+  - DynamicFormRenderer embeds `<app-date-selector>` instead of native `<input type="date">`.
+  - Automatically activates `isDob` mode with multi-year decade view when `field.key === 'dob'`, `date_of_birth`, or label contains "birth".
+  - Form submission accurately packages ISO `YYYY-MM-DD` string value into registration response.
+- **Final state:** Athlete registration and roster details modal seamlessly reflect selected date of birth.
+
+**HF-DATE-004: Event Start & End Date Selection with Calendar Popover**
+
+- **Preconditions:** User creates or edits an event in the Tournaments and Events management surface.
+- **User/System actions:** User opens date selector for Event Start Date, Event End Date, Registration Start Date, or Registration End Date.
+- **Expected results:**
+  - Opens accessible calendar popover with header year/month navigation.
+  - Formats date string cleanly and enforces mandatory date validation.
+- **Final state:** Event dates configured accurately with enhanced datepicker.
+
+**NF-DATE-001: Required Date Validation**
+
+- **Preconditions:** Date selector is marked required in a reactive form.
+- **User/System actions:** User touches the date selector without picking a date or clears the value.
+- **Expected results:**
+  - Form control is marked invalid.
+  - Required validation error message is displayed.
+- **Final state:** Submission prevented until valid date is supplied.

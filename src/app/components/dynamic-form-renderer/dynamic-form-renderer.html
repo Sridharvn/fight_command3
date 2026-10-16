@@ -137,12 +137,14 @@
                   />
                 }
                 @case ('date') {
-                  <input
-                    type="date"
+                  <app-date-selector
                     [id]="field.key || field.id"
                     [formControlName]="field.key || field.id"
-                    class="form-control"
-                  />
+                    [placeholder]="field.placeholder || 'YYYY-MM-DD'"
+                    [isDob]="isDobField(field)"
+                    [required]="field.required || false"
+                    [disabled]="disabled()"
+                  ></app-date-selector>
                 }
                 @case ('email') {
                   <input
