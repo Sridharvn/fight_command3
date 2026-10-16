@@ -1425,3 +1425,19 @@ The application provides:
   - The options list is accurately serialized to `defaultOptions.options`.
 - **Final state:** Custom options easily authored and edited.
 
+**HF-FD-006: Form Definitions - Automatic snake_case Field Key Generation from Field Label**
+
+- **Preconditions:** User is creating a new Form Definition in the Create Field modal on `/form-definitions`.
+- **User/System actions:**
+  - User types "Medical Insurance Policy" into the Field Label input.
+  - User types special characters or mixed casing e.g. "Belt Rank / Division (Under 18)".
+  - User manually modifies the Field Key to a custom string (e.g. `my_custom_key`).
+  - User clicks the sync/regenerate action next to the Field Key.
+- **Expected results:**
+  - The Field Key (`fieldName`) is automatically derived and updated in `snake_case` (e.g. `medical_insurance_policy`, `belt_rank_division_under_18`).
+  - Non-alphanumeric characters, punctuation, and whitespace are converted to underscores, multiple consecutive underscores are collapsed, and leading/trailing underscores are stripped.
+  - Once manually edited by the user, the manual key is respected and not automatically overwritten unless the user clears it or clicks the re-sync button.
+  - In Edit mode for existing fields, the field key remains locked/disabled to protect existing schema references.
+- **Final state:** Fast, frictionless field creation with zero manual snake_case formatting required and zero pattern validation errors.
+
+

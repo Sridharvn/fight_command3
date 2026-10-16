@@ -380,5 +380,60 @@ describe('FormDefinitionsPage', () => {
       expect(summary).toContain('Min: 10');
       expect(summary).toContain('Max: 100');
     });
+
+    describe('Automatic snake_case Field Key Generation (HF-FD-006)', () => {
+      it('should automatically generate snake_case fieldName when typing fieldLabel in create mode (HF-FD-006)', () => {
+        component.openCreateFieldModal();
+        component.fieldForm.get('fieldLabel')?.setValue('Medical Insurance Policy');
+        expect(component.fieldForm.get('fieldName')?.value).toBe('medical_insurance_policy');
+      });
+
+      it('should normalize special characters, whitespace, and collapse underscores', () => {
+        component.openCreateFieldModal();
+        component.fieldForm.get('fieldLabel')?.setValue('Belt Rank / Category (Under 18)!');
+        expect(component.fieldForm.get('fieldName')?.value).toBe('belt_rank_category_under_18');
+
+        component.fieldForm.get('fieldLabel')?.setValue('  Weight --- Class & Division  ');
+        expect(component.fieldForm.get('fieldName')?.value).toBe('weight_class_division');
+      });
+
+      it('should preserve manual edits to fieldName and allow re-syncing from label', () => {
+        component.openCreateFieldModal();
+        component.fieldForm.get('fieldLabel')?.setValue('Emergency Contact');
+        expect(component.fieldForm.get('fieldName')?.value).toBe('emergency_contact');
+
+        // Simulate user typing into fieldName manually
+        component.onKeyManualInput();
+        component.fieldForm.get('fieldName')?.setValue('custom_emergency_phone');
+
+        // Change label further
+        component.fieldForm.get('fieldLabel')?.setValue('Primary Emergency Contact');
+        // Manual key must remain intact
+        expect(component.fieldForm.get('fieldName')?.value).toBe('custom_emergency_phone');
+
+        // Re-sync explicitly
+        component.syncKeyFromLabel();
+        expect(component.fieldForm.get('fieldName')?.value).toBe('primary_emergency_contact');
+      });
+
+      it('should not overwrite fieldName when editing an existing field definition', () => {
+        const existingField: FieldDefinition = {
+          fieldDefinitionId: 10,
+          fieldName: 'disciplines',
+          fieldLabel: 'Disciplines',
+          fieldType: 'checkbox',
+          defaultOptions: { options: ['Combat Sambo', 'Sport Sambo'] },
+          validationRules: { required: true },
+          isFilterable: true,
+          isSortable: false,
+          isSearchable: false,
+          isGlobal: true,
+        };
+
+        component.openEditFieldModal(existingField);
+        component.fieldForm.get('fieldLabel')?.setValue('Martial Arts Disciplines');
+        expect(component.fieldForm.get('fieldName')?.value).toBe('disciplines');
+      });
+    });
   });
 });

@@ -33,6 +33,15 @@ export interface FieldValidationRules {
   maxSizeMb?: number | null;
 }
 
+export function toSnakeCase(str: string): string {
+  if (!str) return '';
+  return str
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
 @Component({
   selector: 'app-form-definitions',
   imports: [BaseLayout, ReactiveFormsModule, RouterLink, DynamicFormRendererComponent],
@@ -59,6 +68,8 @@ export class FormDefinitionsPage implements OnInit {
   readonly searchControl = new FormControl('');
 
   // Field form with base type, options, and dynamic validation rules
+  readonly isKeyManuallyEdited = signal(false);
+
   readonly fieldForm = new FormGroup({
     fieldName: new FormControl('', [Validators.required, Validators.pattern(/^[a-z0-9_]+$/)]),
     fieldLabel: new FormControl('', [Validators.required]),
@@ -86,6 +97,25 @@ export class FormDefinitionsPage implements OnInit {
     this.searchControl.valueChanges.subscribe((val) => {
       this.formStore.setSearchQuery(val || '');
     });
+
+    this.fieldForm.get('fieldLabel')?.valueChanges.subscribe((label) => {
+      if (this.editingFieldId() === null && !this.isKeyManuallyEdited()) {
+        const generatedKey = toSnakeCase(label || '');
+        this.fieldForm.get('fieldName')?.setValue(generatedKey, { emitEvent: false });
+      }
+    });
+  }
+
+  onKeyManualInput(): void {
+    this.isKeyManuallyEdited.set(true);
+  }
+
+  syncKeyFromLabel(): void {
+    this.isKeyManuallyEdited.set(false);
+    const currentLabel = this.fieldForm.get('fieldLabel')?.value || '';
+    const generatedKey = toSnakeCase(currentLabel);
+    this.fieldForm.get('fieldName')?.setValue(generatedKey);
+    this.fieldForm.get('fieldName')?.markAsDirty();
   }
 
   switchTab(tab: 'templates' | 'fields'): void {
@@ -96,6 +126,7 @@ export class FormDefinitionsPage implements OnInit {
   // ── Field Modal ────────────────────────────────────────────────────────────
   openCreateFieldModal(): void {
     this.editingFieldId.set(null);
+    this.isKeyManuallyEdited.set(false);
     this.fieldForm.reset({
       fieldName: '',
       fieldLabel: '',
@@ -126,6 +157,7 @@ export class FormDefinitionsPage implements OnInit {
 
   openEditFieldModal(field: LibFieldDefinition): void {
     this.editingFieldId.set(field.fieldDefinitionId);
+    this.isKeyManuallyEdited.set(false);
 
     // Parse options
     let opts: string[] = [];
