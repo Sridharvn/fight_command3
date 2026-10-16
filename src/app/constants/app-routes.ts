@@ -4,6 +4,7 @@ export const APP_ROUTES = {
   users: '/users',
   roles: '/roles',
   ruleManagement: '/rule-management',
+  formTemplates: '/form-templates',
   formDefinitions: '/form-definitions',
   formBuilder: '/form-builder',
   events: '/events',
@@ -26,4 +27,3 @@ export function eventRosterRoute(eventId: number | string): string {
 export function publicRegistrationRoute(eventId: number | string): string {
   return `/events/${eventId}/register`;
 }
-

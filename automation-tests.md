@@ -1471,6 +1471,28 @@ The application provides:
   - Manual toggling and existing values in edit mode are strictly respected.
 - **Final state:** Streamlined field creation with discoverability and search indexing enabled by default.
 
+**HF-NAV-011: Dedicated Form Templates Page and Sidemenu Navigation**
+
+- **Preconditions:** User is authenticated as an administrator and viewing the main application shell with the sidemenu.
+- **User/System actions:**
+  1. Inspect the sidemenu navigation items:
+     - Verify a dedicated navigation link for "Form Templates" pointing to `/form-templates` is present.
+     - Verify a separate navigation link for "Form Definitions" pointing to `/form-definitions` is present.
+  2. Click the "Form Templates" link in the sidemenu:
+     - Verify route changes to `/form-templates`.
+     - Verify the page displays the "Form Templates" title, template cards grid, search input, and "+ New Form Template" button.
+     - Verify template actions work: View Form (live preview modal), Clone to Edit (preset), Edit Form Template (custom -> `/form-builder/:id`), and Activate/Deactivate toggle.
+  3. Click the "Form Definitions" link in the sidemenu:
+     - Verify route changes to `/form-definitions`.
+     - Verify the page displays the Field Library directly without template tabs: table columns for Field Label, Key (snake_case), Base Type, Custom Options, Validation Rules, Flags, and "+ Add Field" button.
+  4. Navigate to `/form-builder` without an ID:
+     - Verify it cleanly redirects to `/form-templates`.
+- **Expected results:**
+  - Form Templates and Form Definitions are cleanly decoupled into dedicated pages with individual sidemenu links.
+  - Complete feature parity is maintained for both templates and field definitions.
+- **Final state:** Clear separation between form templates and underlying field definitions in routing, navigation, and page presentation.
+
+
 
 
 

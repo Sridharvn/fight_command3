@@ -53,7 +53,8 @@
       <a routerLink="/users" class="nav-link">Users</a>
       <a routerLink="/roles" class="nav-link">Roles</a>
       <a routerLink="/rule-management" class="nav-link">Rules</a>
-      <a routerLink="/form-definitions" class="nav-link">Forms</a>
+      <a routerLink="/form-templates" class="nav-link">Templates</a>
+      <a routerLink="/form-definitions" class="nav-link">Definitions</a>
     }
   </nav>
 
@@ -61,7 +62,13 @@
     @if (authStore.isAuthenticated()) {
       <div
         class="user-profile-header"
-        [title]="authStore.userFullName() + ' (' + authStore.userRoleName() + ') - ' + authStore.userEmail()"
+        [title]="
+          authStore.userFullName() +
+          ' (' +
+          authStore.userRoleName() +
+          ') - ' +
+          authStore.userEmail()
+        "
       >
         <div class="avatar-header">
           {{ authStore.userInitials() }}

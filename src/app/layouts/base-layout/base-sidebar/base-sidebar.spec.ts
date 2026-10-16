@@ -70,6 +70,18 @@ describe('BaseSidebar', () => {
     expect(linkTexts.some((text) => text?.includes('Form Builder'))).toBe(false);
   });
 
+  it('should render distinct navigation links for Form Templates and Form Definitions (HF-NAV-011)', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const links = Array.from(compiled.querySelectorAll('.nav-link'));
+    const linkHrefs = links.map((el) => el.getAttribute('routerlink') || el.getAttribute('href'));
+    const linkTexts = links.map((el) => el.textContent?.trim());
+
+    expect(linkHrefs).toContain('/form-templates');
+    expect(linkTexts.some((text) => text?.includes('Form Templates'))).toBe(true);
+    expect(linkHrefs).toContain('/form-definitions');
+    expect(linkTexts.some((text) => text?.includes('Form Definitions'))).toBe(true);
+  });
+
   it('should apply collapsed class when isSidebarCollapsed is true', () => {
     isCollapsedSignal.set(true);
     fixture.detectChanges();

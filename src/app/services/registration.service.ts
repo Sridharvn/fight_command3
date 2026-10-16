@@ -35,19 +35,13 @@ export class RegistrationService {
     if (pagination.isActive !== undefined) {
       params['isActive'] = pagination.isActive;
     }
-    return this.api.get<PaginatedResult<RegistrationDetail>>(
-      `/events/${eventId}/registrations`,
-      { params },
-    );
+    return this.api.get<PaginatedResult<RegistrationDetail>>(`/events/${eventId}/registrations`, {
+      params,
+    });
   }
 
-  getRegistrationById(
-    eventId: number,
-    registrationId: number,
-  ): Observable<RegistrationDetail> {
-    return this.api.get<RegistrationDetail>(
-      `/events/${eventId}/registrations/${registrationId}`,
-    );
+  getRegistrationById(eventId: number, registrationId: number): Observable<RegistrationDetail> {
+    return this.api.get<RegistrationDetail>(`/events/${eventId}/registrations/${registrationId}`);
   }
 
   submitRegistration(

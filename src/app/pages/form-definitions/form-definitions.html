@@ -5,43 +5,28 @@
       <div class="header-titles">
         <h1 class="page-title">Form Definitions</h1>
         <p class="page-subtitle">
-          Manage modular field schemas in the master Field Library and construct tournament
-          registration form templates
+          Manage reusable modular field schemas, custom options, validation constraints, and
+          discoverability flags
         </p>
       </div>
 
       <div class="header-actions">
-        @if (formStore.activeTab() === 'templates') {
-          <button
-            type="button"
-            class="btn btn-primary create-template-btn"
-            (click)="openCreateTemplateModal()"
-          >
-            <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
-              <path
-                d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-              />
-            </svg>
-            New Form Template
-          </button>
-        } @else {
-          <button
-            type="button"
-            class="btn btn-primary create-field-btn"
-            (click)="openCreateFieldModal()"
-          >
-            <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
-              <path
-                d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-              />
-            </svg>
-            Add Field
-          </button>
-        }
+        <button
+          type="button"
+          class="btn btn-primary create-field-btn"
+          (click)="openCreateFieldModal()"
+        >
+          <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path
+              d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+            />
+          </svg>
+          Add Field
+        </button>
       </div>
     </header>
 
-    <!-- Toolbar: Search + Tabs -->
+    <!-- Toolbar: Search -->
     <div class="page-toolbar">
       <div class="search-box">
         <svg class="search-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor">
@@ -51,41 +36,10 @@
         <input
           type="search"
           [formControl]="searchControl"
-          [placeholder]="
-            formStore.activeTab() === 'templates'
-              ? 'Search templates...'
-              : 'Search field definitions...'
-          "
+          placeholder="Search field definitions..."
           class="search-input"
-          aria-label="Search"
+          aria-label="Search field definitions"
         />
-      </div>
-
-      <div
-        class="status-filters"
-        role="tablist"
-        aria-label="Toggle between templates and field library"
-      >
-        <button
-          type="button"
-          role="tab"
-          class="status-tab"
-          [class.active]="formStore.activeTab() === 'templates'"
-          [attr.aria-selected]="formStore.activeTab() === 'templates'"
-          (click)="switchTab('templates')"
-        >
-          Form Templates ({{ formStore.templates().length }})
-        </button>
-        <button
-          type="button"
-          role="tab"
-          class="status-tab"
-          [class.active]="formStore.activeTab() === 'fields'"
-          [attr.aria-selected]="formStore.activeTab() === 'fields'"
-          (click)="switchTab('fields')"
-        >
-          Field Library ({{ formStore.fieldDefinitions().length }})
-        </button>
       </div>
     </div>
 
@@ -96,14 +50,14 @@
       </div>
     }
 
-    <!-- TAB 1: FORM TEMPLATES -->
-    @if (formStore.activeTab() === 'templates') {
-      @if (formStore.status() === 'loading' && formStore.templates().length === 0) {
+    <!-- FIELD LIBRARY TABLE -->
+    <div class="table-card">
+      @if (formStore.status() === 'loading' && formStore.fieldDefinitions().length === 0) {
         <div class="loading-state" aria-live="polite">
           <div class="spinner"></div>
-          <span>Loading templates...</span>
+          <span>Loading field library...</span>
         </div>
-      } @else if (formStore.filteredTemplates().length === 0) {
+      } @else if (formStore.filteredFieldDefinitions().length === 0) {
         <div class="empty-state">
           <svg
             class="empty-icon"
@@ -115,293 +69,130 @@
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
-              d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+              d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"
             />
           </svg>
-          <p class="empty-title">No form templates found</p>
+          <p class="empty-title">No field definitions found</p>
           <p class="empty-desc">
-            Create tournament registration templates to assemble fields and enforce validation
-            rules.
+            Register reusable field types (e.g. Weight, DOB, Medical Certificate) in the master
+            library.
           </p>
-          <button type="button" (click)="openCreateTemplateModal()" class="btn btn-primary">
-            New Form Template
+          <button type="button" class="btn btn-primary" (click)="openCreateFieldModal()">
+            Create New Field
           </button>
         </div>
       } @else {
-        <div class="templates-grid">
-          @for (tmpl of formStore.filteredTemplates(); track tmpl.templateId) {
-            <div class="template-card">
-              <div class="card-header">
-                <div class="card-title-group">
-                  <h2 class="template-name">{{ tmpl.templateName }}</h2>
-                  <div class="badges-row">
-                    <span class="badge badge-scope">
-                      {{ tmpl.templateType }}
-                    </span>
-                    <span class="badge badge-sport">Sport #{{ tmpl.sportType }}</span>
-                    <span class="status-pill" [class.active]="tmpl.isActive">
-                      {{ tmpl.isActive ? 'Active' : 'Draft' }}
-                    </span>
-                  </div>
-                </div>
-
-                <div class="card-top-actions">
-                  @if (tmpl.templateType === 'PRESET') {
-                    <a
-                      [routerLink]="['/form-builder/new']"
-                      [queryParams]="{ cloneFrom: tmpl.templateId }"
-                      class="btn-action btn-clone"
-                      title="Clone as Custom Template"
-                      aria-label="Clone template"
-                    >
-                      <svg viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z" />
-                        <path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z" />
-                      </svg>
-                    </a>
-                  } @else {
-                    <a
-                      [routerLink]="['/form-builder', tmpl.templateId]"
-                      class="btn-action btn-edit"
-                      title="Edit template in Form Builder"
-                      aria-label="Edit template"
-                    >
-                      <svg viewBox="0 0 20 20" fill="currentColor">
-                        <path
-                          d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"
-                        />
-                      </svg>
-                    </a>
-
-                    <button
-                      type="button"
-                      class="btn-action btn-delete"
-                      (click)="onDeleteTemplate(tmpl.templateId)"
-                      title="Delete template"
-                      aria-label="Delete template"
-                    >
-                      <svg viewBox="0 0 20 20" fill="currentColor">
-                        <path
-                          fill-rule="evenodd"
-                          d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                          clip-rule="evenodd"
-                        />
-                      </svg>
-                    </button>
-                  }
-                </div>
-              </div>
-
-              <div class="card-stats">
-                <div class="stat-item">
-                  <span class="stat-label">Attached Fields</span>
-                  <span class="stat-value">{{
-                    tmpl.fieldCount ?? (tmpl.fields?.length || 0)
-                  }}</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-label">Compound Rules</span>
-                  <span class="stat-value">{{ tmpl.formSchema?.compoundRules?.length || 0 }}</span>
-                </div>
-              </div>
-
-              <div class="card-footer">
-                <button
-                  type="button"
-                  class="btn btn-secondary btn-sm btn-preview"
-                  (click)="openPreviewModal(tmpl)"
-                  title="View live form preview"
-                >
-                  <svg viewBox="0 0 20 20" fill="currentColor" class="btn-icon-xs">
-                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                    <path
-                      fill-rule="evenodd"
-                      d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  View Form
-                </button>
-
-                @if (tmpl.templateType === 'PRESET') {
-                  <a
-                    [routerLink]="['/form-builder/new']"
-                    [queryParams]="{ cloneFrom: tmpl.templateId }"
-                    class="btn btn-primary btn-sm btn-builder"
-                  >
-                    Clone to Edit
-                  </a>
-                } @else {
-                  <a
-                    [routerLink]="['/form-builder', tmpl.templateId]"
-                    class="btn btn-primary btn-sm btn-builder"
-                  >
-                    Edit Form Template
-                  </a>
-                }
-
-                <button
-                  type="button"
-                  class="btn btn-secondary btn-sm"
-                  (click)="onToggleTemplateStatus(tmpl.templateId, tmpl.isActive)"
-                >
-                  {{ tmpl.isActive ? 'Deactivate' : 'Activate' }}
-                </button>
-              </div>
-            </div>
-          }
-        </div>
-      }
-    }
-
-    <!-- TAB 2: FIELD LIBRARY -->
-    @if (formStore.activeTab() === 'fields') {
-      <div class="table-card">
-        @if (formStore.status() === 'loading' && formStore.fieldDefinitions().length === 0) {
-          <div class="loading-state" aria-live="polite">
-            <div class="spinner"></div>
-            <span>Loading field library...</span>
-          </div>
-        } @else if (formStore.filteredFieldDefinitions().length === 0) {
-          <div class="empty-state">
-            <svg
-              class="empty-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"
-              />
-            </svg>
-            <p class="empty-title">No field definitions found</p>
-            <p class="empty-desc">
-              Register reusable field types (e.g. Weight, DOB, Medical Certificate) in the master
-              library.
-            </p>
-            <button type="button" class="btn btn-primary" (click)="openCreateFieldModal()">
-              Create New Field
-            </button>
-          </div>
-        } @else {
-          <div class="table-responsive">
-            <table class="user-table" aria-label="Field definitions table">
-              <thead>
+        <div class="table-responsive">
+          <table class="user-table" aria-label="Field definitions table">
+            <thead>
+              <tr>
+                <th scope="col">Field Label</th>
+                <th scope="col">Key (snake_case)</th>
+                <th scope="col">Base Type</th>
+                <th scope="col">Custom Options</th>
+                <th scope="col">Validation Rules</th>
+                <th scope="col">Flags</th>
+                <th scope="col" class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (field of formStore.filteredFieldDefinitions(); track field.fieldDefinitionId) {
                 <tr>
-                  <th scope="col">Field Label</th>
-                  <th scope="col">Key (snake_case)</th>
-                  <th scope="col">Base Type</th>
-                  <th scope="col">Custom Options</th>
-                  <th scope="col">Validation Rules</th>
-                  <th scope="col">Flags</th>
-                  <th scope="col" class="text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (
-                  field of formStore.filteredFieldDefinitions();
-                  track field.fieldDefinitionId
-                ) {
-                  <tr>
-                    <td>
-                      <strong class="field-label-text">{{ field.fieldLabel }}</strong>
-                    </td>
-                    <td>
-                      <code class="code-key">{{ field.fieldName }}</code>
-                    </td>
-                    <td>
-                      <span class="badge badge-type">{{ field.fieldType }}</span>
-                    </td>
-                    <td>
-                      @if (['select', 'radio', 'checkbox'].includes(field.fieldType)) {
-                        @if (getOptionsList(field).length > 0) {
-                          <div class="options-summary" [title]="getOptionsList(field).join(', ')">
-                            <span class="badge badge-options"
-                              >{{ getOptionsList(field).length }} options</span
-                            >
-                            <span class="options-preview-text"
-                              >{{ getOptionsList(field).slice(0, 2).join(', ')
-                              }}{{ getOptionsList(field).length > 2 ? '...' : '' }}</span
-                            >
-                          </div>
-                        } @else {
-                          <span class="text-muted">No options configured</span>
-                        }
-                      } @else {
-                        <span class="text-muted">—</span>
-                      }
-                    </td>
-                    <td>
-                      @if (formatRulesSummary(field).length > 0) {
-                        <div class="rules-badges-group">
-                          @for (rule of formatRulesSummary(field); track rule) {
-                            <span
-                              class="badge badge-rule"
-                              [class.badge-required]="rule === 'Required'"
-                              >{{ rule }}</span
-                            >
-                          }
+                  <td>
+                    <strong class="field-label-text">{{ field.fieldLabel }}</strong>
+                  </td>
+                  <td>
+                    <code class="code-key">{{ field.fieldName }}</code>
+                  </td>
+                  <td>
+                    <span class="badge badge-type">{{ field.fieldType }}</span>
+                  </td>
+                  <td>
+                    @if (['select', 'radio', 'checkbox'].includes(field.fieldType)) {
+                      @if (getOptionsList(field).length > 0) {
+                        <div class="options-summary" [title]="getOptionsList(field).join(', ')">
+                          <span class="badge badge-options"
+                            >{{ getOptionsList(field).length }} options</span
+                          >
+                          <span class="options-preview-text"
+                            >{{ getOptionsList(field).slice(0, 2).join(', ')
+                            }}{{ getOptionsList(field).length > 2 ? '...' : '' }}</span
+                          >
                         </div>
                       } @else {
-                        <span class="text-muted">None</span>
+                        <span class="text-muted">No options configured</span>
                       }
-                    </td>
-                    <td>
-                      <div class="flags-group">
-                        @if (field.isFilterable) {
-                          <span class="flag-badge">Filterable</span>
-                        }
-                        @if (field.isSortable) {
-                          <span class="flag-badge">Sortable</span>
-                        }
-                        @if (field.isSearchable) {
-                          <span class="flag-badge">Searchable</span>
+                    } @else {
+                      <span class="text-muted">—</span>
+                    }
+                  </td>
+                  <td>
+                    @if (formatRulesSummary(field).length > 0) {
+                      <div class="rules-badges-group">
+                        @for (rule of formatRulesSummary(field); track rule) {
+                          <span
+                            class="badge badge-rule"
+                            [class.badge-required]="rule === 'Required'"
+                            >{{ rule }}</span
+                          >
                         }
                       </div>
-                    </td>
-                    <td class="text-right">
-                      <div class="row-actions-group">
-                        <button
-                          type="button"
-                          class="btn-action btn-edit"
-                          (click)="openEditFieldModal(field)"
-                          title="Edit field definition"
-                          aria-label="Edit field definition"
-                        >
-                          <svg viewBox="0 0 20 20" fill="currentColor">
-                            <path
-                              d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"
-                            />
-                          </svg>
-                        </button>
-                        <button
-                          type="button"
-                          class="btn-action btn-delete"
-                          (click)="onDeleteField(field.fieldDefinitionId)"
-                          title="Delete field definition"
-                          aria-label="Delete field definition"
-                        >
-                          <svg viewBox="0 0 20 20" fill="currentColor">
-                            <path
-                              fill-rule="evenodd"
-                              d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                              clip-rule="evenodd"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        }
-      </div>
-    }
+                    } @else {
+                      <span class="text-muted">None</span>
+                    }
+                  </td>
+                  <td>
+                    <div class="flags-group">
+                      @if (field.isFilterable) {
+                        <span class="flag-badge">Filterable</span>
+                      }
+                      @if (field.isSortable) {
+                        <span class="flag-badge">Sortable</span>
+                      }
+                      @if (field.isSearchable) {
+                        <span class="flag-badge">Searchable</span>
+                      }
+                    </div>
+                  </td>
+                  <td class="text-right">
+                    <div class="row-actions-group">
+                      <button
+                        type="button"
+                        class="btn-action btn-edit"
+                        (click)="openEditFieldModal(field)"
+                        title="Edit field definition"
+                        aria-label="Edit field definition"
+                      >
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                          <path
+                            d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-action btn-delete"
+                        (click)="onDeleteField(field.fieldDefinitionId)"
+                        title="Delete field definition"
+                        aria-label="Delete field definition"
+                      >
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                          <path
+                            fill-rule="evenodd"
+                            d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                            clip-rule="evenodd"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
 
     <!-- Modal: Create / Edit Field Definition -->
     @if (isFieldModalOpen()) {
@@ -730,191 +521,6 @@
               </button>
             </footer>
           </form>
-        </div>
-      </div>
-    }
-
-    <!-- Modal: Create Template Setup (Inheritance vs Blank) -->
-    @if (isCreateTemplateModalOpen()) {
-      <div class="modal-backdrop" (click)="closeCreateTemplateModal()">
-        <div
-          class="modal-dialog template-setup-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="template-setup-title"
-          (click)="$event.stopPropagation()"
-        >
-          <header class="modal-header">
-            <h2 id="template-setup-title" class="modal-title">Create Form Template</h2>
-            <button
-              type="button"
-              class="btn-close"
-              (click)="closeCreateTemplateModal()"
-              aria-label="Close dialog"
-            >
-              &times;
-            </button>
-          </header>
-
-          <div class="modal-body setup-options-container">
-            <p class="setup-instruction">
-              Choose whether to build a clean registration template from scratch or inherit baseline
-              sport fields from a standard preset.
-            </p>
-
-            <div class="setup-card-options">
-              <!-- Blank Option -->
-              <div
-                class="setup-option-card"
-                [class.selected]="selectedBasePresetId() === null"
-                (click)="onSelectBasePreset(null)"
-              >
-                <div class="option-icon-box">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" />
-                  </svg>
-                </div>
-                <div class="option-info">
-                  <h3 class="option-title">Blank Template</h3>
-                  <p class="option-desc">
-                    Starts with mandatory identity fields (Full Name, Email). Assemble custom fields
-                    freely.
-                  </p>
-                </div>
-              </div>
-
-              <!-- Presets Header -->
-              <div class="preset-choice-heading">
-                <span>Or Inherit from a Baseline Preset:</span>
-              </div>
-
-              <!-- Available Presets -->
-              <div class="preset-options-list">
-                @for (preset of formStore.presets(); track preset.templateId) {
-                  <div
-                    class="setup-option-card preset-card"
-                    [class.selected]="selectedBasePresetId() === preset.templateId"
-                    (click)="onSelectBasePreset(preset.templateId)"
-                  >
-                    <div class="option-icon-box preset-icon-box">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path
-                          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                        />
-                      </svg>
-                    </div>
-                    <div class="option-info">
-                      <div class="preset-name-row">
-                        <h3 class="option-title">{{ preset.templateName }}</h3>
-                        <span class="badge badge-scope">{{ preset.templateType }}</span>
-                      </div>
-                      <p class="option-desc">
-                        Inherits {{ preset.fields?.length || 0 }} standard fields (e.g. Belt Rank,
-                        Weight Class) as protected baseline fields.
-                      </p>
-                    </div>
-                  </div>
-                }
-              </div>
-            </div>
-          </div>
-
-          <footer class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="closeCreateTemplateModal()">
-              Cancel
-            </button>
-            @if (selectedBasePresetId()) {
-              <a
-                [routerLink]="['/form-builder/new']"
-                [queryParams]="{ basePresetId: selectedBasePresetId() }"
-                (click)="closeCreateTemplateModal()"
-                class="btn btn-primary"
-              >
-                Proceed with Selected Preset &rarr;
-              </a>
-            } @else {
-              <a
-                routerLink="/form-builder/new"
-                (click)="closeCreateTemplateModal()"
-                class="btn btn-primary"
-              >
-                Create Blank Template &rarr;
-              </a>
-            }
-          </footer>
-        </div>
-      </div>
-    }
-
-    <!-- Modal: Live Form Preview -->
-    @if (previewingTemplate()) {
-      <div class="modal-backdrop" (click)="closePreviewModal()">
-        <div
-          class="modal-dialog preview-dialog modal-large"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="preview-modal-title"
-          (click)="$event.stopPropagation()"
-        >
-          <header class="modal-header">
-            <div class="preview-title-block">
-              <span class="preview-badge">Live Form Simulation</span>
-              <h2 id="preview-modal-title" class="modal-title">
-                {{ previewingTemplate()?.templateName }}
-              </h2>
-            </div>
-            <button
-              type="button"
-              class="btn-close"
-              (click)="closePreviewModal()"
-              aria-label="Close dialog"
-            >
-              &times;
-            </button>
-          </header>
-
-          <div class="modal-body preview-body">
-            <p class="preview-helper-text">
-              This interactive preview renders the form exactly as athletes see during registration.
-            </p>
-            @if (isPreviewLoading()) {
-              <div class="loading-state" aria-live="polite">
-                <div class="spinner"></div>
-                <span>Loading complete form schema...</span>
-              </div>
-            } @else if (previewFormDefinition()) {
-              <div class="preview-renderer-container">
-                <app-dynamic-form-renderer
-                  [schema]="previewFormDefinition()!"
-                  [showSubmitButton]="false"
-                />
-              </div>
-            }
-          </div>
-
-          <footer class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="closePreviewModal()">
-              Close Preview
-            </button>
-            @if (previewingTemplate()?.templateType === 'PRESET') {
-              <a
-                [routerLink]="['/form-builder/new']"
-                [queryParams]="{ cloneFrom: previewingTemplate()?.templateId }"
-                (click)="closePreviewModal()"
-                class="btn btn-primary"
-              >
-                Clone to Edit
-              </a>
-            } @else {
-              <a
-                [routerLink]="['/form-builder', previewingTemplate()?.templateId]"
-                (click)="closePreviewModal()"
-                class="btn btn-primary"
-              >
-                Edit Form Template
-              </a>
-            }
-          </footer>
         </div>
       </div>
     }

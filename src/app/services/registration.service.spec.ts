@@ -42,10 +42,7 @@ describe('RegistrationService', () => {
     };
 
     TestBed.configureTestingModule({
-      providers: [
-        RegistrationService,
-        { provide: ApiService, useValue: apiServiceMock },
-      ],
+      providers: [RegistrationService, { provide: ApiService, useValue: apiServiceMock }],
     });
 
     service = TestBed.inject(RegistrationService);
@@ -58,9 +55,11 @@ describe('RegistrationService', () => {
   it('should call GET /events/:eventId/registrations with pagination and filters in getRegistrations', () => {
     apiServiceMock.get.mockReturnValue(of({ data: [mockRegistration], meta: { total: 1 } }));
 
-    service.getRegistrations(1, { page: 1, limit: 10 }, { status: RegistrationStatus.PENDING }).subscribe((res) => {
-      expect(res.data).toEqual([mockRegistration]);
-    });
+    service
+      .getRegistrations(1, { page: 1, limit: 10 }, { status: RegistrationStatus.PENDING })
+      .subscribe((res) => {
+        expect(res.data).toEqual([mockRegistration]);
+      });
 
     expect(apiServiceMock.get).toHaveBeenCalledWith('/events/1/registrations', {
       params: expect.objectContaining({ page: 1, limit: 10, status: RegistrationStatus.PENDING }),
@@ -118,7 +117,9 @@ describe('RegistrationService', () => {
   });
 
   it('should call getBlob on /events/:eventId/registrations/export in exportRegistrations', () => {
-    const mockBlob = new Blob(['sample-data'], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const mockBlob = new Blob(['sample-data'], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
     apiServiceMock.getBlob.mockReturnValue(of(mockBlob));
 
     service.exportRegistrations(1).subscribe((blob) => {

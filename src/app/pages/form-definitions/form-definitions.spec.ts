@@ -54,6 +54,7 @@ describe('FormDefinitionsPage', () => {
       status: signal('success'),
       error: signal(null),
       loadAll: vi.fn(),
+      loadFieldDefinitions: vi.fn(),
       setActiveTab: vi.fn((tab: 'templates' | 'fields') => activeTabSignal.set(tab)),
       setSearchQuery: vi.fn(),
       createFieldDefinition: vi.fn(),
@@ -107,18 +108,14 @@ describe('FormDefinitionsPage', () => {
     fixture.detectChanges();
   });
 
-  it('should create and render templates tab by default inside BaseLayout', () => {
+  it('should create and render Field Library table inside BaseLayout', () => {
     expect(component).toBeTruthy();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('app-base-layout')).toBeTruthy();
-    expect(compiled.textContent).toContain('National Championship Template');
-  });
-
-  it('should switch to field library tab', () => {
-    component.switchTab('fields');
-    fixture.detectChanges();
-
-    expect(formStoreMock.setActiveTab).toHaveBeenCalledWith('fields');
+    expect(compiled.querySelector('.page-title')?.textContent?.trim()).toBe('Form Definitions');
+    expect(compiled.textContent).toContain('Belt Rank');
+    expect(compiled.textContent).toContain('belt_rank');
+    expect(compiled.textContent).toContain('select');
   });
 
   it('should toggle field modal for field library', () => {
@@ -130,112 +127,16 @@ describe('FormDefinitionsPage', () => {
     expect(component.isFieldModalOpen()).toBe(false);
   });
 
-  it('should render New Form Template button opening inheritance setup modal (HF-NAV-009)', () => {
+  it('should render Add Field button in page header', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    const addTemplateBtn = compiled.querySelector('.create-template-btn') as HTMLButtonElement;
-    expect(addTemplateBtn).toBeTruthy();
-    expect(addTemplateBtn.textContent).toContain('New Form Template');
-    expect(component.isCreateTemplateModalOpen()).toBe(false);
-    addTemplateBtn.click();
-    expect(component.isCreateTemplateModalOpen()).toBe(true);
+    const addFieldBtn = compiled.querySelector('.create-field-btn') as HTMLButtonElement;
+    expect(addFieldBtn).toBeTruthy();
+    expect(addFieldBtn.textContent).toContain('Add Field');
   });
 
-  it('should render Edit Form Template button on custom template card directing to /form-builder/:id (HF-NAV-010)', () => {
-    templatesSignal.set([
-      {
-        templateId: 2,
-        templateName: 'Regional Championship Custom',
-        templateType: 'CUSTOM',
-        sportType: 1,
-        tournamentType: 1,
-        isActive: true,
-      },
-    ]);
-    fixture.detectChanges();
-
-    const compiled = fixture.nativeElement as HTMLElement;
-    const editBtn = compiled.querySelector('.btn-edit') as HTMLAnchorElement;
-    expect(editBtn).toBeTruthy();
-    expect(editBtn.getAttribute('href')).toBe('/form-builder/2');
-
-    const builderBtn = compiled.querySelector('.btn-builder') as HTMLAnchorElement;
-    expect(builderBtn).toBeTruthy();
-    expect(builderBtn.textContent?.trim()).toBe('Edit Form Template');
-    expect(builderBtn.getAttribute('href')).toBe('/form-builder/2');
-  });
-
-  it('should call deleteTemplate when confirming deletion for custom template', () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
-    component.onDeleteTemplate(1);
-    expect(formStoreMock.deleteTemplate).toHaveBeenCalledWith(1);
-  });
-
-  it('should handle template preview modal open and close', () => {
-    expect(component.previewingTemplate()).toBeNull();
-    component.openPreviewModal(mockTemplate);
-    expect(component.previewingTemplate()).toEqual(mockTemplate);
-    expect(component.previewFormDefinition()).toBeTruthy();
-    expect(component.previewFormDefinition()?.templateName).toBe(mockTemplate.templateName);
-
-    component.closePreviewModal();
-    expect(component.previewingTemplate()).toBeNull();
-    expect(component.previewFormDefinition()).toBeNull();
-  });
-
-  it('should handle template creation inheritance modal open and close', () => {
-    expect(component.isCreateTemplateModalOpen()).toBe(false);
-    component.openCreateTemplateModal();
-    expect(component.isCreateTemplateModalOpen()).toBe(true);
-
-    component.closeCreateTemplateModal();
-    expect(component.isCreateTemplateModalOpen()).toBe(false);
-  });
-
-  it('should safeguard PRESET templates: delete is hidden and clone link is rendered', () => {
-    templatesSignal.set([mockTemplate]);
-    fixture.detectChanges();
-
-    const compiled = fixture.nativeElement as HTMLElement;
-    // Template 1 is PRESET
-    expect(compiled.querySelector('.btn-delete')).toBeFalsy();
-    expect(compiled.querySelector('.btn-clone')).toBeTruthy();
-    const cloneBtn = compiled.querySelector('.btn-clone') as HTMLAnchorElement;
-    expect(cloneBtn.getAttribute('href')).toContain('cloneFrom=1');
-  });
-
-  it('should fetch complete template schema via getTemplateById when opening preview modal (HF-051)', () => {
-    const fullTemplateMock: FormTemplate = {
-      templateId: 1,
-      templateName: 'National Championship Template',
-      templateType: 'PRESET',
-      sportType: 1,
-      tournamentType: 1,
-      isActive: true,
-      formSchema: {
-        fields: [
-          { id: 'phone', key: 'phone', label: 'Phone Number', type: 'text', required: true },
-          {
-            id: 'belt_rank',
-            key: 'belt_rank',
-            label: 'Belt Rank',
-            type: 'select',
-            required: true,
-            options: [{ label: 'White', value: 'white' }],
-          },
-          { id: 'dob', key: 'dob', label: 'Date of Birth', type: 'date', required: true },
-        ],
-        compoundRules: [],
-      },
-    };
-    formDefinitionServiceMock.getTemplateById.mockReturnValue(of(fullTemplateMock));
-
-    component.openPreviewModal(mockTemplate);
-    fixture.detectChanges();
-
-    expect(formDefinitionServiceMock.getTemplateById).toHaveBeenCalledWith(1);
-    expect(component.previewFormDefinition()?.fields.length).toBeGreaterThanOrEqual(5); // fullName + email + 3 custom fields
-    expect(component.previewFormDefinition()?.fields.some((f) => f.key === 'belt_rank')).toBe(true);
-    expect(component.previewFormDefinition()?.fields.some((f) => f.key === 'dob')).toBe(true);
+  it('should filter field definitions via search input', () => {
+    component.searchControl.setValue('Belt');
+    expect(formStoreMock.setSearchQuery).toHaveBeenCalledWith('Belt');
   });
 
   describe('Form Definitions Management (HF-FD-001 to HF-FD-005)', () => {

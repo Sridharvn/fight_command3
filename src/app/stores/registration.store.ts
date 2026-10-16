@@ -103,16 +103,15 @@ export const RegistrationStore = signalStore(
       return filtered.length > 0 && selectedIds().length === filtered.length;
     }),
   })),
-  withMethods((store, regService = inject(RegistrationService), eventService = inject(EventService)) => {
-    const loadRegistrations = rxMethod<number>(
-      pipe(
-        tap((eventId) =>
-          patchState(store, { eventId, status: 'loading', error: null, selectedIds: [] }),
-        ),
-        switchMap((eventId) =>
-          regService
-            .getRegistrations(eventId, { page: store.page(), limit: store.limit() })
-            .pipe(
+  withMethods(
+    (store, regService = inject(RegistrationService), eventService = inject(EventService)) => {
+      const loadRegistrations = rxMethod<number>(
+        pipe(
+          tap((eventId) =>
+            patchState(store, { eventId, status: 'loading', error: null, selectedIds: [] }),
+          ),
+          switchMap((eventId) =>
+            regService.getRegistrations(eventId, { page: store.page(), limit: store.limit() }).pipe(
               tap((response) => {
                 patchState(store, {
                   registrations: response.data || [],
@@ -126,230 +125,224 @@ export const RegistrationStore = signalStore(
                 return of(null);
               }),
             ),
-        ),
-      ),
-    );
-
-    const loadDuplicates = rxMethod<number>(
-      pipe(
-        switchMap((eventId) =>
-          eventService.getDuplicates(eventId).pipe(
-            tap((duplicates) => {
-              patchState(store, { duplicates: duplicates || [] });
-            }),
-            catchError((err) => {
-              const msg = err.error?.message || 'Failed to load duplicates';
-              patchState(store, { error: msg });
-              return of(null);
-            }),
           ),
         ),
-      ),
-    );
+      );
 
-    const loadPublicForm = rxMethod<number>(
-      pipe(
-        tap(() => patchState(store, { status: 'loading', error: null })),
-        switchMap((eventId) =>
-          eventService.getPublicEventForm(eventId).pipe(
-            tap((form) => {
-              patchState(store, { publicEventForm: form, status: 'success' });
-            }),
-            catchError((err) => {
-              const msg = err.error?.message || 'Failed to load registration form';
-              patchState(store, { status: 'error', error: msg });
-              return of(null);
-            }),
+      const loadDuplicates = rxMethod<number>(
+        pipe(
+          switchMap((eventId) =>
+            eventService.getDuplicates(eventId).pipe(
+              tap((duplicates) => {
+                patchState(store, { duplicates: duplicates || [] });
+              }),
+              catchError((err) => {
+                const msg = err.error?.message || 'Failed to load duplicates';
+                patchState(store, { error: msg });
+                return of(null);
+              }),
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    return {
-      setEventId(eventId: number): void {
-        patchState(store, { eventId });
-      },
+      const loadPublicForm = rxMethod<number>(
+        pipe(
+          tap(() => patchState(store, { status: 'loading', error: null })),
+          switchMap((eventId) =>
+            eventService.getPublicEventForm(eventId).pipe(
+              tap((form) => {
+                patchState(store, { publicEventForm: form, status: 'success' });
+              }),
+              catchError((err) => {
+                const msg = err.error?.message || 'Failed to load registration form';
+                patchState(store, { status: 'error', error: msg });
+                return of(null);
+              }),
+            ),
+          ),
+        ),
+      );
 
-      setActiveTab(activeTab: RosterTab): void {
-        patchState(store, { activeTab, selectedIds: [] });
-      },
+      return {
+        setEventId(eventId: number): void {
+          patchState(store, { eventId });
+        },
 
-      setSearchQuery(searchQuery: string): void {
-        patchState(store, { searchQuery });
-      },
+        setActiveTab(activeTab: RosterTab): void {
+          patchState(store, { activeTab, selectedIds: [] });
+        },
 
-      setSelectedRegistration(selectedRegistration: RegistrationDetail | null): void {
-        patchState(store, { selectedRegistration });
-      },
+        setSearchQuery(searchQuery: string): void {
+          patchState(store, { searchQuery });
+        },
 
-      toggleSelect(id: number): void {
-        const current = store.selectedIds();
-        if (current.includes(id)) {
-          patchState(store, { selectedIds: current.filter((x) => x !== id) });
-        } else {
-          patchState(store, { selectedIds: [...current, id] });
-        }
-      },
+        setSelectedRegistration(selectedRegistration: RegistrationDetail | null): void {
+          patchState(store, { selectedRegistration });
+        },
 
-      toggleSelectAll(ids: number[]): void {
-        const current = store.selectedIds();
-        if (current.length === ids.length) {
+        toggleSelect(id: number): void {
+          const current = store.selectedIds();
+          if (current.includes(id)) {
+            patchState(store, { selectedIds: current.filter((x) => x !== id) });
+          } else {
+            patchState(store, { selectedIds: [...current, id] });
+          }
+        },
+
+        toggleSelectAll(ids: number[]): void {
+          const current = store.selectedIds();
+          if (current.length === ids.length) {
+            patchState(store, { selectedIds: [] });
+          } else {
+            patchState(store, { selectedIds: [...ids] });
+          }
+        },
+
+        clearSelection(): void {
           patchState(store, { selectedIds: [] });
-        } else {
-          patchState(store, { selectedIds: [...ids] });
-        }
-      },
+        },
 
-      clearSelection(): void {
-        patchState(store, { selectedIds: [] });
-      },
+        clearMessages(): void {
+          patchState(store, { error: null, successMessage: null });
+        },
 
-      clearMessages(): void {
-        patchState(store, { error: null, successMessage: null });
-      },
+        loadRegistrations,
+        loadDuplicates,
+        loadPublicForm,
 
-      loadRegistrations,
-      loadDuplicates,
-      loadPublicForm,
+        updateStatus(
+          registrationId: number,
+          status: RegistrationStatus,
+          onSuccess?: () => void,
+        ): void {
+          const evId = store.eventId();
+          if (!evId) return;
 
-      updateStatus(
-        registrationId: number,
-        status: RegistrationStatus,
-        onSuccess?: () => void,
-      ): void {
-        const evId = store.eventId();
-        if (!evId) return;
+          patchState(store, { actionLoading: true, error: null });
+          regService
+            .updateStatus(evId, registrationId, status)
+            .pipe(
+              tap(() => {
+                patchState(store, {
+                  actionLoading: false,
+                  registrations: store
+                    .registrations()
+                    .map((r) => (r.registrationId === registrationId ? { ...r, status } : r)),
+                  successMessage: `Status updated successfully`,
+                });
+                if (onSuccess) onSuccess();
+              }),
+              catchError((err) => {
+                const msg = err.error?.message || 'Failed to update status';
+                patchState(store, { actionLoading: false, error: msg });
+                return of(null);
+              }),
+            )
+            .subscribe();
+        },
 
-        patchState(store, { actionLoading: true, error: null });
-        regService
-          .updateStatus(evId, registrationId, status)
-          .pipe(
-            tap(() => {
-              patchState(store, {
-                actionLoading: false,
-                registrations: store
-                  .registrations()
-                  .map((r) =>
-                    r.registrationId === registrationId ? { ...r, status } : r,
-                  ),
-                successMessage: `Status updated successfully`,
-              });
-              if (onSuccess) onSuccess();
-            }),
-            catchError((err) => {
-              const msg = err.error?.message || 'Failed to update status';
-              patchState(store, { actionLoading: false, error: msg });
-              return of(null);
-            }),
-          )
-          .subscribe();
-      },
+        batchUpdateStatus(status: RegistrationStatus, onSuccess?: () => void): void {
+          const evId = store.eventId();
+          const selected = store.selectedIds();
+          if (!evId || selected.length === 0) return;
 
-      batchUpdateStatus(status: RegistrationStatus, onSuccess?: () => void): void {
-        const evId = store.eventId();
-        const selected = store.selectedIds();
-        if (!evId || selected.length === 0) return;
+          patchState(store, { actionLoading: true, error: null });
+          regService
+            .batchUpdateStatus(evId, selected, status)
+            .pipe(
+              tap((res) => {
+                patchState(store, {
+                  actionLoading: false,
+                  selectedIds: [],
+                  registrations: store
+                    .registrations()
+                    .map((r) => (selected.includes(r.registrationId) ? { ...r, status } : r)),
+                  successMessage: res.message || 'Batch update completed',
+                });
+                if (onSuccess) onSuccess();
+              }),
+              catchError((err) => {
+                const msg = err.error?.message || 'Failed to batch update status';
+                patchState(store, { actionLoading: false, error: msg });
+                return of(null);
+              }),
+            )
+            .subscribe();
+        },
 
-        patchState(store, { actionLoading: true, error: null });
-        regService
-          .batchUpdateStatus(evId, selected, status)
-          .pipe(
-            tap((res) => {
-              patchState(store, {
-                actionLoading: false,
-                selectedIds: [],
-                registrations: store
-                  .registrations()
-                  .map((r) =>
-                    selected.includes(r.registrationId) ? { ...r, status } : r,
-                  ),
-                successMessage: res.message || 'Batch update completed',
-              });
-              if (onSuccess) onSuccess();
-            }),
-            catchError((err) => {
-              const msg = err.error?.message || 'Failed to batch update status';
-              patchState(store, { actionLoading: false, error: msg });
-              return of(null);
-            }),
-          )
-          .subscribe();
-      },
+        scanDuplicates(onSuccess?: () => void): void {
+          const evId = store.eventId();
+          if (!evId) return;
 
-      scanDuplicates(onSuccess?: () => void): void {
-        const evId = store.eventId();
-        if (!evId) return;
+          patchState(store, { actionLoading: true, error: null });
+          eventService
+            .scanDuplicates(evId)
+            .pipe(
+              tap(() => {
+                patchState(store, { actionLoading: false });
+                loadDuplicates(evId);
+                if (onSuccess) onSuccess();
+              }),
+              catchError((err) => {
+                const msg = err.error?.message || 'Failed to scan duplicates';
+                patchState(store, { actionLoading: false, error: msg });
+                return of(null);
+              }),
+            )
+            .subscribe();
+        },
 
-        patchState(store, { actionLoading: true, error: null });
-        eventService
-          .scanDuplicates(evId)
-          .pipe(
-            tap(() => {
-              patchState(store, { actionLoading: false });
-              loadDuplicates(evId);
-              if (onSuccess) onSuccess();
-            }),
-            catchError((err) => {
-              const msg = err.error?.message || 'Failed to scan duplicates';
-              patchState(store, { actionLoading: false, error: msg });
-              return of(null);
-            }),
-          )
-          .subscribe();
-      },
+        resolveDuplicateGroup(dto: ResolveDuplicateDto, onSuccess?: () => void): void {
+          const evId = store.eventId();
+          if (!evId) return;
 
-      resolveDuplicateGroup(dto: ResolveDuplicateDto, onSuccess?: () => void): void {
-        const evId = store.eventId();
-        if (!evId) return;
-
-        patchState(store, { actionLoading: true, error: null });
-        eventService
-          .resolveDuplicates(evId, dto)
-          .pipe(
-            tap(() => {
-              patchState(store, { actionLoading: false });
-              loadDuplicates(evId);
-              loadRegistrations(evId);
-              if (onSuccess) onSuccess();
-            }),
-            catchError((err) => {
-              const msg = err.error?.message || 'Failed to resolve duplicate';
-              patchState(store, { actionLoading: false, error: msg });
-              return of(null);
-            }),
-          )
-          .subscribe();
-      },
-
-      submitRegistration(
-        dto: SubmitRegistrationDto,
-        onSuccess?: (regId: number) => void,
-      ): void {
-        const evId = store.eventId() || store.publicEventForm()?.eventId;
-        if (!evId) return;
-
-        patchState(store, { actionLoading: true, error: null, successMessage: null });
-        regService
-          .submitRegistration(evId, dto)
-          .pipe(
-            tap((res) => {
-              patchState(store, {
-                actionLoading: false,
-                successMessage: 'Registration submitted successfully!',
-              });
-              if (store.eventId()) {
+          patchState(store, { actionLoading: true, error: null });
+          eventService
+            .resolveDuplicates(evId, dto)
+            .pipe(
+              tap(() => {
+                patchState(store, { actionLoading: false });
+                loadDuplicates(evId);
                 loadRegistrations(evId);
-              }
-              if (onSuccess) onSuccess(res.registrationId);
-            }),
-            catchError((err) => {
-              const msg = err.error?.message || 'Failed to submit registration';
-              patchState(store, { actionLoading: false, error: msg });
-              return of(null);
-            }),
-          )
-          .subscribe();
-      },
-    };
-  }),
+                if (onSuccess) onSuccess();
+              }),
+              catchError((err) => {
+                const msg = err.error?.message || 'Failed to resolve duplicate';
+                patchState(store, { actionLoading: false, error: msg });
+                return of(null);
+              }),
+            )
+            .subscribe();
+        },
+
+        submitRegistration(dto: SubmitRegistrationDto, onSuccess?: (regId: number) => void): void {
+          const evId = store.eventId() || store.publicEventForm()?.eventId;
+          if (!evId) return;
+
+          patchState(store, { actionLoading: true, error: null, successMessage: null });
+          regService
+            .submitRegistration(evId, dto)
+            .pipe(
+              tap((res) => {
+                patchState(store, {
+                  actionLoading: false,
+                  successMessage: 'Registration submitted successfully!',
+                });
+                if (store.eventId()) {
+                  loadRegistrations(evId);
+                }
+                if (onSuccess) onSuccess(res.registrationId);
+              }),
+              catchError((err) => {
+                const msg = err.error?.message || 'Failed to submit registration';
+                patchState(store, { actionLoading: false, error: msg });
+                return of(null);
+              }),
+            )
+            .subscribe();
+        },
+      };
+    },
+  ),
 );

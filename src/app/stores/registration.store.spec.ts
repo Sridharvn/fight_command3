@@ -80,10 +80,14 @@ describe('RegistrationStore', () => {
 
   beforeEach(() => {
     registrationServiceMock = {
-      getRegistrations: vi.fn().mockReturnValue(of({ data: mockRegistrations, meta: { total: 3 } })),
+      getRegistrations: vi
+        .fn()
+        .mockReturnValue(of({ data: mockRegistrations, meta: { total: 3 } })),
       updateStatus: vi.fn().mockReturnValue(of({ message: 'Status updated' })),
       batchUpdateStatus: vi.fn().mockReturnValue(of({ message: 'Batch updated', updatedCount: 2 })),
-      submitRegistration: vi.fn().mockReturnValue(of({ message: 'Submitted', registrationId: 105 })),
+      submitRegistration: vi
+        .fn()
+        .mockReturnValue(of({ message: 'Submitted', registrationId: 105 })),
       exportRegistrations: vi.fn().mockReturnValue(of(new Blob())),
     };
 

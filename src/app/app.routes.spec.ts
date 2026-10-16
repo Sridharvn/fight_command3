@@ -91,9 +91,16 @@ describe('App Routes', () => {
     expect(router.url).toBe('/');
   });
 
-  it('should redirect direct navigation to /form-builder to /form-definitions (NF-NAV-003)', async () => {
+  it('should navigate to /form-templates for authenticated users (HF-NAV-011)', async () => {
+    isAuthenticatedSignal.set(true);
+    const canNavigate = await router.navigateByUrl('/form-templates');
+    expect(canNavigate).toBe(true);
+    expect(router.url).toBe('/form-templates');
+  });
+
+  it('should redirect direct navigation to /form-builder to /form-templates (HF-NAV-011)', async () => {
     isAuthenticatedSignal.set(true);
     await router.navigateByUrl('/form-builder');
-    expect(router.url).toBe('/form-definitions');
+    expect(router.url).toBe('/form-templates');
   });
 });

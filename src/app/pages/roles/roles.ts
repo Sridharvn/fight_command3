@@ -170,18 +170,16 @@ export class RolesPage implements OnInit {
         payload.parentRoleId = this.parentRoleId();
       }
 
-      this.rolesStore
-        .createRole(payload)
-        .subscribe({
-          next: () => {
-            this.isSubmitting.set(false);
-            this.closeModal();
-          },
-          error: (err: any) => {
-            this.isSubmitting.set(false);
-            this.modalError.set(err?.error?.message || 'Failed to create role');
-          },
-        });
+      this.rolesStore.createRole(payload).subscribe({
+        next: () => {
+          this.isSubmitting.set(false);
+          this.closeModal();
+        },
+        error: (err: any) => {
+          this.isSubmitting.set(false);
+          this.modalError.set(err?.error?.message || 'Failed to create role');
+        },
+      });
     }
   }
 

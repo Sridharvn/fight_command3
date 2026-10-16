@@ -31,6 +31,12 @@ export const routes: Routes = [
       import('./pages/rule-management/rule-management').then((m) => m.RuleManagementPage),
   },
   {
+    path: toSegment(APP_ROUTES.formTemplates),
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/form-templates/form-templates').then((m) => m.FormTemplatesPage),
+  },
+  {
     path: toSegment(APP_ROUTES.formDefinitions),
     canActivate: [authGuard],
     loadComponent: () =>
@@ -38,7 +44,7 @@ export const routes: Routes = [
   },
   {
     path: toSegment(APP_ROUTES.formBuilder),
-    redirectTo: toSegment(APP_ROUTES.formDefinitions),
+    redirectTo: toSegment(APP_ROUTES.formTemplates),
     pathMatch: 'full',
   },
   {
