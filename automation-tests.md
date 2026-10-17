@@ -1132,6 +1132,16 @@ The application provides:
   - Athlete entry form is rendered with all dynamic inputs and submission controls.
 - **Final state:** Athletes can enter and submit their registrations.
 
+**HF-PUB-004: Public Form Mobile Layout Enforces Single Item Per Row**
+
+- **Preconditions:** Public registration form or dynamic form renderer is loaded on a mobile viewport (<= 768px) or within a mobile simulator container (<= 768px).
+- **User/System actions:** User views form fields on mobile screen.
+- **Expected results:**
+  - Form grid collapses to a single column (`grid-template-columns: 1fr`).
+  - All form groups, regardless of whether configured with `columnSpan: 1` or `columnSpan: 2`, span the full width (`grid-column: 1 / -1`).
+  - Each form element renders strictly 1 item per row for clear, accessible mobile readability and tap ergonomics.
+- **Final state:** Mobile public form layout is 100% single-item per row; desktop view retains multi-column layout.
+
 **NF-REG-004: Backend Rejects Registration Submissions for Closed or Unopened Tournaments**
 
 - **Preconditions:** Event status is `COMPLETED`, `CANCELLED`, `REGISTRATION_CLOSED`, or `DRAFT`.
@@ -1665,3 +1675,94 @@ The application provides:
   - Active tab does not incorrectly switch to `'duplicates'`.
   - Error is handled gracefully without crashing the UI.
 - **Final state:** User view remains intact with error status recorded.
+
+---
+
+## Feature / Change: Form Builder UX Redesign (Single-Card Studio, In-Card Presets, Options Customization & In-Place Device Preview)
+
+**Priority:** High
+**Desired Behavior:**
+The Form Builder provides a modern single-card-per-row studio experience. Inactive cards show a clean, high-fidelity athlete question preview; clicking any card focuses and smoothly expands it into an interactive editor with in-card type/library preset switching, pre-existing option customization (with "Reset to Preset Defaults"), and an in-card "Rules & Validation" accordion for checkbox limits and conditional logic. In-place live preview allows organizers to test the form live in Desktop, Tablet, and Mobile frames via `DynamicFormRendererComponent`. Sticky floating action bar and insertion points provide rapid field creation. All backend schema mapping, system field protections, and existing features are strictly preserved.
+
+---
+
+### Happy Flows
+
+**HF-FB-001: Single-Card Per Row Layout with Focus-to-Expand Interaction**
+- **Preconditions:** User is on `/form-builder/:id` or `/form-builder/new`.
+- **User/System actions:** Form Builder loads fields in a vertical single-card layout. User clicks on an inactive card.
+- **Expected results:**
+  - Inactive cards render a clean, compact preview showing question label, type badge, required status, and read-only inputs/options.
+  - The clicked card receives active focus styling (accent border), collapsing any previously active card.
+  - The active card displays the inline label editor, type/preset dropdown selector, placeholder input, options editor (if choice-based), footer toggles (Required, Column Span), and "Rules & Validation" accordion.
+- **Final state:** Active card is expanded in edit mode; inactive cards remain in clean preview mode.
+
+**HF-FB-002: In-Card Field Type Switching & Custom Library Presets Application**
+- **Preconditions:** Active card is open in the Form Builder.
+- **User/System actions:** User selects a different type from the in-card type selector dropdown (e.g., switches from "text" to "select", or selects a Library Preset like "Age Category").
+- **Expected results:**
+  - Selecting a standard type updates the field's type, initializing default options if choice-based.
+  - Selecting a library preset fetches the preset definition, sets the field label, assigns the preset type, links `fieldDefinitionId`, and populates the field with the preset's pre-existing options.
+  - The in-card type selector dropdown (`.card-type-select`) renders a custom dropdown arrow positioned with right-side padding (`1rem` / 16px from the right border) and `appearance: none` to prevent flush browser arrows.
+- **Final state:** Field is converted to the selected type/preset with correct options, attributes, and properly padded dropdown arrow.
+
+**HF-FB-003: Pre-existing Options Customization & Reset to Preset Defaults**
+- **Preconditions:** Active card is linked to a library preset (e.g. "Age Category" with default options).
+- **User/System actions:**
+  - User edits an existing option label, adds a new option, and deletes an unwanted option.
+  - User then clicks the "Reset to Preset Defaults" button.
+- **Expected results:**
+  - Customized options are saved to the card for this specific form template.
+  - Clicking "Reset to Preset Defaults" restores the preset's original default options list.
+- **Final state:** Pre-existing options are fully customizable per event form with a reliable restore mechanism.
+
+**HF-FB-004: In-Card Rules & Validation Accordion (Selection Limits & Conditional Logic)**
+- **Preconditions:** Active card is open.
+- **User/System actions:**
+  - User clicks the "Rules & Validation" accordion toggle on the card footer.
+  - For a checkbox field: User sets maximum allowed selections (e.g., 3).
+  - For conditional logic: User configures a WHEN/THEN rule.
+- **Expected results:**
+  - The accordion expands smoothly showing rule configuration controls.
+  - Checkbox selection limits update `validationRules.maxSelections` and create a cross-field rule.
+  - Active rules badge on the accordion header indicates the number of active rules on that field.
+- **Final state:** Rules are configured directly on the card and synced to template validations.
+
+**HF-FB-005: Dual-Mode Header In-Place Live Preview with Device Switcher**
+- **Preconditions:** User is authoring a form template.
+- **User/System actions:** User clicks the "Preview" toggle button in the header, and clicks the Desktop, Tablet, and Mobile device buttons.
+- **Expected results:**
+  - View switches in-place from the "Build" canvas to "Preview" mode without an intrusive blocking modal dialog.
+  - `DynamicFormRendererComponent` renders the active form schema inside a device mockup frame.
+  - Device buttons adjust the container width (100% desktop, 768px tablet, 400px mobile).
+  - In Mobile view (400px), the live preview collapses to strictly one form item per row (`forceSingleColumn: true` / `.single-column-mode`), ensuring all fields render full-width.
+  - User can interact with inputs, checkboxes, and test live athlete registration validation.
+- **Final state:** Live interactive registration preview is testable directly within the builder with responsive mobile single-item-per-row layout.
+
+**HF-FB-006: Sticky Action Palette and Quick Insert Between Cards**
+- **Preconditions:** User is viewing the form canvas.
+- **User/System actions:** User clicks "+ Add Field" on the sticky side palette or clicks an insert divider between two cards.
+- **Expected results:**
+  - A new field card is appended or inserted at the exact target index.
+  - The new card immediately becomes the active expanded card, focused for editing.
+- **Final state:** New card created and ready for editing.
+
+---
+
+### Negative Flows & Edge Cases
+
+**NF-FB-001: Protected System Fields Cannot be Deleted or Type-Changed**
+- **Preconditions:** User selects a system field card (`fullName`, `email`, `phone`).
+- **User/System actions:** User inspects the card actions and attempts to delete or alter core required status.
+- **Expected results:**
+  - Delete button is disabled or hidden for system fields with a tooltip explaining system protection.
+  - Required checkbox is locked to `true` and disabled.
+- **Final state:** Core system identity fields remain intact and required.
+
+**EC-FB-001: Custom Library Preset Missing Default Options Fallback**
+- **Preconditions:** A library preset definition has no `defaultOptions` or null options.
+- **User/System actions:** User selects this preset on a choice field card.
+- **Expected results:**
+  - Fallback default options (`Option 1`, `Option 2`) are provided so the field is never left in a broken state.
+- **Final state:** Choice field has valid options.
+

@@ -46,8 +46,27 @@ export class FormBuilderPage implements OnInit {
   private readonly router = inject(Router);
 
   readonly activeTab = signal<'canvas' | 'rules' | 'settings'>('canvas');
+  readonly previewMode = signal<'build' | 'preview'>('build');
+  readonly previewDevice = signal<'desktop' | 'tablet' | 'mobile'>('desktop');
+  readonly openCardRules = signal<Record<string, boolean>>({});
   readonly isRuleModalOpen = signal(false);
   readonly saveSuccessMessage = signal<string | null>(null);
+
+  setPreviewMode(mode: 'build' | 'preview'): void {
+    this.previewMode.set(mode);
+  }
+
+  setPreviewDevice(device: 'desktop' | 'tablet' | 'mobile'): void {
+    this.previewDevice.set(device);
+  }
+
+  isCardRulesOpen(fieldId: string): boolean {
+    return !!this.openCardRules()[fieldId];
+  }
+
+  onToggleCardRules(fieldId: string): void {
+    this.openCardRules.update((m) => ({ ...m, [fieldId]: !m[fieldId] }));
+  }
 
   // Field Palette Types
   readonly paletteTypes: { type: FormFieldType; label: string; icon: string }[] = [
@@ -246,6 +265,38 @@ export class FormBuilderPage implements OnInit {
 
   onSelectField(fieldId: string): void {
     this.builderStore.setActiveField(fieldId);
+  }
+
+  onInsertFieldAfter(index: number, type: FormFieldType = 'text', label = 'New Field'): void {
+    this.builderStore.insertFieldAt(index + 1, type, label);
+  }
+
+  onChangeCardType(fieldId: string, value: string): void {
+    if (value.startsWith('type:')) {
+      const type = value.replace('type:', '') as FormFieldType;
+      this.builderStore.changeFieldType(fieldId, type);
+    } else if (value.startsWith('preset:')) {
+      const defId = +value.replace('preset:', '');
+      const def = this.formDefStore.fieldDefinitions().find((d) => d.fieldDefinitionId === defId);
+      if (def) {
+        this.builderStore.applyPresetToField(fieldId, def);
+      }
+    }
+  }
+
+  onResetOptions(fieldId: string, fieldDefId: number): void {
+    const def = this.formDefStore.fieldDefinitions().find((d) => d.fieldDefinitionId === fieldDefId);
+    const defaultOpts = (def?.defaultOptions as any)?.options || ['Option 1', 'Option 2'];
+    this.builderStore.resetFieldOptionsToDefault(fieldId, defaultOpts);
+  }
+
+  getFieldRuleCount(fieldKey: string): number {
+    const rules = this.builderStore.template()?.validations || [];
+    return rules.filter(
+      (r) =>
+        r.when?.conditions?.some((c: any) => c.fieldId === fieldKey) ||
+        r.then?.conditions?.some((c: any) => c.fieldId === fieldKey),
+    ).length;
   }
 
   onUpdateFieldLabel(fieldId: string, event: Event): void {

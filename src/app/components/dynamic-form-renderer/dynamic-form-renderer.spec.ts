@@ -236,4 +236,29 @@ describe('DynamicFormRendererComponent', () => {
     const dateSelector = fixture.nativeElement.querySelector('app-date-selector');
     expect(dateSelector).toBeTruthy();
   });
+
+  it('should render form-grid with container and responsive styling support (HF-PUB-004)', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const container = compiled.querySelector('.dynamic-form-container');
+    expect(container).toBeTruthy();
+
+    const formGrid = compiled.querySelector('.form-grid');
+    expect(formGrid).toBeTruthy();
+
+    const formGroups = compiled.querySelectorAll('.form-group');
+    expect(formGroups.length).toBe(mockSchema.fields.length);
+  });
+
+  it('should apply single-column-mode class when forceSingleColumn is true (HF-FB-005)', () => {
+    fixture.componentRef.setInput('forceSingleColumn', true);
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const container = compiled.querySelector('.dynamic-form-container');
+    expect(container?.classList.contains('single-column-mode')).toBe(true);
+
+    fixture.componentRef.setInput('forceSingleColumn', false);
+    fixture.detectChanges();
+    expect(container?.classList.contains('single-column-mode')).toBe(false);
+  });
 });

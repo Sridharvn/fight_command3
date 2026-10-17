@@ -405,3 +405,26 @@
     }
   }
 }
+
+@media (max-width: 768px) {
+  .portal-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .portal-main {
+    padding: 1.25rem 1rem;
+  }
+
+  .hero-content {
+    padding: 1.25rem 1rem !important;
+
+    .tournament-title {
+      font-size: 1.4rem;
+    }
+  }
+
+  .registration-form-card {
+    padding: 1.25rem 1rem;
+  }
+}
+

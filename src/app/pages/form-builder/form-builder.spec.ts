@@ -368,4 +368,107 @@ describe('FormBuilderPage', () => {
     expect(choices[0].key).toBe('styles');
     expect(choices[0].type).toBe('checkbox');
   });
+
+  it('should toggle in-place previewMode and switch device frames (HF-FB-005)', () => {
+    expect((component as any).previewMode()).toBe('build');
+    expect((component as any).previewDevice()).toBe('desktop');
+
+    // Switch to preview mode
+    (component as any).setPreviewMode('preview');
+    expect((component as any).previewMode()).toBe('preview');
+
+    // Switch device
+    (component as any).setPreviewDevice('tablet');
+    expect((component as any).previewDevice()).toBe('tablet');
+
+    (component as any).setPreviewDevice('mobile');
+    expect((component as any).previewDevice()).toBe('mobile');
+
+    // Switch back to build mode
+    (component as any).setPreviewMode('build');
+    expect((component as any).previewMode()).toBe('build');
+  });
+
+  it('should change field type or apply library preset via onChangeCardType (HF-FB-002)', () => {
+    builderStore.initNewTemplate(1, 1);
+    builderStore.addField('text', 'Test Field');
+    const field = builderStore.template()!.fields.find((f) => f.label === 'Test Field')!;
+
+    // 1. Change to select
+    (component as any).onChangeCardType(field.id, 'type:select');
+    let updated = builderStore.template()!.fields.find((f) => f.id === field.id)!;
+    expect(updated.type).toBe('select');
+
+    // 2. Change to preset 101 (Belt Rank from mockFormDefinitionStore)
+    (component as any).onChangeCardType(field.id, 'preset:101');
+    updated = builderStore.template()!.fields.find((f) => f.id === field.id)!;
+    expect(updated.label).toBe('Belt Rank');
+    expect(updated.fieldDefinitionId).toBe(101);
+  });
+
+  it('should reset options to preset defaults via onResetOptions (HF-FB-003)', () => {
+    builderStore.initNewTemplate(1, 1);
+    builderStore.addField('select', 'Belt Rank');
+    const field = builderStore.template()!.fields.find((f) => f.label === 'Belt Rank')!;
+    builderStore.updateField(field.id, { fieldDefinitionId: 101 });
+
+    // Modify option
+    component.onUpdateOptionLabel(field.id, 0, { target: { value: 'Custom Red' } } as any);
+
+    // Call onResetOptions
+    (component as any).onResetOptions(field.id, 101);
+    const updated = builderStore.template()!.fields.find((f) => f.id === field.id)!;
+    expect(updated.options).toBeTruthy();
+  });
+
+  it('should toggle in-card rules accordion and insert field after index (HF-FB-004, HF-FB-006)', () => {
+    builderStore.initNewTemplate(1, 1);
+    const field = builderStore.template()!.fields[0];
+
+    // Toggle card rules
+    expect((component as any).isCardRulesOpen(field.id)).toBe(false);
+    (component as any).onToggleCardRules(field.id);
+    expect((component as any).isCardRulesOpen(field.id)).toBe(true);
+    (component as any).onToggleCardRules(field.id);
+    expect((component as any).isCardRulesOpen(field.id)).toBe(false);
+
+    // Insert field after index 0
+    const countBefore = builderStore.template()!.fields.length;
+    (component as any).onInsertFieldAfter(0, 'date');
+    const fieldsAfter = builderStore.template()!.fields;
+    expect(fieldsAfter.length).toBe(countBefore + 1);
+    expect(fieldsAfter[1].type).toBe('date');
+  });
+
+  it('should render card-type-select with options and dropdown styling in active editor card', () => {
+    builderStore.initNewTemplate(1, 1);
+    builderStore.addField('text', 'Athlete Belt');
+    const field = builderStore.template()!.fields.find((f) => f.label === 'Athlete Belt')!;
+    builderStore.setActiveField(field.id);
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const selectEl = compiled.querySelector('.card-type-select') as HTMLSelectElement;
+    expect(selectEl).toBeTruthy();
+    expect(selectEl.classList.contains('card-type-select')).toBe(true);
+    expect(selectEl.options.length).toBeGreaterThan(0);
+  });
+
+  it('should pass forceSingleColumn to dynamic-form-renderer when previewDevice is mobile (HF-FB-005)', () => {
+    builderStore.initNewTemplate(1, 1);
+    component.previewMode.set('preview');
+    component.previewDevice.set('mobile');
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const rendererEl = compiled.querySelector('app-dynamic-form-renderer');
+    expect(rendererEl).toBeTruthy();
+
+    const container = rendererEl?.querySelector('.dynamic-form-container');
+    expect(container?.classList.contains('single-column-mode')).toBe(true);
+
+    component.previewDevice.set('desktop');
+    fixture.detectChanges();
+    expect(container?.classList.contains('single-column-mode')).toBe(false);
+  });
 });

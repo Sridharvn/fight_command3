@@ -1,4 +1,4 @@
-<div class="dynamic-form-container">
+<div class="dynamic-form-container" [class.single-column-mode]="forceSingleColumn()">
   @if (complianceErrors().length > 0) {
     <div class="compliance-alert" role="alert">
       <div class="alert-icon">

@@ -243,4 +243,82 @@ describe('FormBuilderStore', () => {
     expect(updatedField.options?.length).toBe(2);
     expect(updatedField.options?.[0].label).toBe('Option 2');
   });
+
+  it('should switch field type via changeFieldType and initialize options if needed (HF-FB-002)', () => {
+    store.initNewTemplate(1, 1);
+    store.addField('text', 'Division');
+    const field = store.template()!.fields.find((f) => f.label === 'Division')!;
+
+    expect(field.type).toBe('text');
+    expect(field.options).toBeUndefined();
+
+    // Switch to select
+    (store as any).changeFieldType(field.id, 'select');
+    let updated = store.template()!.fields.find((f) => f.id === field.id)!;
+    expect(updated.type).toBe('select');
+    expect(updated.options?.length).toBe(2);
+
+    // Switch to number
+    (store as any).changeFieldType(field.id, 'number');
+    updated = store.template()!.fields.find((f) => f.id === field.id)!;
+    expect(updated.type).toBe('number');
+  });
+
+  it('should apply a library preset to an existing card via applyPresetToField (HF-FB-002)', () => {
+    store.initNewTemplate(1, 1);
+    store.addField('text', 'Temporary Field');
+    const field = store.template()!.fields.find((f) => f.label === 'Temporary Field')!;
+
+    const presetDef = {
+      fieldDefinitionId: 55,
+      fieldName: 'age_category',
+      fieldLabel: 'Age Category',
+      fieldType: 'select' as const,
+      isFilterable: true,
+      isSortable: true,
+      isSearchable: true,
+      isGlobal: true,
+      defaultOptions: { options: ['Youth (12-14)', 'Cadet (15-17)', 'Adult (18-35)'] },
+    };
+
+    (store as any).applyPresetToField(field.id, presetDef);
+    const updated = store.template()!.fields.find((f) => f.id === field.id)!;
+
+    expect(updated.label).toBe('Age Category');
+    expect(updated.type).toBe('select');
+    expect(updated.fieldDefinitionId).toBe(55);
+    expect(updated.options?.length).toBe(3);
+    expect(updated.options?.[0].label).toBe('Youth (12-14)');
+  });
+
+  it('should reset options to preset defaults via resetFieldOptionsToDefault (HF-FB-003)', () => {
+    store.initNewTemplate(1, 1);
+    store.addField('select', 'Belt Rank');
+    const field = store.template()!.fields.find((f) => f.label === 'Belt Rank')!;
+
+    // Customise options
+    store.updateFieldOption(field.id, 0, { label: 'Custom Purple' });
+    store.addFieldOption(field.id, { label: 'Custom Coral', value: 'coral' });
+
+    // Reset to defaults
+    (store as any).resetFieldOptionsToDefault(field.id, ['White', 'Blue', 'Purple', 'Brown', 'Black']);
+    const updated = store.template()!.fields.find((f) => f.id === field.id)!;
+
+    expect(updated.options?.length).toBe(5);
+    expect(updated.options?.[0].label).toBe('White');
+    expect(updated.options?.[4].label).toBe('Black');
+  });
+
+  it('should insert field at a specific index via insertFieldAt (HF-FB-006)', () => {
+    store.initNewTemplate(1, 1);
+    const initialCount = store.template()!.fields.length;
+
+    (store as any).insertFieldAt(1, 'number', 'Weight Class');
+    const fields = store.template()!.fields;
+
+    expect(fields.length).toBe(initialCount + 1);
+    expect(fields[1].label).toBe('Weight Class');
+    expect(fields[1].type).toBe('number');
+    expect(store.activeFieldId()).toBe(fields[1].id);
+  });
 });

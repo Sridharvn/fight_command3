@@ -192,4 +192,13 @@ describe('PublicRegistrationPage', () => {
     expect(dobField?.required).toBe(true);
     expect(dobField?.type).toBe('date');
   });
+
+  it('should render dynamic-form-renderer inside registration-form-card for athlete entry (HF-PUB-004)', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const card = compiled.querySelector('.registration-form-card');
+    expect(card).toBeTruthy();
+
+    const renderer = compiled.querySelector('app-dynamic-form-renderer');
+    expect(renderer).toBeTruthy();
+  });
 });

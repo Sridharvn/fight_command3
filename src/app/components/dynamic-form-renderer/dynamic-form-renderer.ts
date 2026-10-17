@@ -35,6 +35,7 @@ export class DynamicFormRendererComponent implements OnInit {
   readonly disabled = input<boolean>(false);
   readonly submitButtonText = input<string>('Submit Registration');
   readonly showSubmitButton = input<boolean>(true);
+  readonly forceSingleColumn = input<boolean>(false);
 
   readonly formSubmit = output<Record<string, any>>();
   readonly formReady = output<FormGroup>();

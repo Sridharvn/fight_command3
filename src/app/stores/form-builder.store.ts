@@ -242,6 +242,144 @@ export const FormBuilderStore = signalStore(
       });
     },
 
+    insertFieldAt(index: number, type: FormFieldType, label = 'New Field') {
+      const current = store.template();
+      if (!current) return;
+
+      const randomSuffix = Math.random().toString(36).substring(2, 6);
+      const id = `field_${Date.now()}_${randomSuffix}`;
+      const key = `${label.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${randomSuffix}`;
+
+      const newField: FormField = {
+        id,
+        key,
+        label,
+        type,
+        required: false,
+        columnSpan: 1,
+        options:
+          type === 'select' || type === 'radio' || type === 'checkbox'
+            ? [
+                { label: 'Option 1', value: 'opt_1' },
+                { label: 'Option 2', value: 'opt_2' },
+              ]
+            : undefined,
+      };
+
+      const fields = [...current.fields];
+      const targetIndex = Math.max(0, Math.min(index, fields.length));
+      fields.splice(targetIndex, 0, newField);
+
+      patchState(store, {
+        template: {
+          ...current,
+          fields,
+        },
+        activeFieldId: id,
+      });
+    },
+
+    changeFieldType(fieldId: string, newType: FormFieldType) {
+      const current = store.template();
+      if (!current) return;
+
+      const updatedFields = current.fields.map((field) => {
+        if (field.id !== fieldId) return field;
+        if (field.isSystemField) return field; // Protect system fields
+
+        const isChoice = newType === 'select' || newType === 'radio' || newType === 'checkbox';
+        let options = field.options;
+        if (isChoice && (!options || options.length === 0)) {
+          options = [
+            { label: 'Option 1', value: 'opt_1' },
+            { label: 'Option 2', value: 'opt_2' },
+          ];
+        }
+
+        return {
+          ...field,
+          type: newType,
+          options,
+        };
+      });
+
+      patchState(store, {
+        template: {
+          ...current,
+          fields: updatedFields,
+        },
+      });
+    },
+
+    applyPresetToField(fieldId: string, def: FieldDefinition) {
+      const current = store.template();
+      if (!current) return;
+
+      let options: FormFieldOption[] | undefined = undefined;
+      const rawOptions = (def.defaultOptions as any)?.options;
+      if (Array.isArray(rawOptions) && rawOptions.length > 0) {
+        options = rawOptions.map((opt: string) => ({
+          label: opt,
+          value: opt.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+        }));
+      } else if (
+        def.fieldType === 'select' ||
+        def.fieldType === 'radio' ||
+        def.fieldType === 'checkbox'
+      ) {
+        options = [
+          { label: 'Option 1', value: 'opt_1' },
+          { label: 'Option 2', value: 'opt_2' },
+        ];
+      }
+
+      const updatedFields = current.fields.map((field) => {
+        if (field.id !== fieldId) return field;
+        if (field.isSystemField) return field;
+
+        return {
+          ...field,
+          fieldDefinitionId: def.fieldDefinitionId,
+          label: def.fieldLabel,
+          type: def.fieldType as FormFieldType,
+          options,
+          validationRules: (def.validationRules as any) || field.validationRules,
+        };
+      });
+
+      patchState(store, {
+        template: {
+          ...current,
+          fields: updatedFields,
+        },
+      });
+    },
+
+    resetFieldOptionsToDefault(fieldId: string, defaultOptions: string[]) {
+      const current = store.template();
+      if (!current) return;
+
+      const newOptions: FormFieldOption[] = defaultOptions.map((opt) => ({
+        label: opt,
+        value: opt.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+      }));
+
+      const updatedFields = current.fields.map((field) => {
+        if (field.id !== fieldId) return field;
+        return {
+          ...field,
+          options: newOptions,
+        };
+      });
+
+      patchState(store, {
+        template: {
+          ...current,
+          fields: updatedFields,
+        },
+      });
+    },
+
     updateField(fieldId: string, updates: Partial<FormField>) {
       const current = store.template();
       if (!current) return;
